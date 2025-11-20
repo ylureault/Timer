@@ -1,0 +1,394 @@
+.salon-display {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  transition: background-color 1s ease;
+}
+
+/* Progress Background Fill */
+.progress-background {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.3);
+  z-index: 0;
+  transition: width 1s linear;
+}
+
+/* Session Transition Animation */
+.session-transition {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 10;
+  pointer-events: none;
+}
+
+.transition-from {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 4rem;
+  font-weight: 800;
+  color: white;
+  animation: slideOut 1s ease-out forwards;
+}
+
+@keyframes slideOut {
+  0% {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(-100%) scale(0.8);
+  }
+}
+
+/* Main Content */
+.display-content {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 1400px;
+  padding: 40px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 40px;
+}
+
+/* Session Info */
+.session-info {
+  text-align: center;
+}
+
+.session-type {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-bottom: 20px;
+  opacity: 0.9;
+  text-transform: uppercase;
+  letter-spacing: 0.2rem;
+}
+
+.session-name {
+  font-size: 4.5rem;
+  font-weight: 800;
+  margin-bottom: 20px;
+  text-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  line-height: 1.2;
+}
+
+.session-number {
+  font-size: 1.8rem;
+  font-weight: 600;
+  opacity: 0.8;
+}
+
+/* Timer Display */
+.timer-display {
+  text-align: center;
+  position: relative;
+}
+
+.timer-main {
+  font-size: 12rem;
+  font-weight: 900;
+  font-family: 'Courier New', monospace;
+  text-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
+  letter-spacing: 0.5rem;
+  transition: transform 0.3s ease;
+}
+
+.timer-main.running {
+  animation: pulse 2s infinite;
+}
+
+.timer-main.paused {
+  opacity: 0.7;
+}
+
+.timer-status {
+  margin-top: 30px;
+  font-size: 2rem;
+  font-weight: 700;
+  padding: 15px 40px;
+  border-radius: 50px;
+  display: inline-block;
+  text-transform: uppercase;
+  letter-spacing: 0.1rem;
+}
+
+.pause-indicator {
+  background: rgba(255, 255, 255, 0.2);
+  animation: pulse 1.5s infinite;
+}
+
+.completed {
+  background: rgba(16, 185, 129, 0.3);
+}
+
+/* Time Info */
+.time-info {
+  display: flex;
+  gap: 40px;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+}
+
+.time-block {
+  text-align: center;
+}
+
+.time-label {
+  font-size: 1rem;
+  opacity: 0.8;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.1rem;
+}
+
+.time-value {
+  font-size: 2.5rem;
+  font-weight: 700;
+  font-family: 'Courier New', monospace;
+}
+
+.time-separator {
+  font-size: 2rem;
+  opacity: 0.5;
+}
+
+/* Visual Progress */
+.visual-progress {
+  width: 100%;
+  max-width: 900px;
+  text-align: center;
+}
+
+.progress-track {
+  height: 40px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.2);
+  margin-bottom: 15px;
+}
+
+.progress-fill {
+  height: 100%;
+  background: rgba(255, 255, 255, 0.5);
+  border-radius: 20px;
+  box-shadow: 0 2px 10px rgba(255, 255, 255, 0.3);
+  transition: width 1s linear;
+}
+
+.progress-percentage {
+  font-size: 1.8rem;
+  font-weight: 700;
+  opacity: 0.9;
+}
+
+/* Upcoming Sessions */
+.upcoming-sessions {
+  width: 100%;
+  max-width: 700px;
+}
+
+.upcoming-label {
+  font-size: 1.2rem;
+  font-weight: 600;
+  margin-bottom: 15px;
+  opacity: 0.8;
+  text-transform: uppercase;
+  letter-spacing: 0.1rem;
+}
+
+.upcoming-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.upcoming-session {
+  display: flex;
+  justify-content: space-between;
+  padding: 15px 20px;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 10px;
+  border-left: 5px solid white;
+  backdrop-filter: blur(10px);
+  transition: transform 0.3s ease;
+}
+
+.upcoming-session:hover {
+  transform: translateX(10px);
+}
+
+.upcoming-name {
+  font-weight: 600;
+  font-size: 1.1rem;
+}
+
+.upcoming-duration {
+  opacity: 0.8;
+  font-size: 1rem;
+}
+
+/* Remote Control Hint */
+.remote-hint {
+  position: absolute;
+  bottom: 30px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 1rem;
+  opacity: 0.6;
+  background: rgba(0, 0, 0, 0.3);
+  padding: 10px 30px;
+  border-radius: 20px;
+  backdrop-filter: blur(5px);
+}
+
+/* Loading State */
+.salon-display.loading,
+.salon-display.error {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  text-align: center;
+}
+
+.loader {
+  width: 80px;
+  height: 80px;
+  border: 8px solid rgba(255, 255, 255, 0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: rotate 1s linear infinite;
+  margin: 0 auto 30px;
+}
+
+.salon-display.loading p {
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+/* Error State */
+.error-content {
+  padding: 60px;
+}
+
+.error-content h1 {
+  font-size: 6rem;
+  margin-bottom: 20px;
+}
+
+.error-content h2 {
+  font-size: 2.5rem;
+  font-weight: 700;
+  margin-bottom: 20px;
+}
+
+.error-content p {
+  font-size: 1.3rem;
+  margin-bottom: 30px;
+  opacity: 0.9;
+}
+
+/* Pause Mode Styling */
+.salon-display.pause {
+  filter: brightness(0.85);
+}
+
+/* Completed Mode */
+.salon-display.termine {
+  background: linear-gradient(135deg, #10B981, #059669) !important;
+}
+
+/* RESPONSIVE */
+@media (max-width: 1200px) {
+  .timer-main {
+    font-size: 8rem;
+  }
+
+  .session-name {
+    font-size: 3.5rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .display-content {
+    padding: 20px;
+    gap: 25px;
+  }
+
+  .session-name {
+    font-size: 2.5rem;
+  }
+
+  .session-type {
+    font-size: 1.2rem;
+  }
+
+  .timer-main {
+    font-size: 5rem;
+    letter-spacing: 0.3rem;
+  }
+
+  .timer-status {
+    font-size: 1.5rem;
+    padding: 10px 25px;
+  }
+
+  .time-info {
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .time-separator {
+    display: none;
+  }
+
+  .time-value {
+    font-size: 2rem;
+  }
+
+  .progress-track {
+    height: 30px;
+  }
+
+  .progress-percentage {
+    font-size: 1.3rem;
+  }
+
+  .upcoming-sessions {
+    max-width: 100%;
+  }
+
+  .remote-hint {
+    font-size: 0.8rem;
+    bottom: 15px;
+    padding: 8px 20px;
+  }
+}
+
+@media (max-width: 480px) {
+  .timer-main {
+    font-size: 3.5rem;
+  }
+
+  .session-name {
+    font-size: 1.8rem;
+  }
+}
