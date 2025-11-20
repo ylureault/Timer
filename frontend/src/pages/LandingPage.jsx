@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { THEMES, applyTheme } from '../utils/features'
 import '../styles/LandingPage.css'
+import '../styles/HeroButtons.css'
 
 function LandingPage() {
   const navigate = useNavigate()
@@ -90,50 +91,66 @@ function LandingPage() {
               className="hero-actions-modern"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.4 }}
+              transition={{ delay: 0.4, duration: 0.8 }}
             >
-              <button className="btn btn-primary btn-xl" onClick={handleCreateSalon}>
-                <span>Créer un salon</span>
-                <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                  <path d="M7.5 15L12.5 10L7.5 5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-              </button>
+              <motion.button
+                className="btn-cta-hero"
+                onClick={handleCreateSalon}
+                whileHover={{ scale: 1.05, boxShadow: "0 20px 60px rgba(20, 184, 166, 0.4)" }}
+                whileTap={{ scale: 0.98 }}
+              >
+                <span className="btn-cta-text">Créer mon premier salon</span>
+                <span className="btn-cta-icon">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                    <path d="M5 12H19M19 12L12 5M19 12L12 19" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                </span>
+              </motion.button>
 
-              <div className="join-input-modern glass">
+              <div className="divider-or">
+                <span>ou</span>
+              </div>
+
+              <div className="join-input-hero">
                 <input
                   type="text"
-                  placeholder="Code 4 chiffres"
+                  placeholder="1234"
                   maxLength="4"
                   value={joinCode}
                   onChange={(e) => setJoinCode(e.target.value.replace(/\D/g, ''))}
                   onKeyPress={(e) => e.key === 'Enter' && handleJoinSalon()}
                 />
-                <button onClick={handleJoinSalon} disabled={joinCode.length !== 4}>
-                  Rejoindre
-                </button>
+                <motion.button
+                  onClick={handleJoinSalon}
+                  disabled={joinCode.length !== 4}
+                  whileHover={{ scale: 1.03 }}
+                  whileTap={{ scale: 0.97 }}
+                >
+                  Rejoindre un salon →
+                </motion.button>
               </div>
             </motion.div>
 
             {/* Live Stats */}
             <motion.div
               className="hero-stats"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.6 }}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.6, duration: 0.8 }}
             >
               <div className="stat-item">
                 <div className="stat-value">100%</div>
-                <div className="stat-label">Gratuit</div>
+                <div className="stat-label">Gratuit Forever</div>
               </div>
               <div className="stat-divider"></div>
               <div className="stat-item">
-                <div className="stat-value">0</div>
-                <div className="stat-label">Installation</div>
+                <div className="stat-value">&lt; 30s</div>
+                <div className="stat-label">Pour démarrer</div>
               </div>
               <div className="stat-divider"></div>
               <div className="stat-item">
                 <div className="stat-value">∞</div>
-                <div className="stat-label">Sessions</div>
+                <div className="stat-label">Salons illimités</div>
               </div>
             </motion.div>
           </motion.div>
@@ -428,36 +445,10 @@ function LandingPage() {
               <div className="footer-logo">⏱️ Timer Salon</div>
               <p>Orchestrez le temps de vos ateliers</p>
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', alignItems: 'flex-end' }}>
-              <div className="footer-links-modern">
-                <a href="#">Mentions légales</a>
-                <span>•</span>
-                <a href="#">Contact</a>
-                <span>•</span>
-                <a href="#">Documentation</a>
-              </div>
-              <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                <span style={{ fontSize: '0.875rem', color: 'var(--gray-400)' }}>Thème:</span>
-                {Object.entries(THEMES).map(([key, theme]) => (
-                  <button
-                    key={key}
-                    onClick={() => handleThemeChange(key)}
-                    style={{
-                      padding: '8px 16px',
-                      background: currentTheme === key ? 'var(--primary)' : 'transparent',
-                      color: currentTheme === key ? 'white' : 'var(--gray-400)',
-                      border: '1px solid',
-                      borderColor: currentTheme === key ? 'var(--primary)' : 'var(--gray-700)',
-                      borderRadius: '8px',
-                      cursor: 'pointer',
-                      fontSize: '0.875rem',
-                      transition: 'all 0.2s'
-                    }}
-                  >
-                    {theme.name}
-                  </button>
-                ))}
-              </div>
+            <div className="footer-links-modern">
+              <a href="https://github.com/anthropics/claude-code" target="_blank" rel="noopener noreferrer">GitHub</a>
+              <a href="#features">Fonctionnalités</a>
+              <a href="#" onClick={(e) => { e.preventDefault(); handleCreateSalon(); }}>Créer un salon</a>
             </div>
           </div>
           <div className="footer-copy">
