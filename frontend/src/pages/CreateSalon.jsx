@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
@@ -17,6 +17,7 @@ import {
   useSortable,
 } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
+import { SESSION_TEMPLATES, exportSalonConfig, importSalonConfig, generateQRCodeSVG } from '../utils/features'
 import '../styles/CreateSalon.css'
 
 const DEFAULT_COLORS = [
@@ -102,6 +103,7 @@ function SortableSession({ session, onEdit, onRemove }) {
 
 function CreateSalon() {
   const navigate = useNavigate()
+  const fileInputRef = useRef(null)
   const [salonName, setSalonName] = useState('')
   const [sessions, setSessions] = useState([])
   const [showAddSession, setShowAddSession] = useState(false)
@@ -120,6 +122,50 @@ function CreateSalon() {
       coordinateGetter: sortableKeyboardCoordinates,
     })
   )
+
+  // Template loader
+  const loadTemplate = (templateKey) => {
+    const template = SESSION_TEMPLATES[templateKey]
+    if (template) {
+      setSalonName(template.name)
+      setSessions(template.sessions.map((s, idx) => ({
+        ...s,
+        id: Date.now() + idx,
+        duree_secondes: s.duree_minutes * 60
+      })))
+    }
+  }
+
+  // Export configuration
+  const handleExport = () => {
+    if (sessions.length > 0) {
+      exportSalonConfig(salonName || 'Mon Salon', sessions)
+    } else {
+      alert('Aucune session à exporter')
+    }
+  }
+
+  // Import configuration
+  const handleImport = async (e) => {
+    const file = e.target.files[0]
+    if (file) {
+      try {
+        const config = await importSalonConfig(file)
+        setSalonName(config.name || 'Mon Salon')
+        setSessions(config.sessions.map((s, idx) => ({
+          ...s,
+          id: Date.now() + idx,
+          duree_secondes: s.duree_minutes * 60
+        })))
+      } catch (error) {
+        alert('Erreur lors de l\'import: ' + error.message)
+      }
+    }
+    // Reset file input
+    if (fileInputRef.current) {
+      fileInputRef.current.value = ''
+    }
+  }
 
   const handleAddSession = () => {
     if (newSession.nom_session.trim()) {
@@ -174,20 +220,27 @@ function CreateSalon() {
     setIsCreating(true)
 
     try {
+      // Create salon
       const createResponse = await fetch('/api/salon/create', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ nom: salonName || 'Mon Salon' })
       })
 
-      const salonData = await createResponse.json()
-
-      if (!salonData.success) {
-        throw new Error('Échec de la création du salon')
+      if (!createResponse.ok) {
+        throw new Error(`HTTP error! status: ${createResponse.status}`)
       }
 
+      const salonData = await createResponse.json()
+      console.log('Salon created:', salonData)
+
+      if (!salonData.success || !salonData.code_4chiffres) {
+        throw new Error(salonData.error || 'Échec de la création du salon')
+      }
+
+      // Add sessions one by one
       for (const session of sessions) {
-        await fetch(`/api/salon/${salonData.code_4chiffres}/sessions/add`, {
+        const sessionResponse = await fetch(`/api/salon/${salonData.code_4chiffres}/sessions/add`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -197,13 +250,34 @@ function CreateSalon() {
             type: session.type
           })
         })
+
+        if (!sessionResponse.ok) {
+          console.error('Failed to add session:', session)
+        }
       }
+
+      // Save to history
+      saveToHistory(salonData)
 
       setCreatedSalon(salonData)
     } catch (error) {
       console.error('Error creating salon:', error)
-      alert('Erreur lors de la création du salon')
+      alert(`Erreur lors de la création du salon: ${error.message}`)
       setIsCreating(false)
+    }
+  }
+
+  const saveToHistory = (salon) => {
+    try {
+      const history = JSON.parse(localStorage.getItem('salon_history') || '[]')
+      history.unshift({
+        ...salon,
+        created_at: new Date().toISOString(),
+        sessions_count: sessions.length
+      })
+      localStorage.setItem('salon_history', JSON.stringify(history.slice(0, 10)))
+    } catch (e) {
+      console.error('Failed to save history:', e)
     }
   }
 
@@ -234,6 +308,17 @@ function CreateSalon() {
               <div className="url-block">
                 <label>Code du salon</label>
                 <div className="code-display-modern">{createdSalon.code_4chiffres}</div>
+              </div>
+
+              <div className="url-block">
+                <label>QR Code pour rejoindre</label>
+                <div style={{ display: 'flex', justifyContent: 'center', padding: '20px', background: 'white', borderRadius: '12px' }}>
+                  <img
+                    src={generateQRCodeSVG(`${window.location.origin}/remote/${createdSalon.code_4chiffres}`, 200)}
+                    alt="QR Code"
+                    style={{ width: '200px', height: '200px' }}
+                  />
+                </div>
               </div>
 
               <div className="url-block">
@@ -308,6 +393,58 @@ function CreateSalon() {
           </div>
 
           <div className="card create-card-modern">
+            {/* Templates & Import/Export */}
+            <div className="form-section-modern">
+              <div className="section-header-create">
+                <div>
+                  <h2>Démarrage rapide</h2>
+                  <p className="section-subtitle">Choisissez un template ou importez une configuration</p>
+                </div>
+                <div style={{ display: 'flex', gap: '12px' }}>
+                  <button
+                    className="btn btn-outline"
+                    onClick={handleExport}
+                    type="button"
+                  >
+                    📥 Exporter
+                  </button>
+                  <button
+                    className="btn btn-outline"
+                    onClick={() => fileInputRef.current?.click()}
+                    type="button"
+                  >
+                    📤 Importer
+                  </button>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept=".json"
+                    onChange={handleImport}
+                    style={{ display: 'none' }}
+                  />
+                </div>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '12px', marginBottom: '24px' }}>
+                {Object.entries(SESSION_TEMPLATES).map(([key, template]) => (
+                  <motion.button
+                    key={key}
+                    className="btn btn-outline"
+                    onClick={() => loadTemplate(key)}
+                    type="button"
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    style={{ padding: '16px', textAlign: 'left' }}
+                  >
+                    <div style={{ fontWeight: 'bold', marginBottom: '4px' }}>{template.name}</div>
+                    <div style={{ fontSize: '0.75rem', opacity: 0.7 }}>
+                      {template.sessions.length} sessions
+                    </div>
+                  </motion.button>
+                ))}
+              </div>
+            </div>
+
             <div className="form-section-modern">
               <label>Nom du salon (optionnel)</label>
               <input

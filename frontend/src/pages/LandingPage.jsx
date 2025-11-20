@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
+import { THEMES, applyTheme, getHistory } from '../utils/features'
 import '../styles/LandingPage.css'
 
 function LandingPage() {
@@ -8,6 +9,8 @@ function LandingPage() {
   const [joinCode, setJoinCode] = useState('')
   const [demoTime, setDemoTime] = useState(1800) // 30 minutes
   const [demoRunning, setDemoRunning] = useState(false)
+  const [currentTheme, setCurrentTheme] = useState(localStorage.getItem('selected_theme') || 'light')
+  const [history, setHistory] = useState([])
 
   // Demo timer
   useEffect(() => {
@@ -18,6 +21,17 @@ function LandingPage() {
       return () => clearInterval(interval)
     }
   }, [demoRunning, demoTime])
+
+  // Load theme and history on mount
+  useEffect(() => {
+    applyTheme(currentTheme)
+    setHistory(getHistory())
+  }, [])
+
+  const handleThemeChange = (themeName) => {
+    setCurrentTheme(themeName)
+    applyTheme(themeName)
+  }
 
   const formatTime = (seconds) => {
     const mins = Math.floor(seconds / 60)
@@ -332,6 +346,55 @@ function LandingPage() {
         </div>
       </section>
 
+      {/* HISTORY SECTION */}
+      {history.length > 0 && (
+        <section className="features-modern" style={{ paddingTop: '60px', paddingBottom: '60px', background: 'var(--gray-50)' }}>
+          <div className="container">
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              className="section-header-modern"
+            >
+              <h2 className="section-title-modern">Vos salons récents</h2>
+              <p className="section-subtitle-modern">Retrouvez vos derniers salons créés</p>
+            </motion.div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '20px', maxWidth: '1200px', margin: '0 auto' }}>
+              {history.slice(0, 6).map((salon, idx) => (
+                <motion.div
+                  key={salon.code_4chiffres || idx}
+                  className="card"
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: idx * 0.1 }}
+                  whileHover={{ y: -5 }}
+                  style={{ padding: '24px', cursor: 'pointer' }}
+                  onClick={() => navigate(`/remote/${salon.code_4chiffres}`)}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
+                    <div>
+                      <h3 style={{ fontSize: '1.25rem', fontWeight: '700', color: 'var(--gray-900)', marginBottom: '8px' }}>
+                        {salon.nom || 'Mon Salon'}
+                      </h3>
+                      <div style={{ fontSize: '2rem', fontWeight: '900', color: 'var(--primary)', fontFamily: 'monospace', letterSpacing: '0.3rem' }}>
+                        {salon.code_4chiffres}
+                      </div>
+                    </div>
+                  </div>
+                  <div style={{ display: 'flex', gap: '8px', fontSize: '0.875rem', color: 'var(--gray-600)' }}>
+                    <span>{salon.sessions_count || 0} sessions</span>
+                    <span>•</span>
+                    <span>{new Date(salon.created_at).toLocaleDateString()}</span>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
       {/* CTA SECTION */}
       <section className="cta-modern">
         <div className="container">
@@ -358,12 +421,36 @@ function LandingPage() {
               <div className="footer-logo">⏱️ Timer Salon</div>
               <p>Orchestrez le temps de vos ateliers</p>
             </div>
-            <div className="footer-links-modern">
-              <a href="#">Mentions légales</a>
-              <span>•</span>
-              <a href="#">Contact</a>
-              <span>•</span>
-              <a href="#">Documentation</a>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', alignItems: 'flex-end' }}>
+              <div className="footer-links-modern">
+                <a href="#">Mentions légales</a>
+                <span>•</span>
+                <a href="#">Contact</a>
+                <span>•</span>
+                <a href="#">Documentation</a>
+              </div>
+              <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                <span style={{ fontSize: '0.875rem', color: 'var(--gray-400)' }}>Thème:</span>
+                {Object.entries(THEMES).map(([key, theme]) => (
+                  <button
+                    key={key}
+                    onClick={() => handleThemeChange(key)}
+                    style={{
+                      padding: '8px 16px',
+                      background: currentTheme === key ? 'var(--primary)' : 'transparent',
+                      color: currentTheme === key ? 'white' : 'var(--gray-400)',
+                      border: '1px solid',
+                      borderColor: currentTheme === key ? 'var(--primary)' : 'var(--gray-700)',
+                      borderRadius: '8px',
+                      cursor: 'pointer',
+                      fontSize: '0.875rem',
+                      transition: 'all 0.2s'
+                    }}
+                  >
+                    {theme.name}
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
           <div className="footer-copy">

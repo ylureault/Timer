@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
+import { saveSessionNotes, getSessionNotes, calculateStats } from '../utils/features'
 import '../styles/RemoteControl.css'
 
 function RemoteControl() {
@@ -9,6 +10,9 @@ function RemoteControl() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [actionFeedback, setActionFeedback] = useState(null)
+  const [notes, setNotes] = useState('')
+  const [showNotes, setShowNotes] = useState(false)
+  const [stats, setStats] = useState(null)
   const pollingInterval = useRef(null)
 
   const fetchState = async () => {
@@ -40,6 +44,33 @@ function RemoteControl() {
       }
     }
   }, [code])
+
+  // Load notes when session changes
+  useEffect(() => {
+    if (state && state.current_session) {
+      const sessionId = state.session_en_cours
+      const loadedNotes = getSessionNotes(code, sessionId)
+      setNotes(loadedNotes)
+    }
+  }, [state?.session_en_cours, code])
+
+  // Calculate statistics
+  useEffect(() => {
+    if (state && state.sessions) {
+      const completedSessions = state.sessions.slice(0, state.session_en_cours)
+      const statsData = calculateStats(state.sessions, completedSessions)
+      setStats(statsData)
+    }
+  }, [state])
+
+  // Handle notes save
+  const handleNotesChange = (e) => {
+    const newNotes = e.target.value
+    setNotes(newNotes)
+    if (state) {
+      saveSessionNotes(code, state.session_en_cours, newNotes)
+    }
+  }
 
   const showFeedback = (message) => {
     setActionFeedback(message)
@@ -266,6 +297,95 @@ function RemoteControl() {
           </div>
         </div>
       )}
+
+      {/* Statistics Section */}
+      {stats && (
+        <div className="stats-section" style={{
+          background: 'white',
+          borderRadius: '12px',
+          padding: '20px',
+          marginBottom: '20px',
+          boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+        }}>
+          <h4 style={{ marginBottom: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span>Statistiques</span>
+            <span style={{
+              fontSize: '2rem',
+              fontWeight: '900',
+              color: 'var(--primary)'
+            }}>
+              {stats.progress_percentage}%
+            </span>
+          </h4>
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(2, 1fr)',
+            gap: '12px'
+          }}>
+            <div style={{
+              padding: '12px',
+              background: 'var(--gray-50)',
+              borderRadius: '8px'
+            }}>
+              <div style={{ fontSize: '0.75rem', color: 'var(--gray-600)', marginBottom: '4px' }}>
+                Sessions
+              </div>
+              <div style={{ fontSize: '1.5rem', fontWeight: '700', color: 'var(--gray-900)' }}>
+                {stats.completed_sessions}/{stats.total_sessions}
+              </div>
+            </div>
+            <div style={{
+              padding: '12px',
+              background: 'var(--gray-50)',
+              borderRadius: '8px'
+            }}>
+              <div style={{ fontSize: '0.75rem', color: 'var(--gray-600)', marginBottom: '4px' }}>
+                Temps écoulé
+              </div>
+              <div style={{ fontSize: '1.5rem', fontWeight: '700', color: 'var(--gray-900)' }}>
+                {stats.completed_duration_minutes}/{stats.total_duration_minutes} min
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Notes Section */}
+      <div className="notes-section" style={{
+        background: 'white',
+        borderRadius: '12px',
+        padding: '20px',
+        marginBottom: '20px',
+        boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+      }}>
+        <h4 style={{
+          marginBottom: '12px',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          cursor: 'pointer'
+        }} onClick={() => setShowNotes(!showNotes)}>
+          <span>📝 Notes de session</span>
+          <span style={{ fontSize: '1.5rem' }}>{showNotes ? '▼' : '▶'}</span>
+        </h4>
+        {showNotes && (
+          <textarea
+            value={notes}
+            onChange={handleNotesChange}
+            placeholder="Prenez des notes pour cette session..."
+            style={{
+              width: '100%',
+              minHeight: '120px',
+              padding: '12px',
+              border: '2px solid var(--gray-200)',
+              borderRadius: '8px',
+              fontSize: '0.9375rem',
+              fontFamily: 'inherit',
+              resize: 'vertical'
+            }}
+          />
+        )}
+      </div>
 
       {/* Sessions List */}
       <div className="sessions-list-remote">

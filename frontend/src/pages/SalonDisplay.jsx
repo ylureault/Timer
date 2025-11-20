@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
+import { toggleFullscreen, soundManager, setupKeyboardShortcuts } from '../utils/features'
 import '../styles/SalonDisplay.css'
 
 function SalonDisplay() {
@@ -9,6 +10,9 @@ function SalonDisplay() {
   const [state, setState] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const [isFullscreen, setIsFullscreen] = useState(false)
+  const prevSessionRef = useRef(null)
+  const prevTempsRestantRef = useRef(null)
 
   const fetchState = async () => {
     try {
@@ -32,6 +36,44 @@ function SalonDisplay() {
     const interval = setInterval(fetchState, 300)
     return () => clearInterval(interval)
   }, [code])
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    const cleanup = setupKeyboardShortcuts({
+      fullscreen: () => {
+        const newState = toggleFullscreen()
+        setIsFullscreen(newState)
+      },
+      exitFullscreen: () => {
+        if (document.fullscreenElement) {
+          document.exitFullscreen()
+          setIsFullscreen(false)
+        }
+      }
+    })
+    return cleanup
+  }, [])
+
+  // Sound notifications and session change detection
+  useEffect(() => {
+    if (!state) return
+
+    const currentSession = state.session_en_cours
+    const tempsRestant = state.temps_restant
+
+    // Session change detection
+    if (prevSessionRef.current !== null && prevSessionRef.current !== currentSession) {
+      soundManager.playSessionEnd()
+    }
+
+    // Warning at 10 seconds remaining
+    if (prevTempsRestantRef.current === 11 && tempsRestant === 10) {
+      soundManager.playWarning()
+    }
+
+    prevSessionRef.current = currentSession
+    prevTempsRestantRef.current = tempsRestant
+  }, [state])
 
   const formatTime = (seconds) => {
     const mins = Math.floor(seconds / 60)
@@ -132,6 +174,24 @@ function SalonDisplay() {
             <span>Code: {state.salon.code}</span>
             <span>•</span>
             <span>Télécommande: /remote/{state.salon.code}</span>
+            <span>•</span>
+            <button
+              onClick={() => {
+                const newState = toggleFullscreen()
+                setIsFullscreen(newState)
+              }}
+              style={{
+                background: 'none',
+                border: 'none',
+                color: 'white',
+                cursor: 'pointer',
+                fontSize: '1.2rem',
+                padding: '4px 8px'
+              }}
+              title="Plein écran (F)"
+            >
+              {isFullscreen ? '⛶' : '⛶'}
+            </button>
           </div>
         </motion.div>
       </div>
