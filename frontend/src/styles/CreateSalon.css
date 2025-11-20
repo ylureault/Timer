@@ -445,34 +445,87 @@
   flex-wrap: wrap;
 }
 
-/* Success Modal - Fun Celebration */
+/* Success Modal - EVENT TICKET DESIGN */
 .modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(0, 0, 0, 0.7);
   backdrop-filter: blur(10px);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 1000;
   animation: fadeIn 0.3s ease;
+  padding: 2rem;
 }
 
 .modal-content-fun {
-  background: white;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   border-radius: var(--radius-3xl);
-  padding: 3rem;
-  max-width: 500px;
-  width: 90%;
-  text-align: center;
-  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.3);
+  padding: 0;
+  max-width: 600px;
+  width: 100%;
+  position: relative;
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.4);
   animation: scaleIn 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  overflow: hidden;
 }
 
-.modal-content-fun .celebration {
-  font-size: 5rem;
-  margin-bottom: 1rem;
+/* Ticket perforation effect on sides */
+.modal-content-fun::before,
+.modal-content-fun::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 20px;
+  background-image: repeating-linear-gradient(
+    to bottom,
+    transparent 0,
+    transparent 10px,
+    rgba(255, 255, 255, 0.1) 10px,
+    rgba(255, 255, 255, 0.1) 20px
+  );
+  z-index: 1;
+}
+
+.modal-content-fun::before {
+  left: 0;
+  background-image: radial-gradient(circle at 0 50%, transparent 8px, rgba(255, 255, 255, 0.05) 8px);
+  background-size: 20px 40px;
+  background-position: 0 0;
+}
+
+.modal-content-fun::after {
+  right: 0;
+  background-image: radial-gradient(circle at 20px 50%, transparent 8px, rgba(255, 255, 255, 0.05) 8px);
+  background-size: 20px 40px;
+  background-position: 0 0;
+}
+
+/* Ticket header */
+.modal-content-fun > div {
+  position: relative;
+  z-index: 2;
+  padding: 3rem 3rem 2rem;
+}
+
+.success-check-modern {
+  width: 80px;
+  height: 80px;
+  background: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(10px);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 1.5rem;
+  border: 3px solid rgba(255, 255, 255, 0.5);
   animation: bounce 0.6s ease;
+}
+
+.success-check-modern svg {
+  filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.2));
 }
 
 @keyframes bounce {
@@ -484,41 +537,238 @@
   }
 }
 
-.modal-content-fun h2 {
+.modal-content-fun h1 {
   font-size: 2rem;
   font-weight: 900;
-  color: var(--gray-900);
+  color: white;
   margin-bottom: 0.5rem;
+  text-align: center;
+  text-shadow: 0 2px 20px rgba(0, 0, 0, 0.3);
 }
 
-.modal-content-fun .code-display {
-  font-size: 4rem;
-  font-weight: 900;
-  font-family: monospace;
-  color: var(--primary);
-  letter-spacing: 0.5rem;
-  margin: 1.5rem 0;
-  text-shadow: 2px 2px 0 rgba(20, 184, 166, 0.1);
-}
-
-.modal-content-fun p {
+.success-subtitle {
   font-size: 1.125rem;
-  color: var(--gray-600);
+  color: rgba(255, 255, 255, 0.9);
+  margin-bottom: 2rem;
+  text-align: center;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* Ticket main content - WHITE SECTION */
+.salon-urls {
+  background: white;
+  border-radius: var(--radius-2xl);
+  padding: 2.5rem;
+  margin: 0 -1rem 2rem;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+  position: relative;
+}
+
+/* Perforated tear line */
+.salon-urls::before {
+  content: '';
+  position: absolute;
+  top: -1px;
+  left: 20px;
+  right: 20px;
+  height: 2px;
+  background-image: repeating-linear-gradient(
+    to right,
+    var(--gray-300) 0,
+    var(--gray-300) 8px,
+    transparent 8px,
+    transparent 16px
+  );
+}
+
+.url-block {
   margin-bottom: 2rem;
 }
 
-.modal-actions {
-  display: flex;
-  gap: 1rem;
-  justify-content: center;
-  flex-wrap: wrap;
+.url-block:last-child {
+  margin-bottom: 0;
 }
 
-.qr-code-container {
-  margin: 2rem 0;
-  padding: 1.5rem;
-  background: var(--gray-50);
+.url-block label {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--gray-600);
+  margin-bottom: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+/* CODE DISPLAY - GIANT TICKET NUMBER */
+.code-display-modern {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 2rem;
   border-radius: var(--radius-xl);
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 8px 32px rgba(102, 126, 234, 0.3);
+}
+
+.code-display-modern::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+  opacity: 0.1;
+  pointer-events: none;
+}
+
+.code-display-modern::after {
+  content: 'ADMIT ONE';
+  position: absolute;
+  top: 0.5rem;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 0.625rem;
+  font-weight: 900;
+  letter-spacing: 3px;
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.code-display-modern {
+  font-size: 5rem;
+  font-weight: 900;
+  font-family: monospace;
+  color: white;
+  letter-spacing: 1rem;
+  text-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  position: relative;
+  padding-top: 3rem;
+  line-height: 1;
+}
+
+/* URL displays */
+.url-display-modern {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem 1.25rem;
+  background: var(--gray-50);
+  border: 2px solid var(--gray-200);
+  border-radius: var(--radius-lg);
+  font-family: monospace;
+  font-size: 0.875rem;
+  color: var(--gray-700);
+  transition: all var(--transition-base);
+}
+
+.url-display-modern:hover {
+  border-color: var(--primary);
+  background: var(--primary-50);
+}
+
+.url-display-modern span {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.btn-copy {
+  background: white;
+  border: 2px solid var(--gray-200);
+  border-radius: var(--radius-md);
+  padding: 0.5rem 0.75rem;
+  font-size: 1.25rem;
+  cursor: pointer;
+  transition: all var(--transition-base);
+  flex-shrink: 0;
+}
+
+.btn-copy:hover {
+  background: var(--primary);
+  border-color: var(--primary);
+  transform: scale(1.1);
+}
+
+/* QR Code container */
+.url-block:has(img) > div {
+  background: white;
+  border: 3px solid var(--gray-200);
+  border-radius: var(--radius-xl);
+  padding: 1.5rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+/* Success Actions - TICKET STUB BUTTONS */
+.success-actions-modern {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-top: 2rem;
+}
+
+.success-actions-modern .btn {
+  width: 100%;
+  padding: 1.25rem 1.5rem;
+  font-size: 1rem;
+  font-weight: 700;
+  border: none;
+  border-radius: var(--radius-xl);
+  cursor: pointer;
+  transition: all var(--transition-base);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.success-actions-modern .btn-primary {
+  background: white;
+  color: #667eea;
+}
+
+.success-actions-modern .btn-primary:hover {
+  background: var(--gray-50);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+}
+
+.success-actions-modern .btn-secondary {
+  background: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(10px);
+  color: white;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+}
+
+.success-actions-modern .btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .modal-content-fun > div {
+    padding: 2rem 1.5rem 1.5rem;
+  }
+
+  .salon-urls {
+    padding: 2rem 1.5rem;
+    margin: 0 -0.5rem 1.5rem;
+  }
+
+  .code-display-modern {
+    font-size: 3.5rem;
+    letter-spacing: 0.5rem;
+    padding: 1.5rem 1rem 1rem;
+  }
+
+  .success-actions-modern {
+    grid-template-columns: 1fr;
+  }
+
+  .url-display-modern {
+    font-size: 0.75rem;
+  }
 }
 
 /* Responsive */
