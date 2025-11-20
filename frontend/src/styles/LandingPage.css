@@ -159,24 +159,27 @@
 .join-input-modern input {
   flex: 1;
   border: none;
-  background: transparent;
+  background: white;
   padding: 0.75rem 1rem;
   font-size: 1.125rem;
-  font-weight: 600;
+  font-weight: 700;
   color: var(--gray-900);
   font-family: monospace;
   letter-spacing: 0.5rem;
   text-align: center;
   min-width: 160px;
+  border-radius: var(--radius-lg);
 }
 
 .join-input-modern input:focus {
   outline: none;
+  background: white;
 }
 
 .join-input-modern input::placeholder {
-  color: var(--gray-400);
-  letter-spacing: normal;
+  color: var(--gray-500);
+  letter-spacing: 0.2rem;
+  font-weight: 600;
 }
 
 .join-input-modern button {
@@ -247,12 +250,12 @@
    PREMIUM CIRCULAR TIMER DEMO
    ======================================== */
 .hero-demo-float {
-  position: absolute;
-  bottom: -100px;
-  left: 50%;
-  transform: translateX(-50%);
+  position: relative;
+  margin-top: 60px;
   z-index: 10;
   pointer-events: auto;
+  display: flex;
+  justify-content: center;
 }
 
 .demo-timer-premium {

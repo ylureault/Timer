@@ -448,6 +448,96 @@ app.get('/api/salon/:code/sessions', (req, res) => {
   }
 });
 
+// ============================
+// SALON ADMIN (GET/UPDATE)
+// ============================
+
+// Get salon details with all sessions
+app.get('/api/salon/:code', (req, res) => {
+  try {
+    const { code } = req.params;
+
+    const salon = db.prepare('SELECT * FROM salons WHERE code_4chiffres = ? OR url_unique = ?').get(code, code);
+    if (!salon) {
+      return res.status(404).json({ success: false, error: 'Salon not found' });
+    }
+
+    const sessions = db.prepare('SELECT * FROM sessions WHERE salon_id = ? ORDER BY ordre').all(salon.id);
+
+    res.json({
+      success: true,
+      salon: {
+        code: salon.code_4chiffres,
+        url: salon.url_unique,
+        nom: salon.nom
+      },
+      sessions: sessions
+    });
+  } catch (error) {
+    console.error('Error getting salon:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// Update salon (name and sessions)
+app.put('/api/salon/:code', (req, res) => {
+  try {
+    const { code } = req.params;
+    const { nom, sessions } = req.body;
+
+    const salon = db.prepare('SELECT id FROM salons WHERE code_4chiffres = ? OR url_unique = ?').get(code, code);
+    if (!salon) {
+      return res.status(404).json({ success: false, error: 'Salon not found' });
+    }
+
+    // Update salon name
+    if (nom !== undefined) {
+      db.prepare('UPDATE salons SET nom = ? WHERE id = ?').run(nom || null, salon.id);
+    }
+
+    // Update sessions if provided
+    if (sessions && Array.isArray(sessions)) {
+      // Delete all existing sessions
+      db.prepare('DELETE FROM sessions WHERE salon_id = ?').run(salon.id);
+
+      // Insert new sessions
+      const insertStmt = db.prepare(`
+        INSERT INTO sessions (salon_id, ordre, nom_session, duree_secondes, couleur, type)
+        VALUES (?, ?, ?, ?, ?, ?)
+      `);
+
+      sessions.forEach((session, index) => {
+        insertStmt.run(
+          salon.id,
+          session.ordre !== undefined ? session.ordre : index,
+          session.nom_session,
+          session.duree_secondes,
+          session.couleur,
+          session.type || 'session'
+        );
+      });
+
+      // Reset timer state to first session
+      const firstSession = sessions[0];
+      if (firstSession) {
+        db.prepare(`
+          UPDATE timer_states
+          SET session_en_cours = 0,
+              temps_restant = ?,
+              mode = 'pause',
+              timestamp_dernier_update = ?
+          WHERE salon_id = ?
+        `).run(firstSession.duree_secondes, Date.now(), salon.id);
+      }
+    }
+
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Error updating salon:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
 // Health check
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', timestamp: Date.now() });

@@ -186,9 +186,18 @@ function RemoteControl() {
           <h3>Télécommande</h3>
           <p>Code: {state.salon.code}</p>
         </div>
-        <button className="btn-icon" onClick={() => window.location.reload()}>
-          🔄
-        </button>
+        <div style={{ display: 'flex', gap: '8px' }}>
+          <button
+            className="btn-icon"
+            onClick={() => navigate(`/admin/${state.salon.code}`)}
+            title="Modifier le salon"
+          >
+            ✏️
+          </button>
+          <button className="btn-icon" onClick={() => window.location.reload()}>
+            🔄
+          </button>
+        </div>
       </div>
 
       {/* Current Session Display */}
