@@ -1,6 +1,22 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd'
+import { motion, AnimatePresence } from 'framer-motion'
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+} from '@dnd-kit/core'
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+  useSortable,
+} from '@dnd-kit/sortable'
+import { CSS } from '@dnd-kit/utilities'
 import '../styles/CreateSalon.css'
 
 const DEFAULT_COLORS = [
@@ -12,6 +28,77 @@ const DEFAULT_COLORS = [
   '#EF4444', // red
   '#6B7280'  // gray (for pauses)
 ]
+
+function SortableSession({ session, onEdit, onRemove }) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: session.id })
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  }
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className={`session-item-modern ${isDragging ? 'dragging' : ''}`}
+    >
+      <div className="session-drag-handle" {...listeners} {...attributes}>
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+          <circle cx="7" cy="5" r="1.5"/>
+          <circle cx="7" cy="10" r="1.5"/>
+          <circle cx="7" cy="15" r="1.5"/>
+          <circle cx="13" cy="5" r="1.5"/>
+          <circle cx="13" cy="10" r="1.5"/>
+          <circle cx="13" cy="15" r="1.5"/>
+        </svg>
+      </div>
+
+      <div className="session-color-indicator" style={{ backgroundColor: session.couleur }}></div>
+
+      <div className="session-info-modern">
+        <input
+          type="text"
+          className="session-name-modern"
+          value={session.nom_session}
+          onChange={(e) => onEdit(session.id, 'nom_session', e.target.value)}
+          placeholder="Nom de la session"
+        />
+        <div className="session-meta">
+          <span className="badge badge-primary">{session.type}</span>
+        </div>
+      </div>
+
+      <div className="session-duration-modern">
+        <input
+          type="number"
+          min="1"
+          value={session.duree_minutes}
+          onChange={(e) => onEdit(session.id, 'duree_minutes', parseInt(e.target.value) || 1)}
+        />
+        <span>min</span>
+      </div>
+
+      <button
+        className="session-remove-btn"
+        onClick={() => onRemove(session.id)}
+        type="button"
+      >
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor">
+          <path d="M6 6l8 8M14 6l-8 8" strokeWidth="2" strokeLinecap="round"/>
+        </svg>
+      </button>
+    </div>
+  )
+}
 
 function CreateSalon() {
   const navigate = useNavigate()
@@ -26,6 +113,13 @@ function CreateSalon() {
   })
   const [isCreating, setIsCreating] = useState(false)
   const [createdSalon, setCreatedSalon] = useState(null)
+
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  )
 
   const handleAddSession = () => {
     if (newSession.nom_session.trim()) {
@@ -58,14 +152,17 @@ function CreateSalon() {
     setSessions(sessions.filter(session => session.id !== id))
   }
 
-  const handleDragEnd = (result) => {
-    if (!result.destination) return
+  const handleDragEnd = (event) => {
+    const { active, over } = event
 
-    const items = Array.from(sessions)
-    const [reorderedItem] = items.splice(result.source.index, 1)
-    items.splice(result.destination.index, 0, reorderedItem)
+    if (active.id !== over.id) {
+      setSessions((items) => {
+        const oldIndex = items.findIndex((item) => item.id === active.id)
+        const newIndex = items.findIndex((item) => item.id === over.id)
 
-    setSessions(items)
+        return arrayMove(items, oldIndex, newIndex)
+      })
+    }
   }
 
   const handleCreateSalon = async () => {
@@ -77,7 +174,6 @@ function CreateSalon() {
     setIsCreating(true)
 
     try {
-      // Create salon
       const createResponse = await fetch('/api/salon/create', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -90,7 +186,6 @@ function CreateSalon() {
         throw new Error('Échec de la création du salon')
       }
 
-      // Add sessions
       for (const session of sessions) {
         await fetch(`/api/salon/${salonData.code_4chiffres}/sessions/add`, {
           method: 'POST',
@@ -112,254 +207,258 @@ function CreateSalon() {
     }
   }
 
-  const formatTime = (minutes) => {
-    if (minutes < 60) return `${minutes} min`
-    const hours = Math.floor(minutes / 60)
-    const mins = minutes % 60
-    return mins > 0 ? `${hours}h${mins}` : `${hours}h`
+  const copyToClipboard = (text) => {
+    navigator.clipboard.writeText(text)
   }
 
   if (createdSalon) {
     return (
-      <div className="create-salon-page">
+      <div className="create-salon-modern">
         <div className="container">
-          <div className="success-modal card fade-in">
-            <div className="success-icon">✓</div>
-            <h1>Salon créé avec succès!</h1>
+          <motion.div
+            className="success-modal-modern card"
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+          >
+            <div className="success-icon-modern">
+              <svg width="64" height="64" viewBox="0 0 64 64" fill="none">
+                <circle cx="32" cy="32" r="32" fill="#10B981"/>
+                <path d="M20 32l8 8 16-16" stroke="white" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </div>
 
-            <div className="salon-info">
-              <div className="info-block">
+            <h1>Salon créé avec succès !</h1>
+            <p className="success-subtitle">Votre salon est prêt à être utilisé</p>
+
+            <div className="salon-urls">
+              <div className="url-block">
                 <label>Code du salon</label>
-                <div className="code-display">{createdSalon.code_4chiffres}</div>
+                <div className="code-display-modern">{createdSalon.code_4chiffres}</div>
               </div>
 
-              <div className="info-block">
+              <div className="url-block">
                 <label>URL d'affichage (à projeter)</label>
-                <div className="url-display">
-                  {window.location.origin}/salon/{createdSalon.url}
+                <div className="url-display-modern">
+                  <span>{window.location.origin}/salon/{createdSalon.url}</span>
+                  <button
+                    className="btn-copy"
+                    onClick={() => copyToClipboard(`${window.location.origin}/salon/${createdSalon.url}`)}
+                  >
+                    📋
+                  </button>
                 </div>
-                <button
-                  className="btn btn-outline"
-                  onClick={() => {
-                    navigator.clipboard.writeText(`${window.location.origin}/salon/${createdSalon.url}`)
-                    alert('URL copiée!')
-                  }}
-                >
-                  Copier
-                </button>
               </div>
 
-              <div className="info-block">
+              <div className="url-block">
                 <label>URL de la télécommande</label>
-                <div className="url-display">
-                  {window.location.origin}/remote/{createdSalon.code_4chiffres}
+                <div className="url-display-modern">
+                  <span>{window.location.origin}/remote/{createdSalon.code_4chiffres}</span>
+                  <button
+                    className="btn-copy"
+                    onClick={() => copyToClipboard(`${window.location.origin}/remote/${createdSalon.code_4chiffres}`)}
+                  >
+                    📋
+                  </button>
                 </div>
-                <button
-                  className="btn btn-outline"
-                  onClick={() => {
-                    navigator.clipboard.writeText(`${window.location.origin}/remote/${createdSalon.code_4chiffres}`)
-                    alert('URL copiée!')
-                  }}
-                >
-                  Copier
-                </button>
               </div>
             </div>
 
-            <div className="success-actions">
+            <div className="success-actions-modern">
               <button
                 className="btn btn-primary btn-lg"
-                onClick={() => navigate(`/salon/${createdSalon.url}`)}
+                onClick={() => window.open(`/salon/${createdSalon.url}`, '_blank')}
               >
                 Voir l'affichage
               </button>
               <button
                 className="btn btn-secondary btn-lg"
-                onClick={() => navigate(`/remote/${createdSalon.code_4chiffres}`)}
+                onClick={() => window.open(`/remote/${createdSalon.code_4chiffres}`, '_blank')}
               >
                 Ouvrir la télécommande
               </button>
             </div>
-          </div>
+          </motion.div>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="create-salon-page">
-      <div className="container">
-        <div className="create-header fade-in">
-          <h1>Créer un nouveau salon</h1>
-          <button className="btn btn-outline" onClick={() => navigate('/')}>
+    <div className="create-salon-modern">
+      <div className="create-header-modern">
+        <div className="container">
+          <button className="btn-back" onClick={() => navigate('/')}>
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor">
+              <path d="M12 6l-6 6 6 6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
             Retour
           </button>
         </div>
+      </div>
 
-        <div className="salon-config card fade-in">
-          <div className="config-section">
-            <label>Nom du salon (optionnel)</label>
-            <input
-              type="text"
-              className="input"
-              placeholder="Ex: Atelier Design Thinking"
-              value={salonName}
-              onChange={(e) => setSalonName(e.target.value)}
-            />
+      <div className="container">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="create-content-modern"
+        >
+          <div className="create-title-section">
+            <h1>Créer un nouveau salon</h1>
+            <p>Configurez vos sessions et partagez votre timer</p>
           </div>
 
-          <div className="config-section">
-            <div className="section-header">
-              <h2>Sessions</h2>
-              <button
-                className="btn btn-primary"
-                onClick={() => setShowAddSession(true)}
-              >
-                + Ajouter une session
-              </button>
+          <div className="card create-card-modern">
+            <div className="form-section-modern">
+              <label>Nom du salon (optionnel)</label>
+              <input
+                type="text"
+                className="input"
+                placeholder="Ex: Atelier Design Thinking"
+                value={salonName}
+                onChange={(e) => setSalonName(e.target.value)}
+              />
             </div>
 
-            {showAddSession && (
-              <div className="add-session-form card">
-                <input
-                  type="text"
-                  className="input"
-                  placeholder="Nom de la session"
-                  value={newSession.nom_session}
-                  onChange={(e) => setNewSession({ ...newSession, nom_session: e.target.value })}
-                  onKeyPress={(e) => e.key === 'Enter' && handleAddSession()}
-                  autoFocus
-                />
+            <div className="form-section-modern">
+              <div className="section-header-create">
+                <div>
+                  <h2>Sessions</h2>
+                  <p className="section-subtitle">Glissez-déposez pour réorganiser</p>
+                </div>
+                <button
+                  className="btn btn-primary"
+                  onClick={() => setShowAddSession(true)}
+                >
+                  + Ajouter une session
+                </button>
+              </div>
 
-                <div className="form-row">
-                  <div className="form-group">
-                    <label>Durée (minutes)</label>
-                    <input
-                      type="number"
-                      className="input"
-                      min="1"
-                      value={newSession.duree_minutes}
-                      onChange={(e) => setNewSession({ ...newSession, duree_minutes: parseInt(e.target.value) || 1 })}
-                    />
-                  </div>
+              <AnimatePresence>
+                {showAddSession && (
+                  <motion.div
+                    className="add-session-card card-glass"
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
+                  >
+                    <div className="add-session-grid">
+                      <div className="form-group-modern">
+                        <label>Nom de la session</label>
+                        <input
+                          type="text"
+                          className="input"
+                          placeholder="Ex: Brainstorming"
+                          value={newSession.nom_session}
+                          onChange={(e) => setNewSession({ ...newSession, nom_session: e.target.value })}
+                          onKeyPress={(e) => e.key === 'Enter' && handleAddSession()}
+                          autoFocus
+                        />
+                      </div>
 
-                  <div className="form-group">
-                    <label>Type</label>
-                    <select
-                      className="input"
-                      value={newSession.type}
-                      onChange={(e) => setNewSession({
-                        ...newSession,
-                        type: e.target.value,
-                        couleur: e.target.value === 'pause' ? '#6B7280' : newSession.couleur
-                      })}
-                    >
-                      <option value="session">Session</option>
-                      <option value="pause">Pause</option>
-                    </select>
-                  </div>
+                      <div className="form-group-modern">
+                        <label>Durée (minutes)</label>
+                        <input
+                          type="number"
+                          className="input"
+                          min="1"
+                          value={newSession.duree_minutes}
+                          onChange={(e) => setNewSession({ ...newSession, duree_minutes: parseInt(e.target.value) || 1 })}
+                        />
+                      </div>
 
-                  <div className="form-group">
-                    <label>Couleur</label>
-                    <div className="color-picker">
-                      {DEFAULT_COLORS.map(color => (
-                        <div
-                          key={color}
-                          className={`color-option ${newSession.couleur === color ? 'active' : ''}`}
-                          style={{ backgroundColor: color }}
-                          onClick={() => setNewSession({ ...newSession, couleur: color })}
+                      <div className="form-group-modern">
+                        <label>Type</label>
+                        <select
+                          className="input"
+                          value={newSession.type}
+                          onChange={(e) => setNewSession({
+                            ...newSession,
+                            type: e.target.value,
+                            couleur: e.target.value === 'pause' ? '#6B7280' : newSession.couleur
+                          })}
+                        >
+                          <option value="session">Session</option>
+                          <option value="pause">Pause</option>
+                        </select>
+                      </div>
+
+                      <div className="form-group-modern">
+                        <label>Couleur</label>
+                        <div className="color-picker-modern">
+                          {DEFAULT_COLORS.map(color => (
+                            <button
+                              key={color}
+                              className={`color-option-modern ${newSession.couleur === color ? 'active' : ''}`}
+                              style={{ backgroundColor: color }}
+                              onClick={() => setNewSession({ ...newSession, couleur: color })}
+                              type="button"
+                            />
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="add-session-actions">
+                      <button className="btn btn-success" onClick={handleAddSession}>
+                        Ajouter
+                      </button>
+                      <button className="btn btn-outline" onClick={() => setShowAddSession(false)}>
+                        Annuler
+                      </button>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              {sessions.length > 0 ? (
+                <DndContext
+                  sensors={sensors}
+                  collisionDetection={closestCenter}
+                  onDragEnd={handleDragEnd}
+                >
+                  <SortableContext
+                    items={sessions}
+                    strategy={verticalListSortingStrategy}
+                  >
+                    <div className="sessions-list-modern">
+                      {sessions.map((session) => (
+                        <SortableSession
+                          key={session.id}
+                          session={session}
+                          onEdit={handleEditSession}
+                          onRemove={handleRemoveSession}
                         />
                       ))}
                     </div>
-                  </div>
+                  </SortableContext>
+                </DndContext>
+              ) : !showAddSession ? (
+                <div className="empty-state-modern">
+                  <div className="empty-icon">⏱️</div>
+                  <h3>Aucune session</h3>
+                  <p>Ajoutez votre première session pour commencer</p>
                 </div>
+              ) : null}
+            </div>
 
-                <div className="form-actions">
-                  <button className="btn btn-success" onClick={handleAddSession}>
-                    Ajouter
-                  </button>
-                  <button className="btn btn-outline" onClick={() => setShowAddSession(false)}>
-                    Annuler
-                  </button>
+            {sessions.length > 0 && (
+              <div className="create-footer-modern">
+                <div className="summary-info">
+                  <span>{sessions.length} session{sessions.length > 1 ? 's' : ''}</span>
+                  <span>•</span>
+                  <span>{sessions.reduce((acc, s) => acc + s.duree_minutes, 0)} minutes au total</span>
                 </div>
-              </div>
-            )}
-
-            <DragDropContext onDragEnd={handleDragEnd}>
-              <Droppable droppableId="sessions">
-                {(provided) => (
-                  <div
-                    className="sessions-list"
-                    {...provided.droppableProps}
-                    ref={provided.innerRef}
-                  >
-                    {sessions.map((session, index) => (
-                      <Draggable key={session.id} draggableId={session.id.toString()} index={index}>
-                        {(provided, snapshot) => (
-                          <div
-                            ref={provided.innerRef}
-                            {...provided.draggableProps}
-                            {...provided.dragHandleProps}
-                            className={`session-item ${snapshot.isDragging ? 'dragging' : ''}`}
-                            style={{
-                              ...provided.draggableProps.style,
-                              borderLeft: `5px solid ${session.couleur}`
-                            }}
-                          >
-                            <div className="session-handle">⋮⋮</div>
-                            <div className="session-info">
-                              <input
-                                type="text"
-                                className="session-name-input"
-                                value={session.nom_session}
-                                onChange={(e) => handleEditSession(session.id, 'nom_session', e.target.value)}
-                              />
-                              <span className="session-type-badge">{session.type}</span>
-                            </div>
-                            <input
-                              type="number"
-                              className="session-duration-input"
-                              min="1"
-                              value={session.duree_minutes}
-                              onChange={(e) => handleEditSession(session.id, 'duree_minutes', parseInt(e.target.value) || 1)}
-                            />
-                            <span className="session-duration-label">{formatTime(session.duree_minutes)}</span>
-                            <button
-                              className="btn-remove"
-                              onClick={() => handleRemoveSession(session.id)}
-                            >
-                              ✕
-                            </button>
-                          </div>
-                        )}
-                      </Draggable>
-                    ))}
-                    {provided.placeholder}
-                  </div>
-                )}
-              </Droppable>
-            </DragDropContext>
-
-            {sessions.length === 0 && !showAddSession && (
-              <div className="empty-state">
-                <p>Aucune session pour le moment</p>
-                <p>Cliquez sur "Ajouter une session" pour commencer</p>
+                <button
+                  className="btn btn-primary btn-xl"
+                  onClick={handleCreateSalon}
+                  disabled={isCreating}
+                >
+                  {isCreating ? 'Création en cours...' : 'Créer le salon'}
+                </button>
               </div>
             )}
           </div>
-
-          {sessions.length > 0 && (
-            <div className="create-actions">
-              <button
-                className="btn btn-primary btn-lg pulse"
-                onClick={handleCreateSalon}
-                disabled={isCreating}
-              >
-                {isCreating ? 'Création en cours...' : 'Créer le salon'}
-              </button>
-            </div>
-          )}
-        </div>
+        </motion.div>
       </div>
     </div>
   )
