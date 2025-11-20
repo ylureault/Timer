@@ -19,9 +19,9 @@ function RemoteControl() {
   const handleThemeChange = (newTheme) => {
     setCurrentTheme(newTheme)
     localStorage.setItem('display_theme', newTheme)
-    // Trigger event for other windows (like display)
-    window.dispatchEvent(new Event('theme-change'))
-    window.dispatchEvent(new Event('storage'))
+    // Trigger custom event with theme data for same-window communication
+    window.dispatchEvent(new CustomEvent('theme-change', { detail: { theme: newTheme } }))
+    // Note: storage event is automatically fired by browser to OTHER tabs
   }
 
   const themes = [

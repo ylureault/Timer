@@ -141,36 +141,93 @@ function LandingPage() {
           </motion.div>
         </div>
 
-        {/* Floating Timer Preview */}
+        {/* Floating Premium Circular Timer Preview */}
         <motion.div
           className="hero-demo-float"
           initial={{ opacity: 0, scale: 0.8, y: 50 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
-          transition={{ delay: 0.3, duration: 0.8 }}
+          transition={{ delay: 0.3, duration: 0.8, type: "spring" }}
         >
-          <div className="demo-timer-card card-glass">
-            <div className="demo-header">
-              <span className="demo-session-badge">Session en cours</span>
-              <span className="demo-live-dot"></span>
-            </div>
-            <div className="demo-time-display">{formatTime(demoTime)}</div>
-            <div className="demo-progress-bar">
-              <motion.div
-                className="demo-progress-fill"
-                animate={{ width: `${progress}%` }}
-                transition={{ duration: 0.5 }}
-              ></motion.div>
-            </div>
-            <div className="demo-controls-minimal">
-              <button
-                className={`demo-btn ${demoRunning ? 'playing' : ''}`}
+          <div className="demo-timer-premium">
+            {/* Circular timer like luxe theme */}
+            <div className="demo-circular-timer">
+              {/* Metal bezel */}
+              <div className="demo-bezel"></div>
+
+              {/* Watch face */}
+              <div className="demo-face">
+                {/* Tick marks */}
+                <div className="demo-marks"></div>
+
+                {/* Progress arc */}
+                <svg className="demo-progress-svg" viewBox="0 0 200 200">
+                  <circle
+                    cx="100"
+                    cy="100"
+                    r="85"
+                    fill="none"
+                    stroke="rgba(255,255,255,0.1)"
+                    strokeWidth="8"
+                  />
+                  <motion.circle
+                    cx="100"
+                    cy="100"
+                    r="85"
+                    fill="none"
+                    stroke="url(#gradient-demo)"
+                    strokeWidth="8"
+                    strokeLinecap="round"
+                    strokeDasharray={534.07}
+                    animate={{
+                      strokeDashoffset: 534.07 * (1 - progress / 100),
+                      rotate: -90
+                    }}
+                    transition={{ duration: 1 }}
+                    style={{ transformOrigin: 'center' }}
+                  />
+                  <defs>
+                    <linearGradient id="gradient-demo" x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="0%" stopColor="#14b8a6" />
+                      <stop offset="100%" stopColor="#06b6d4" />
+                    </linearGradient>
+                  </defs>
+                </svg>
+
+                {/* Center display */}
+                <div className="demo-center-display">
+                  <div className="demo-time-big">{formatTime(demoTime)}</div>
+                  <div className="demo-session-label">Session Focus</div>
+                </div>
+              </div>
+
+              {/* Glass overlay */}
+              <div className="demo-glass"></div>
+
+              {/* Center button */}
+              <motion.button
+                className={`demo-center-btn ${demoRunning ? 'playing' : ''}`}
                 onClick={() => setDemoRunning(!demoRunning)}
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.95 }}
               >
                 {demoRunning ? '⏸' : '▶'}
-              </button>
-              <button className="demo-btn" onClick={() => setDemoTime(1800)}>
-                ↻
-              </button>
+              </motion.button>
+            </div>
+
+            {/* Controls below */}
+            <div className="demo-controls-modern">
+              <motion.button
+                className="demo-control-btn glass"
+                onClick={() => setDemoTime(1800)}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                ↻ Reset
+              </motion.button>
+              <motion.div className="demo-live-indicator" animate={{ opacity: [0.5, 1, 0.5] }} transition={{ duration: 2, repeat: Infinity }}>
+                <span className="demo-live-dot"></span>
+                <span>Live Demo</span>
+              </motion.div>
             </div>
           </div>
         </motion.div>

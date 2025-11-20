@@ -15,15 +15,27 @@ function SalonDisplay() {
   const prevSessionRef = useRef(null)
   const prevTempsRestantRef = useRef(null)
 
-  // Listen for theme changes
+  // Listen for theme changes (from other tabs via storage event, or same window via custom event)
   useEffect(() => {
-    const handleThemeChange = () => {
-      setTheme(localStorage.getItem('display_theme') || 'luxe')
+    const handleStorageChange = () => {
+      const newTheme = localStorage.getItem('display_theme') || 'luxe'
+      setTheme(newTheme)
+      console.log('Theme changed via storage event:', newTheme)
     }
-    window.addEventListener('storage', handleThemeChange)
+
+    const handleThemeChange = (event) => {
+      const newTheme = event.detail?.theme || localStorage.getItem('display_theme') || 'luxe'
+      setTheme(newTheme)
+      console.log('Theme changed via custom event:', newTheme)
+    }
+
+    // Storage event fires automatically when localStorage changes in OTHER tabs
+    window.addEventListener('storage', handleStorageChange)
+    // Custom event for same-window communication
     window.addEventListener('theme-change', handleThemeChange)
+
     return () => {
-      window.removeEventListener('storage', handleThemeChange)
+      window.removeEventListener('storage', handleStorageChange)
       window.removeEventListener('theme-change', handleThemeChange)
     }
   }, [])
@@ -135,6 +147,15 @@ function SalonDisplay() {
   const isPlaying = mode === 'play'
   const isCompleted = mode === 'termine'
 
+  // Calculate dynamic dial numbers based on session duration (in minutes)
+  const durationMinutes = Math.floor(totalDuration / 60)
+  const dialNumbers = {
+    n0: durationMinutes, // Top (start)
+    n15: Math.floor(durationMinutes * 0.75), // Right (75%)
+    n30: Math.floor(durationMinutes * 0.5), // Bottom (50%)
+    n45: Math.floor(durationMinutes * 0.25) // Left (25%)
+  }
+
   return (
     <motion.div
       className={`salon-display-premium ${isPlaying ? 'is-running' : ''}`}
@@ -168,12 +189,12 @@ function SalonDisplay() {
             {/* Graduations */}
             <div className="timer-marks"></div>
 
-            {/* Chiffres sur le cadran (quarts) */}
+            {/* Chiffres sur le cadran (quarts) - dynamiques basés sur la durée */}
             <div className="timer-numbers">
-              <div className="num n0">0</div>
-              <div className="num n15">15</div>
-              <div className="num n30">30</div>
-              <div className="num n45">45</div>
+              <div className="num n0">{dialNumbers.n0}</div>
+              <div className="num n15">{dialNumbers.n15}</div>
+              <div className="num n30">{dialNumbers.n30}</div>
+              <div className="num n45">{dialNumbers.n45}</div>
             </div>
 
             {/* Disque de progression avec la couleur de session */}
