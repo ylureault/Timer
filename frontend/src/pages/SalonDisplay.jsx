@@ -14,27 +14,47 @@ function SalonDisplay() {
   const [theme, setTheme] = useState(localStorage.getItem('display_theme') || 'luxe')
   const prevSessionRef = useRef(null)
   const prevTempsRestantRef = useRef(null)
+  const themeChannel = useRef(null)
 
-  // Listen for theme changes (from other tabs via storage event, or same window via custom event)
+  // Initialize BroadcastChannel for reliable cross-tab theme synchronization
   useEffect(() => {
+    themeChannel.current = new BroadcastChannel('salon-theme-channel')
+
+    // Listen for theme changes from other tabs via BroadcastChannel
+    themeChannel.current.onmessage = (event) => {
+      if (event.data.type === 'theme-change') {
+        const newTheme = event.data.theme
+        setTheme(newTheme)
+        console.log('✅ Theme received via BroadcastChannel:', newTheme)
+      }
+    }
+
+    // Fallback: Listen for storage events (older browsers)
     const handleStorageChange = () => {
       const newTheme = localStorage.getItem('display_theme') || 'luxe'
       setTheme(newTheme)
       console.log('Theme changed via storage event:', newTheme)
     }
 
+    // Fallback: Listen for custom events (same window)
     const handleThemeChange = (event) => {
       const newTheme = event.detail?.theme || localStorage.getItem('display_theme') || 'luxe'
       setTheme(newTheme)
       console.log('Theme changed via custom event:', newTheme)
     }
 
-    // Storage event fires automatically when localStorage changes in OTHER tabs
     window.addEventListener('storage', handleStorageChange)
-    // Custom event for same-window communication
     window.addEventListener('theme-change', handleThemeChange)
 
+    // Sync on mount
+    const initialTheme = localStorage.getItem('display_theme') || 'luxe'
+    setTheme(initialTheme)
+    console.log('Initial theme loaded:', initialTheme)
+
     return () => {
+      if (themeChannel.current) {
+        themeChannel.current.close()
+      }
       window.removeEventListener('storage', handleStorageChange)
       window.removeEventListener('theme-change', handleThemeChange)
     }

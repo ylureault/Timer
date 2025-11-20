@@ -15,13 +15,41 @@ function RemoteControl() {
   const [stats, setStats] = useState(null)
   const [currentTheme, setCurrentTheme] = useState(localStorage.getItem('display_theme') || 'luxe')
   const pollingInterval = useRef(null)
+  const themeChannel = useRef(null)
+
+  // Initialize BroadcastChannel for reliable cross-tab communication
+  useEffect(() => {
+    themeChannel.current = new BroadcastChannel('salon-theme-channel')
+
+    // Listen for theme changes from other tabs
+    themeChannel.current.onmessage = (event) => {
+      if (event.data.type === 'theme-change') {
+        setCurrentTheme(event.data.theme)
+        console.log('Theme received via BroadcastChannel:', event.data.theme)
+      }
+    }
+
+    return () => {
+      if (themeChannel.current) {
+        themeChannel.current.close()
+      }
+    }
+  }, [])
 
   const handleThemeChange = (newTheme) => {
+    console.log('Changing theme to:', newTheme)
     setCurrentTheme(newTheme)
     localStorage.setItem('display_theme', newTheme)
-    // Trigger custom event with theme data for same-window communication
+
+    // Broadcast to all tabs/windows using BroadcastChannel
+    if (themeChannel.current) {
+      themeChannel.current.postMessage({ type: 'theme-change', theme: newTheme })
+    }
+
+    // Also trigger custom event for same-window communication (fallback)
     window.dispatchEvent(new CustomEvent('theme-change', { detail: { theme: newTheme } }))
-    // Note: storage event is automatically fired by browser to OTHER tabs
+
+    console.log('Theme change broadcasted:', newTheme)
   }
 
   const themes = [
