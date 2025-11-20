@@ -1,5 +1,6 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
+import { motion, AnimatePresence } from 'framer-motion'
 import '../styles/SalonDisplay.css'
 
 function SalonDisplay() {
@@ -8,20 +9,12 @@ function SalonDisplay() {
   const [state, setState] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
-  const [previousSession, setPreviousSession] = useState(null)
-  const pollingInterval = useRef(null)
 
   const fetchState = async () => {
     try {
       const response = await fetch(`/api/salon/${code}/state`)
       const data = await response.json()
-
       if (data.success) {
-        // Detect session change for transition animation
-        if (state && state.session_en_cours !== data.session_en_cours) {
-          setPreviousSession(state.current_session)
-          setTimeout(() => setPreviousSession(null), 1000)
-        }
         setState(data)
         setError(null)
       } else {
@@ -29,7 +22,6 @@ function SalonDisplay() {
       }
       setLoading(false)
     } catch (err) {
-      console.error('Error fetching state:', err)
       setError('Erreur de connexion')
       setLoading(false)
     }
@@ -37,15 +29,8 @@ function SalonDisplay() {
 
   useEffect(() => {
     fetchState()
-
-    // Poll every 300ms as specified
-    pollingInterval.current = setInterval(fetchState, 300)
-
-    return () => {
-      if (pollingInterval.current) {
-        clearInterval(pollingInterval.current)
-      }
-    }
+    const interval = setInterval(fetchState, 300)
+    return () => clearInterval(interval)
   }, [code])
 
   const formatTime = (seconds) => {
@@ -54,158 +39,103 @@ function SalonDisplay() {
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`
   }
 
-  const formatTimeElapsed = (seconds) => {
-    const mins = Math.floor(seconds / 60)
-    const secs = seconds % 60
-    if (mins === 0) return `${secs}s`
-    return `${mins}m ${secs}s`
-  }
-
   if (loading) {
     return (
-      <div className="salon-display loading">
-        <div className="loader"></div>
-        <p>Chargement du salon...</p>
+      <div className="salon-display-modern loading">
+        <motion.div className="loader-modern" animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: "linear" }}>
+          <div className="loader-ring"></div>
+        </motion.div>
+        <p>Chargement...</p>
       </div>
     )
   }
 
-  if (error) {
+  if (error || !state?.current_session) {
     return (
-      <div className="salon-display error">
-        <div className="error-content">
-          <h1>😕</h1>
-          <h2>{error}</h2>
-          <button className="btn btn-primary" onClick={() => navigate('/')}>
-            Retour à l'accueil
-          </button>
-        </div>
-      </div>
-    )
-  }
-
-  if (!state || !state.current_session) {
-    return (
-      <div className="salon-display error">
-        <div className="error-content">
-          <h1>⏱️</h1>
-          <h2>Aucune session disponible</h2>
-          <p>Configurez des sessions pour ce salon</p>
-        </div>
+      <div className="salon-display-modern error">
+        <motion.div className="error-content-modern" initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}>
+          <div className="error-icon">{error ? '😕' : '⏱️'}</div>
+          <h2>{error || 'Aucune session'}</h2>
+          <button className="btn btn-primary" onClick={() => navigate('/')}>Retour</button>
+        </motion.div>
       </div>
     )
   }
 
   const { current_session, mode, temps_restant, temps_ecoule, progress, session_en_cours, total_sessions } = state
-
-  const progressPercentage = Math.max(0, Math.min(100, progress * 100))
+  const progressPct = Math.max(0, Math.min(100, progress * 100))
 
   return (
-    <div
-      className={`salon-display ${mode}`}
-      style={{
-        backgroundColor: current_session.couleur,
-        transition: 'background-color 1s ease'
-      }}
-    >
-      {/* Progress Background */}
-      <div
-        className="progress-background"
-        style={{
-          width: `${progressPercentage}%`,
-          transition: mode === 'play' ? 'width 1s linear' : 'none'
-        }}
-      ></div>
+    <motion.div className="salon-display-modern" initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={{ backgroundColor: current_session.couleur }}>
+      <div className="display-bg">
+        <motion.div className="progress-overlay" animate={{ scaleX: progressPct / 100 }} transition={{ duration: mode === 'play' ? 1 : 0.3 }} />
+        <div className="gradient-overlay"></div>
+      </div>
 
-      {/* Session Transition Overlay */}
-      {previousSession && (
-        <div className="session-transition">
-          <div className="transition-from" style={{ backgroundColor: previousSession.couleur }}>
-            {previousSession.nom_session}
-          </div>
-        </div>
-      )}
+      <div className="display-content-modern">
+        <motion.div className="session-info-display" key={session_en_cours} initial={{ y: -50, opacity: 0 }} animate={{ y: 0, opacity: 1 }}>
+          <div className="session-type-badge glass">{current_session.type === 'pause' ? '☕ Pause' : '🎯 Session'}</div>
+          <h1 className="session-name-display">{current_session.nom_session}</h1>
+          <div className="session-counter">{session_en_cours + 1} / {total_sessions}</div>
+        </motion.div>
 
-      {/* Main Content */}
-      <div className="display-content">
-        {/* Session Info */}
-        <div className="session-info fade-in">
-          <div className="session-type">
-            {current_session.type === 'pause' ? '☕ Pause' : '🎯 Session'}
-          </div>
-          <h1 className="session-name">{current_session.nom_session}</h1>
-          <div className="session-number">
-            {session_en_cours + 1} / {total_sessions}
+        <div className="timer-circle-container">
+          <svg className="timer-circle-svg" viewBox="0 0 200 200">
+            <circle cx="100" cy="100" r="85" fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth="8" />
+            <motion.circle cx="100" cy="100" r="85" fill="none" stroke="white" strokeWidth="8" strokeLinecap="round"
+              strokeDasharray={534.07} animate={{ strokeDashoffset: 534.07 * (1 - progress) }}
+              transform="rotate(-90 100 100)" transition={{ duration: mode === 'play' ? 1 : 0.3 }} />
+          </svg>
+
+          <div className="timer-center">
+            <motion.div className={`timer-display-main ${mode === 'play' ? 'playing' : 'paused'}`} key={temps_restant} initial={{ scale: 1.1 }} animate={{ scale: 1 }}>
+              {formatTime(temps_restant)}
+            </motion.div>
+            {mode === 'pause' && temps_restant > 0 && <motion.div className="timer-status-badge" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>⏸ Pause</motion.div>}
+            {mode === 'termine' && <motion.div className="timer-status-badge completed" initial={{ scale: 0 }} animate={{ scale: 1 }}>✓ Terminé</motion.div>}
           </div>
         </div>
 
-        {/* Timer Display */}
-        <div className="timer-display">
-          <div className={`timer-main ${mode === 'play' ? 'running' : 'paused'}`}>
-            {formatTime(temps_restant)}
-          </div>
-
-          {mode === 'pause' && temps_restant > 0 && (
-            <div className="timer-status pause-indicator">
-              ⏸ En pause
-            </div>
-          )}
-
-          {mode === 'termine' && (
-            <div className="timer-status completed">
-              ✓ Terminé
-            </div>
-          )}
-        </div>
-
-        {/* Time Info */}
-        <div className="time-info">
-          <div className="time-block">
+        <motion.div className="time-cards" initial={{ y: 50, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.3 }}>
+          <div className="time-card glass">
             <div className="time-label">Temps écoulé</div>
-            <div className="time-value">{formatTimeElapsed(temps_ecoule)}</div>
+            <div className="time-value">{formatTime(temps_ecoule)}</div>
+            <div className="time-percentage">{Math.round(progressPct)}%</div>
           </div>
-          <div className="time-separator">•</div>
-          <div className="time-block">
+          <div className="time-card glass">
             <div className="time-label">Temps restant</div>
-            <div className="time-value">{formatTimeElapsed(temps_restant)}</div>
+            <div className="time-value">{formatTime(temps_restant)}</div>
+            <div className="time-percentage">{Math.round(100 - progressPct)}%</div>
           </div>
-        </div>
+        </motion.div>
 
-        {/* Visual Progress Bar */}
-        <div className="visual-progress">
-          <div className="progress-track">
-            <div
-              className="progress-fill"
-              style={{
-                width: `${progressPercentage}%`,
-                transition: mode === 'play' ? 'width 1s linear' : 'width 0.3s ease'
-              }}
-            ></div>
-          </div>
-          <div className="progress-percentage">{Math.round(progressPercentage)}%</div>
-        </div>
-
-        {/* Upcoming Sessions Preview */}
         {session_en_cours + 1 < total_sessions && (
-          <div className="upcoming-sessions">
-            <div className="upcoming-label">À venir</div>
-            <div className="upcoming-list">
+          <motion.div className="upcoming-section" initial={{ y: 50, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.4 }}>
+            <h3 className="upcoming-title">À venir</h3>
+            <div className="upcoming-grid">
               {state.sessions.slice(session_en_cours + 1, session_en_cours + 4).map((session, idx) => (
-                <div key={idx} className="upcoming-session" style={{ borderLeftColor: session.couleur }}>
-                  <span className="upcoming-name">{session.nom_session}</span>
-                  <span className="upcoming-duration">{Math.floor(session.duree_secondes / 60)} min</span>
-                </div>
+                <motion.div key={idx} className="upcoming-card glass" initial={{ x: 50, opacity: 0 }} animate={{ x: 0, opacity: 1 }}
+                  transition={{ delay: 0.5 + idx * 0.1 }} whileHover={{ scale: 1.05 }}>
+                  <div className="upcoming-color" style={{ backgroundColor: session.couleur }}></div>
+                  <div className="upcoming-info">
+                    <div className="upcoming-name">{session.nom_session}</div>
+                    <div className="upcoming-duration">{Math.floor(session.duree_secondes / 60)} min</div>
+                  </div>
+                </motion.div>
               ))}
             </div>
-          </div>
+          </motion.div>
         )}
 
-        {/* Remote Control Hint */}
-        <div className="remote-hint">
-          <p>Télécommande: {window.location.origin}/remote/{state.salon.code}</p>
-        </div>
+        <motion.div className="display-footer" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.6 }}>
+          <div className="footer-info glass">
+            <span>Code: {state.salon.code}</span>
+            <span>•</span>
+            <span>Télécommande: /remote/{state.salon.code}</span>
+          </div>
+        </motion.div>
       </div>
-    </div>
+    </motion.div>
   )
 }
 

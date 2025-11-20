@@ -1,4 +1,4 @@
-.salon-display {
+.salon-display-modern {
   position: relative;
   width: 100vw;
   height: 100vh;
@@ -10,53 +10,38 @@
   transition: background-color 1s ease;
 }
 
-/* Progress Background Fill */
-.progress-background {
-  position: absolute;
-  top: 0;
-  left: 0;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.3);
-  z-index: 0;
-  transition: width 1s linear;
-}
-
-/* Session Transition Animation */
-.session-transition {
+/* Animated Background */
+.display-bg {
   position: absolute;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  z-index: 10;
+  z-index: 0;
+}
+
+.progress-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 100%;
+  background: rgba(0, 0, 0, 0.2);
+  transform-origin: left;
+}
+
+.gradient-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle at 30% 50%, rgba(255,255,255,0.1) 0%, transparent 50%);
   pointer-events: none;
 }
 
-.transition-from {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 4rem;
-  font-weight: 800;
-  color: white;
-  animation: slideOut 1s ease-out forwards;
-}
-
-@keyframes slideOut {
-  0% {
-    opacity: 1;
-    transform: translateX(0) scale(1);
-  }
-  100% {
-    opacity: 0;
-    transform: translateX(-100%) scale(0.8);
-  }
-}
-
 /* Main Content */
-.display-content {
+.display-content-modern {
   position: relative;
   z-index: 1;
   width: 100%;
@@ -69,326 +54,286 @@
 }
 
 /* Session Info */
-.session-info {
+.session-info-display {
   text-align: center;
 }
 
-.session-type {
+.session-type-badge {
+  display: inline-block;
+  padding: 8px 24px;
+  border-radius: var(--radius-full);
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 20px;
+}
+
+.session-name-display {
+  font-size: 4rem;
+  font-weight: 900;
+  margin-bottom: 16px;
+  text-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  line-height: 1.1;
+}
+
+.session-counter {
   font-size: 1.5rem;
   font-weight: 600;
-  margin-bottom: 20px;
   opacity: 0.9;
-  text-transform: uppercase;
-  letter-spacing: 0.2rem;
 }
 
-.session-name {
-  font-size: 4.5rem;
-  font-weight: 800;
-  margin-bottom: 20px;
-  text-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-  line-height: 1.2;
-}
-
-.session-number {
-  font-size: 1.8rem;
-  font-weight: 600;
-  opacity: 0.8;
-}
-
-/* Timer Display */
-.timer-display {
-  text-align: center;
+/* Timer Circle */
+.timer-circle-container {
   position: relative;
+  width: 350px;
+  height: 350px;
 }
 
-.timer-main {
-  font-size: 12rem;
+.timer-circle-svg {
+  width: 100%;
+  height: 100%;
+}
+
+.timer-center {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+}
+
+.timer-display-main {
+  font-size: 5rem;
   font-weight: 900;
   font-family: 'Courier New', monospace;
-  text-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
-  letter-spacing: 0.5rem;
+  text-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
   transition: transform 0.3s ease;
 }
 
-.timer-main.running {
+.timer-display-main.playing {
   animation: pulse 2s infinite;
 }
 
-.timer-main.paused {
-  opacity: 0.7;
-}
-
-.timer-status {
-  margin-top: 30px;
-  font-size: 2rem;
-  font-weight: 700;
-  padding: 15px 40px;
-  border-radius: 50px;
-  display: inline-block;
-  text-transform: uppercase;
-  letter-spacing: 0.1rem;
-}
-
-.pause-indicator {
+.timer-status-badge {
+  margin-top: 20px;
+  padding: 12px 32px;
   background: rgba(255, 255, 255, 0.2);
-  animation: pulse 1.5s infinite;
+  backdrop-filter: blur(10px);
+  border-radius: var(--radius-full);
+  font-size: 1.125rem;
+  font-weight: 700;
+  display: inline-block;
 }
 
-.completed {
+.timer-status-badge.completed {
   background: rgba(16, 185, 129, 0.3);
 }
 
-/* Time Info */
-.time-info {
-  display: flex;
-  gap: 40px;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.5rem;
+/* Time Cards */
+.time-cards {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 24px;
+  width: 100%;
+  max-width: 600px;
 }
 
-.time-block {
+.time-card {
+  padding: 30px;
+  border-radius: var(--radius-xl);
   text-align: center;
 }
 
 .time-label {
-  font-size: 1rem;
-  opacity: 0.8;
-  margin-bottom: 8px;
+  font-size: 0.9375rem;
+  opacity: 0.9;
+  margin-bottom: 12px;
   text-transform: uppercase;
-  letter-spacing: 0.1rem;
+  letter-spacing: 0.05em;
+  font-weight: 600;
 }
 
 .time-value {
   font-size: 2.5rem;
-  font-weight: 700;
+  font-weight: 800;
   font-family: 'Courier New', monospace;
+  margin-bottom: 8px;
 }
 
-.time-separator {
-  font-size: 2rem;
-  opacity: 0.5;
-}
-
-/* Visual Progress */
-.visual-progress {
-  width: 100%;
-  max-width: 900px;
-  text-align: center;
-}
-
-.progress-track {
-  height: 40px;
-  background: rgba(255, 255, 255, 0.2);
-  border-radius: 20px;
-  overflow: hidden;
-  box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.2);
-  margin-bottom: 15px;
-}
-
-.progress-fill {
-  height: 100%;
-  background: rgba(255, 255, 255, 0.5);
-  border-radius: 20px;
-  box-shadow: 0 2px 10px rgba(255, 255, 255, 0.3);
-  transition: width 1s linear;
-}
-
-.progress-percentage {
-  font-size: 1.8rem;
+.time-percentage {
+  font-size: 1.125rem;
   font-weight: 700;
-  opacity: 0.9;
-}
-
-/* Upcoming Sessions */
-.upcoming-sessions {
-  width: 100%;
-  max-width: 700px;
-}
-
-.upcoming-label {
-  font-size: 1.2rem;
-  font-weight: 600;
-  margin-bottom: 15px;
   opacity: 0.8;
+}
+
+/* Upcoming Section */
+.upcoming-section {
+  width: 100%;
+  max-width: 800px;
+}
+
+.upcoming-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin-bottom: 20px;
+  opacity: 0.9;
   text-transform: uppercase;
-  letter-spacing: 0.1rem;
+  letter-spacing: 0.05em;
 }
 
-.upcoming-list {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
+.upcoming-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
 }
 
-.upcoming-session {
+.upcoming-card {
   display: flex;
-  justify-content: space-between;
-  padding: 15px 20px;
-  background: rgba(255, 255, 255, 0.15);
-  border-radius: 10px;
-  border-left: 5px solid white;
-  backdrop-filter: blur(10px);
+  align-items: center;
+  gap: 16px;
+  padding: 20px;
+  border-radius: var(--radius-lg);
   transition: transform 0.3s ease;
 }
 
-.upcoming-session:hover {
-  transform: translateX(10px);
+.upcoming-color {
+  width: 6px;
+  height: 50px;
+  border-radius: var(--radius-full);
+  flex-shrink: 0;
+}
+
+.upcoming-info {
+  flex: 1;
 }
 
 .upcoming-name {
-  font-weight: 600;
-  font-size: 1.1rem;
+  font-weight: 700;
+  font-size: 1.125rem;
+  margin-bottom: 4px;
 }
 
 .upcoming-duration {
   opacity: 0.8;
-  font-size: 1rem;
+  font-size: 0.9375rem;
 }
 
-/* Remote Control Hint */
-.remote-hint {
+/* Footer */
+.display-footer {
   position: absolute;
   bottom: 30px;
   left: 50%;
   transform: translateX(-50%);
-  font-size: 1rem;
-  opacity: 0.6;
-  background: rgba(0, 0, 0, 0.3);
-  padding: 10px 30px;
-  border-radius: 20px;
-  backdrop-filter: blur(5px);
 }
 
-/* Loading State */
-.salon-display.loading,
-.salon-display.error {
+.footer-info {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 12px 32px;
+  border-radius: var(--radius-full);
+  font-size: 0.9375rem;
+  font-weight: 600;
+  opacity: 0.8;
+}
+
+.footer-info span:nth-child(2) {
+  opacity: 0.5;
+}
+
+/* Loading & Error States */
+.salon-display-modern.loading,
+.salon-display-modern.error {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  text-align: center;
 }
 
-.loader {
+.loader-modern {
   width: 80px;
   height: 80px;
-  border: 8px solid rgba(255, 255, 255, 0.3);
-  border-top-color: white;
-  border-radius: 50%;
-  animation: rotate 1s linear infinite;
-  margin: 0 auto 30px;
+  margin-bottom: 30px;
 }
 
-.salon-display.loading p {
-  font-size: 1.5rem;
+.loader-ring {
+  width: 100%;
+  height: 100%;
+  border: 8px solid rgba(255, 255, 255, 0.2);
+  border-top-color: white;
+  border-radius: 50%;
+}
+
+.salon-display-modern.loading p {
+  font-size: 1.25rem;
   font-weight: 600;
 }
 
-/* Error State */
-.error-content {
+.error-content-modern {
+  text-align: center;
   padding: 60px;
 }
 
-.error-content h1 {
+.error-icon {
   font-size: 6rem;
-  margin-bottom: 20px;
+  margin-bottom: 24px;
 }
 
-.error-content h2 {
+.error-content-modern h2 {
   font-size: 2.5rem;
   font-weight: 700;
-  margin-bottom: 20px;
-}
-
-.error-content p {
-  font-size: 1.3rem;
   margin-bottom: 30px;
-  opacity: 0.9;
 }
 
-/* Pause Mode Styling */
-.salon-display.pause {
-  filter: brightness(0.85);
-}
-
-/* Completed Mode */
-.salon-display.termine {
-  background: linear-gradient(135deg, #10B981, #059669) !important;
-}
-
-/* RESPONSIVE */
-@media (max-width: 1200px) {
-  .timer-main {
-    font-size: 8rem;
+/* Responsive */
+@media (max-width: 1024px) {
+  .session-name-display {
+    font-size: 3rem;
   }
 
-  .session-name {
-    font-size: 3.5rem;
+  .timer-circle-container {
+    width: 300px;
+    height: 300px;
+  }
+
+  .timer-display-main {
+    font-size: 4rem;
   }
 }
 
 @media (max-width: 768px) {
-  .display-content {
+  .display-content-modern {
     padding: 20px;
-    gap: 25px;
+    gap: 30px;
   }
 
-  .session-name {
-    font-size: 2.5rem;
+  .session-name-display {
+    font-size: 2rem;
   }
 
-  .session-type {
-    font-size: 1.2rem;
+  .timer-circle-container {
+    width: 250px;
+    height: 250px;
   }
 
-  .timer-main {
-    font-size: 5rem;
-    letter-spacing: 0.3rem;
+  .timer-display-main {
+    font-size: 3rem;
   }
 
-  .timer-status {
-    font-size: 1.5rem;
-    padding: 10px 25px;
-  }
-
-  .time-info {
-    flex-direction: column;
-    gap: 20px;
-  }
-
-  .time-separator {
-    display: none;
+  .time-cards {
+    grid-template-columns: 1fr;
   }
 
   .time-value {
     font-size: 2rem;
   }
 
-  .progress-track {
-    height: 30px;
+  .upcoming-grid {
+    grid-template-columns: 1fr;
   }
 
-  .progress-percentage {
-    font-size: 1.3rem;
-  }
-
-  .upcoming-sessions {
-    max-width: 100%;
-  }
-
-  .remote-hint {
-    font-size: 0.8rem;
+  .display-footer {
     bottom: 15px;
-    padding: 8px 20px;
-  }
-}
-
-@media (max-width: 480px) {
-  .timer-main {
-    font-size: 3.5rem;
   }
 
-  .session-name {
-    font-size: 1.8rem;
+  .footer-info {
+    font-size: 0.8125rem;
+    padding: 10px 24px;
   }
 }
