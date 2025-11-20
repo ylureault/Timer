@@ -7,12 +7,24 @@
 }
 
 :root {
-  /* Modern Color Palette 2025 */
-  --primary: #6366f1;
-  --primary-light: #818cf8;
-  --primary-dark: #4f46e5;
-  --secondary: #14b8a6;
-  --secondary-light: #2dd4bf;
+  /* Boussole 4C Hybrid Design System - Teal/Cyan Primary Palette */
+  --primary: #14b8a6;
+  --primary-50: #f0fdfa;
+  --primary-100: #ccfbf1;
+  --primary-200: #99f6e4;
+  --primary-300: #5eead4;
+  --primary-400: #2dd4bf;
+  --primary-500: #14b8a6;
+  --primary-600: #0d9488;
+  --primary-700: #0f766e;
+  --primary-800: #115e59;
+  --primary-900: #134e4a;
+
+  --secondary: #06b6d4;
+  --secondary-400: #22d3ee;
+  --secondary-500: #06b6d4;
+  --secondary-600: #0891b2;
+
   --accent: #f59e0b;
   --accent-light: #fbbf24;
 
@@ -22,19 +34,19 @@
   --warning: #f59e0b;
   --info: #3b82f6;
 
-  /* Neutrals */
+  /* Neutrals - Slate (Boussole 4C) */
   --white: #ffffff;
   --black: #000000;
-  --gray-50: #f9fafb;
-  --gray-100: #f3f4f6;
-  --gray-200: #e5e7eb;
-  --gray-300: #d1d5db;
-  --gray-400: #9ca3af;
-  --gray-500: #6b7280;
-  --gray-600: #4b5563;
-  --gray-700: #374151;
-  --gray-800: #1f2937;
-  --gray-900: #111827;
+  --gray-50: #f8fafc;
+  --gray-100: #f1f5f9;
+  --gray-200: #e2e8f0;
+  --gray-300: #cbd5e1;
+  --gray-400: #94a3b8;
+  --gray-500: #64748b;
+  --gray-600: #475569;
+  --gray-700: #334155;
+  --gray-800: #1e293b;
+  --gray-900: #0f172a;
 
   /* Session Colors (vibrant) */
   --session-blue: #3b82f6;
@@ -43,26 +55,30 @@
   --session-purple: #8b5cf6;
   --session-pink: #ec4899;
   --session-red: #ef4444;
-  --pause-color: #6b7280;
+  --pause-color: #64748b;
 
-  /* Gradients */
-  --gradient-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  --gradient-secondary: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  /* Premium Gradients - Boussole 4C */
+  --gradient-primary: linear-gradient(135deg, #14b8a6, #06b6d4);
+  --gradient-primary-hover: linear-gradient(135deg, #0d9488, #0891b2);
+  --gradient-dark: linear-gradient(135deg, #0f172a, #134e4a);
+  --gradient-ambient: linear-gradient(135deg, rgba(20, 184, 166, 0.3), rgba(6, 182, 212, 0.3));
+  --gradient-card: linear-gradient(135deg, rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.6));
   --gradient-success: linear-gradient(135deg, #0ba360 0%, #3cba92 100%);
   --gradient-sunset: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
   --gradient-ocean: linear-gradient(135deg, #2e3192 0%, #1bffff 100%);
-  --gradient-purple: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  --gradient-fire: linear-gradient(135deg, #ff0844 0%, #ffb199 100%);
 
-  /* Shadows */
+  /* Premium Shadows - Boussole 4C */
   --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-  --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-  --shadow-md: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-  --shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-  --shadow-xl: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-  --shadow-glow: 0 0 40px rgba(99, 102, 241, 0.4);
+  --shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+  --shadow-2xl: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  --shadow-teal: 0 20px 25px -5px rgba(20, 184, 166, 0.3);
+  --shadow-glow: 0 0 40px rgba(20, 184, 166, 0.4);
+  --shadow-inner: inset 0 2px 4px 0 rgba(0, 0, 0, 0.05);
 
-  /* Spacing */
+  /* Spacing - Boussole 4C */
   --spacing-xs: 0.25rem;
   --spacing-sm: 0.5rem;
   --spacing-md: 1rem;
@@ -71,18 +87,20 @@
   --spacing-2xl: 3rem;
   --spacing-3xl: 4rem;
 
-  /* Border Radius */
-  --radius-sm: 0.375rem;
+  /* Border Radius - Boussole 4C (plus généreux) */
+  --radius-sm: 0.25rem;
   --radius-md: 0.5rem;
   --radius-lg: 0.75rem;
   --radius-xl: 1rem;
   --radius-2xl: 1.5rem;
+  --radius-3xl: 2rem;
   --radius-full: 9999px;
 
-  /* Transitions */
-  --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
-  --transition-base: 300ms cubic-bezier(0.4, 0, 0.2, 1);
-  --transition-slow: 500ms cubic-bezier(0.4, 0, 0.2, 1);
+  /* Transitions - Boussole 4C */
+  --transition-fast: 150ms ease;
+  --transition-base: 300ms ease;
+  --transition-slow: 500ms ease;
+  --transition-very-slow: 1000ms ease;
   --transition-bounce: 600ms cubic-bezier(0.68, -0.55, 0.265, 1.55);
 }
 
@@ -328,15 +346,16 @@ body {
 .btn-outline:hover {
   background: var(--primary);
   color: white;
+  box-shadow: var(--shadow-teal);
 }
 
 .btn-ghost {
-  background: rgba(99, 102, 241, 0.1);
+  background: rgba(20, 184, 166, 0.1);
   color: var(--primary);
 }
 
 .btn-ghost:hover {
-  background: rgba(99, 102, 241, 0.2);
+  background: rgba(20, 184, 166, 0.2);
 }
 
 .btn-lg {
@@ -366,7 +385,7 @@ body {
 .input:focus {
   outline: none;
   border-color: var(--primary);
-  box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
+  box-shadow: 0 0 0 4px rgba(20, 184, 166, 0.1);
 }
 
 .input::placeholder {
@@ -453,7 +472,7 @@ body {
 }
 
 .badge-primary {
-  background: rgba(99, 102, 241, 0.1);
+  background: rgba(20, 184, 166, 0.1);
   color: var(--primary);
 }
 
