@@ -4,6 +4,7 @@ import { motion } from 'framer-motion'
 import { THEMES, applyTheme } from '../utils/features'
 import '../styles/LandingPage.css'
 import '../styles/HeroButtons.css'
+import '../styles/PremiumEffects.css'
 
 function LandingPage() {
   const navigate = useNavigate()
@@ -54,6 +55,16 @@ function LandingPage() {
     <div className="landing-page-modern">
       {/* HERO SECTION */}
       <section className="hero-modern">
+        {/* Premium background effects */}
+        <div className="gradient-mesh"></div>
+        <div className="aurora-bg"></div>
+
+        {/* Floating particles */}
+        <div className="particle particle-1"></div>
+        <div className="particle particle-2"></div>
+        <div className="particle particle-3"></div>
+        <div className="particle particle-4"></div>
+
         <div className="hero-bg">
           <div className="gradient-orb orb-1"></div>
           <div className="gradient-orb orb-2"></div>
@@ -78,7 +89,7 @@ function LandingPage() {
 
             <h1 className="hero-title-modern">
               Orchestrez le temps de vos{' '}
-              <span className="gradient-text">ateliers</span>
+              <span className="text-shine">ateliers</span>
             </h1>
 
             <p className="hero-subtitle-modern">
@@ -94,9 +105,9 @@ function LandingPage() {
               transition={{ delay: 0.4, duration: 0.8 }}
             >
               <motion.button
-                className="btn-cta-hero"
+                className="btn-cta-hero btn-magnetic glow-teal ripple"
                 onClick={handleCreateSalon}
-                whileHover={{ scale: 1.05, boxShadow: "0 20px 60px rgba(20, 184, 166, 0.4)" }}
+                whileHover={{ scale: 1.05, boxShadow: "0 25px 70px rgba(20, 184, 166, 0.5)" }}
                 whileTap={{ scale: 0.98 }}
               >
                 <span className="btn-cta-text">Créer mon premier salon</span>
@@ -111,7 +122,7 @@ function LandingPage() {
                 <span>ou</span>
               </div>
 
-              <div className="join-input-hero">
+              <div className="join-input-hero glass-ultra">
                 <input
                   type="text"
                   placeholder="1234"
@@ -119,12 +130,14 @@ function LandingPage() {
                   value={joinCode}
                   onChange={(e) => setJoinCode(e.target.value.replace(/\D/g, ''))}
                   onKeyPress={(e) => e.key === 'Enter' && handleJoinSalon()}
+                  className="shimmer"
                 />
                 <motion.button
                   onClick={handleJoinSalon}
                   disabled={joinCode.length !== 4}
                   whileHover={{ scale: 1.03 }}
                   whileTap={{ scale: 0.97 }}
+                  className="gradient-border"
                 >
                   Rejoindre un salon →
                 </motion.button>
@@ -133,7 +146,7 @@ function LandingPage() {
 
             {/* Live Stats */}
             <motion.div
-              className="hero-stats"
+              className="hero-stats glass-ultra shadow-depth-3"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.6, duration: 0.8 }}
@@ -158,12 +171,12 @@ function LandingPage() {
 
         {/* Floating Premium Circular Timer Preview */}
         <motion.div
-          className="hero-demo-float"
+          className="hero-demo-float breathe"
           initial={{ opacity: 0, scale: 0.8, y: 50 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           transition={{ delay: 0.3, duration: 0.8, type: "spring" }}
         >
-          <div className="demo-timer-premium">
+          <div className="demo-timer-premium shadow-depth-4 glow-teal">
             {/* Circular timer like luxe theme */}
             <div className="demo-circular-timer">
               {/* Metal bezel */}
@@ -306,12 +319,12 @@ function LandingPage() {
             ].map((feature, idx) => (
               <motion.div
                 key={idx}
-                className="feature-card card"
+                className="feature-card card card-3d gradient-border shadow-depth-2 glass-ultra"
                 initial={{ opacity: 0, y: 30 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: idx * 0.1 }}
-                whileHover={{ y: -5, boxShadow: '0 20px 40px rgba(0,0,0,0.1)' }}
+                whileHover={{ y: -8, boxShadow: '0 30px 60px rgba(20, 184, 166, 0.2)' }}
               >
                 <div className="feature-icon" style={{ background: `${feature.color}15`, color: feature.color }}>
                   {feature.icon}
@@ -401,12 +414,12 @@ function LandingPage() {
             ].map((useCase, idx) => (
               <motion.div
                 key={idx}
-                className="use-case-card-modern card-glass"
+                className="use-case-card-modern card-glass glass-ultra shadow-depth-3 gradient-border"
                 initial={{ opacity: 0, y: 30 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: idx * 0.1 }}
-                whileHover={{ scale: 1.02 }}
+                whileHover={{ scale: 1.03, y: -8 }}
                 style={{ background: `${useCase.gradient}, rgba(255,255,255,0.1)` }}
               >
                 <div className="use-case-icon-modern">{useCase.icon}</div>
@@ -423,16 +436,22 @@ function LandingPage() {
       <section className="cta-modern">
         <div className="container">
           <motion.div
-            className="cta-card card-glass"
+            className="cta-card card-glass glass-ultra shadow-depth-4 gradient-border"
             initial={{ opacity: 0, scale: 0.9 }}
             whileInView={{ opacity: 1, scale: 1 }}
             viewport={{ once: true }}
+            whileHover={{ scale: 1.02 }}
           >
-            <h2>Prêt à orchestrer le temps ?</h2>
+            <h2 className="text-shine">Prêt à orchestrer le temps ?</h2>
             <p>Créez votre premier salon maintenant</p>
-            <button className="btn btn-primary btn-xl" onClick={handleCreateSalon}>
+            <motion.button
+              className="btn btn-primary btn-xl btn-magnetic glow-teal ripple"
+              onClick={handleCreateSalon}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
               Commencer gratuitement
-            </button>
+            </motion.button>
           </motion.div>
         </div>
       </section>

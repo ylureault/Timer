@@ -18,7 +18,10 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #0f766e 0%, #0891b2 50%, #14b8a6 100%);
+  background:
+    radial-gradient(circle at 20% 50%, rgba(20, 184, 166, 0.15) 0%, transparent 50%),
+    radial-gradient(circle at 80% 80%, rgba(168, 85, 247, 0.15) 0%, transparent 50%),
+    linear-gradient(135deg, #0a1628 0%, #0f2847 50%, #1a3a5c 100%);
   overflow: hidden;
   padding: 2rem;
 }
@@ -115,13 +118,15 @@
 }
 
 .hero-title-modern {
-  font-size: clamp(3rem, 8vw, 5rem);
+  font-size: clamp(3.5rem, 10vw, 6rem);
   font-weight: 900;
-  line-height: 1.1;
+  line-height: 1.05;
   color: white;
   margin-bottom: 1.5rem;
-  letter-spacing: -0.03em;
-  text-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+  letter-spacing: -0.04em;
+  text-shadow:
+    0 0 40px rgba(20, 184, 166, 0.3),
+    0 4px 20px rgba(0, 0, 0, 0.4);
   animation: fadeInUp 1s ease-out 0.2s both;
 }
 
