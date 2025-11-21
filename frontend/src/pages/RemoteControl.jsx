@@ -21,36 +21,41 @@ function RemoteControl() {
   // Initialize BroadcastChannel for reliable cross-tab communication
   useEffect(() => {
     themeChannel.current = new BroadcastChannel('salon-theme-channel')
+    console.log('🔌 RemoteControl: BroadcastChannel initialized')
 
     // Listen for theme changes from other tabs
     themeChannel.current.onmessage = (event) => {
       if (event.data.type === 'theme-change') {
         setCurrentTheme(event.data.theme)
-        console.log('Theme received via BroadcastChannel:', event.data.theme)
+        console.log('📡 RemoteControl: Theme received via BroadcastChannel:', event.data.theme)
       }
     }
 
     return () => {
       if (themeChannel.current) {
         themeChannel.current.close()
+        console.log('🔌 RemoteControl: BroadcastChannel closed')
       }
     }
   }, [])
 
   const handleThemeChange = (newTheme) => {
-    console.log('Changing theme to:', newTheme)
+    console.log('🎨 RemoteControl: Changing theme to:', newTheme)
     setCurrentTheme(newTheme)
     localStorage.setItem('display_theme', newTheme)
+    console.log('💾 RemoteControl: Theme saved to localStorage')
 
     // Broadcast to all tabs/windows using BroadcastChannel
     if (themeChannel.current) {
       themeChannel.current.postMessage({ type: 'theme-change', theme: newTheme })
+      console.log('📤 RemoteControl: Theme broadcasted via BroadcastChannel:', newTheme)
+    } else {
+      console.error('❌ RemoteControl: BroadcastChannel not initialized!')
     }
 
     // Also trigger custom event for same-window communication (fallback)
     window.dispatchEvent(new CustomEvent('theme-change', { detail: { theme: newTheme } }))
-
-    console.log('Theme change broadcasted:', newTheme)
+    console.log('📤 RemoteControl: Theme dispatched via CustomEvent')
   }
 
   const themes = [
@@ -388,13 +393,14 @@ function RemoteControl() {
 
       {/* Theme Selector */}
       <div className="theme-selector-section" style={{
-        background: 'white',
+        background: 'var(--brand-card)',
         borderRadius: '12px',
         padding: '20px',
         marginBottom: '20px',
-        boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+        boxShadow: '0 4px 12px rgba(31, 58, 139, 0.3)',
+        border: '1px solid rgba(59, 130, 246, 0.2)'
       }}>
-        <h4 style={{ marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <h4 style={{ marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--text-white)' }}>
           <span>🎨</span>
           <span>Thème d'affichage</span>
         </h4>
@@ -409,10 +415,10 @@ function RemoteControl() {
               onClick={() => handleThemeChange(theme.id)}
               style={{
                 padding: '16px 12px',
-                background: currentTheme === theme.id ? 'var(--primary)' : 'var(--gray-50)',
-                color: currentTheme === theme.id ? 'white' : 'var(--gray-700)',
+                background: currentTheme === theme.id ? 'var(--brand-primary)' : 'rgba(31, 58, 139, 0.1)',
+                color: currentTheme === theme.id ? 'white' : 'var(--text-white)',
                 border: '2px solid',
-                borderColor: currentTheme === theme.id ? 'var(--primary)' : 'var(--gray-200)',
+                borderColor: currentTheme === theme.id ? 'var(--brand-primary)' : 'rgba(59, 130, 246, 0.3)',
                 borderRadius: '12px',
                 cursor: 'pointer',
                 transition: 'all 0.2s',
@@ -434,13 +440,14 @@ function RemoteControl() {
 
       {/* Message Broadcasting Section */}
       <div className="message-section" style={{
-        background: 'white',
+        background: 'var(--brand-card)',
         borderRadius: '12px',
         padding: '20px',
         marginBottom: '20px',
-        boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+        boxShadow: '0 4px 12px rgba(31, 58, 139, 0.3)',
+        border: '1px solid rgba(59, 130, 246, 0.2)'
       }}>
-        <h4 style={{ marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <h4 style={{ marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--text-white)' }}>
           <span>📢</span>
           <span>Envoyer un message</span>
         </h4>
@@ -454,10 +461,12 @@ function RemoteControl() {
             style={{
               flex: 1,
               padding: '12px',
-              border: '2px solid var(--gray-200)',
+              border: '2px solid rgba(59, 130, 246, 0.3)',
               borderRadius: '8px',
               fontSize: '0.9375rem',
-              fontFamily: 'inherit'
+              fontFamily: 'inherit',
+              background: 'rgba(31, 58, 139, 0.1)',
+              color: 'var(--text-white)'
             }}
           />
           <button
@@ -465,7 +474,7 @@ function RemoteControl() {
             disabled={!message.trim()}
             style={{
               padding: '12px 20px',
-              background: message.trim() ? 'var(--brand-primary)' : 'var(--gray-300)',
+              background: message.trim() ? 'var(--brand-primary)' : 'rgba(100, 116, 139, 0.3)',
               color: 'white',
               border: 'none',
               borderRadius: '8px',
@@ -505,18 +514,19 @@ function RemoteControl() {
       {/* Statistics Section */}
       {stats && (
         <div className="stats-section" style={{
-          background: 'white',
+          background: 'var(--brand-card)',
           borderRadius: '12px',
           padding: '20px',
           marginBottom: '20px',
-          boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+          boxShadow: '0 4px 12px rgba(31, 58, 139, 0.3)',
+          border: '1px solid rgba(59, 130, 246, 0.2)'
         }}>
-          <h4 style={{ marginBottom: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <h4 style={{ marginBottom: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', color: 'var(--text-white)' }}>
             <span>Statistiques</span>
             <span style={{
               fontSize: '2rem',
               fontWeight: '900',
-              color: 'var(--primary)'
+              color: 'var(--brand-accent)'
             }}>
               {stats.progress_percentage}%
             </span>
@@ -528,25 +538,25 @@ function RemoteControl() {
           }}>
             <div style={{
               padding: '12px',
-              background: 'var(--gray-50)',
+              background: 'rgba(31, 58, 139, 0.15)',
               borderRadius: '8px'
             }}>
-              <div style={{ fontSize: '0.75rem', color: 'var(--gray-600)', marginBottom: '4px' }}>
+              <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '4px' }}>
                 Sessions
               </div>
-              <div style={{ fontSize: '1.5rem', fontWeight: '700', color: 'var(--gray-900)' }}>
+              <div style={{ fontSize: '1.5rem', fontWeight: '700', color: 'var(--text-white)' }}>
                 {stats.completed_sessions}/{stats.total_sessions}
               </div>
             </div>
             <div style={{
               padding: '12px',
-              background: 'var(--gray-50)',
+              background: 'rgba(31, 58, 139, 0.15)',
               borderRadius: '8px'
             }}>
-              <div style={{ fontSize: '0.75rem', color: 'var(--gray-600)', marginBottom: '4px' }}>
+              <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '4px' }}>
                 Temps écoulé
               </div>
-              <div style={{ fontSize: '1.5rem', fontWeight: '700', color: 'var(--gray-900)' }}>
+              <div style={{ fontSize: '1.5rem', fontWeight: '700', color: 'var(--text-white)' }}>
                 {stats.completed_duration_minutes}/{stats.total_duration_minutes} min
               </div>
             </div>
@@ -556,18 +566,20 @@ function RemoteControl() {
 
       {/* Notes Section */}
       <div className="notes-section" style={{
-        background: 'white',
+        background: 'var(--brand-card)',
         borderRadius: '12px',
         padding: '20px',
         marginBottom: '20px',
-        boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+        boxShadow: '0 4px 12px rgba(31, 58, 139, 0.3)',
+        border: '1px solid rgba(59, 130, 246, 0.2)'
       }}>
         <h4 style={{
           marginBottom: '12px',
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
-          cursor: 'pointer'
+          cursor: 'pointer',
+          color: 'var(--text-white)'
         }} onClick={() => setShowNotes(!showNotes)}>
           <span>📝 Notes de session</span>
           <span style={{ fontSize: '1.5rem' }}>{showNotes ? '▼' : '▶'}</span>
@@ -581,11 +593,13 @@ function RemoteControl() {
               width: '100%',
               minHeight: '120px',
               padding: '12px',
-              border: '2px solid var(--gray-200)',
+              border: '2px solid rgba(59, 130, 246, 0.3)',
               borderRadius: '8px',
               fontSize: '0.9375rem',
               fontFamily: 'inherit',
-              resize: 'vertical'
+              resize: 'vertical',
+              background: 'rgba(31, 58, 139, 0.1)',
+              color: 'var(--text-white)'
             }}
           />
         )}

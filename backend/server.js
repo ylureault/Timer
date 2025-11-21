@@ -418,9 +418,12 @@ app.get('/api/salon/:code/state', (req, res) => {
       current_session: currentSession,
       sessions: sessions,
       total_sessions: sessions.length,
+      message_actuel: timerState.message_actuel,
+      message_timestamp: timerState.message_timestamp,
       salon: {
         code: salon.code_4chiffres,
-        nom: salon.nom
+        nom: salon.nom,
+        url: salon.url_unique
       }
     });
   } catch (error) {

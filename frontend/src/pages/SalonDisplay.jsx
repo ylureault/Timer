@@ -19,13 +19,15 @@ function SalonDisplay() {
   // Initialize BroadcastChannel for reliable cross-tab theme synchronization
   useEffect(() => {
     themeChannel.current = new BroadcastChannel('salon-theme-channel')
+    console.log('🔌 SalonDisplay: BroadcastChannel initialized')
 
     // Listen for theme changes from other tabs via BroadcastChannel
     themeChannel.current.onmessage = (event) => {
       if (event.data.type === 'theme-change') {
         const newTheme = event.data.theme
         setTheme(newTheme)
-        console.log('✅ Theme received via BroadcastChannel:', newTheme)
+        console.log('✅ SalonDisplay: Theme received via BroadcastChannel:', newTheme)
+        console.log('🎨 SalonDisplay: Theme state updated to:', newTheme)
       }
     }
 
@@ -33,14 +35,14 @@ function SalonDisplay() {
     const handleStorageChange = () => {
       const newTheme = localStorage.getItem('display_theme') || 'luxe'
       setTheme(newTheme)
-      console.log('Theme changed via storage event:', newTheme)
+      console.log('📦 SalonDisplay: Theme changed via storage event:', newTheme)
     }
 
     // Fallback: Listen for custom events (same window)
     const handleThemeChange = (event) => {
       const newTheme = event.detail?.theme || localStorage.getItem('display_theme') || 'luxe'
       setTheme(newTheme)
-      console.log('Theme changed via custom event:', newTheme)
+      console.log('🎯 SalonDisplay: Theme changed via custom event:', newTheme)
     }
 
     window.addEventListener('storage', handleStorageChange)
@@ -49,11 +51,12 @@ function SalonDisplay() {
     // Sync on mount
     const initialTheme = localStorage.getItem('display_theme') || 'luxe'
     setTheme(initialTheme)
-    console.log('Initial theme loaded:', initialTheme)
+    console.log('🚀 SalonDisplay: Initial theme loaded:', initialTheme)
 
     return () => {
       if (themeChannel.current) {
         themeChannel.current.close()
+        console.log('🔌 SalonDisplay: BroadcastChannel closed')
       }
       window.removeEventListener('storage', handleStorageChange)
       window.removeEventListener('theme-change', handleThemeChange)

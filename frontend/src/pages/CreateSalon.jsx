@@ -312,7 +312,7 @@ function CreateSalon() {
 
               <div className="url-block">
                 <label>QR Code pour rejoindre</label>
-                <div style={{ display: 'flex', justifyContent: 'center', padding: '20px', background: 'white', borderRadius: '12px' }}>
+                <div style={{ display: 'flex', justifyContent: 'center', padding: '20px', background: 'rgba(255, 255, 255, 0.95)', borderRadius: '12px', border: '1px solid rgba(59, 130, 246, 0.2)' }}>
                   <img
                     src={generateQRCodeSVG(`${window.location.origin}/remote/${createdSalon.code_4chiffres}`, 200)}
                     alt="QR Code"
