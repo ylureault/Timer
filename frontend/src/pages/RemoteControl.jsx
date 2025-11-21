@@ -14,6 +14,7 @@ function RemoteControl() {
   const [showNotes, setShowNotes] = useState(false)
   const [stats, setStats] = useState(null)
   const [currentTheme, setCurrentTheme] = useState(localStorage.getItem('display_theme') || 'luxe')
+  const [message, setMessage] = useState('')
   const pollingInterval = useRef(null)
   const themeChannel = useRef(null)
 
@@ -153,6 +154,40 @@ function RemoteControl() {
     }
   }
   const handleAddTime = (seconds) => handleAction('addtime', { seconds })
+
+  const handleSendMessage = async () => {
+    if (!message.trim()) return
+    try {
+      const response = await fetch(`/api/salon/${code}/message`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: message.trim() })
+      })
+      if (response.ok) {
+        setMessage('')
+        showFeedback('✓ Message envoyé')
+      } else {
+        showFeedback('✗ Erreur')
+      }
+    } catch (err) {
+      console.error('Error sending message:', err)
+      showFeedback('✗ Erreur')
+    }
+  }
+
+  const handleClearMessage = async () => {
+    try {
+      const response = await fetch(`/api/salon/${code}/message/clear`, { method: 'POST' })
+      if (response.ok) {
+        showFeedback('✓ Message effacé')
+      } else {
+        showFeedback('✗ Erreur')
+      }
+    } catch (err) {
+      console.error('Error clearing message:', err)
+      showFeedback('✗ Erreur')
+    }
+  }
 
   const formatTime = (seconds) => {
     const mins = Math.floor(seconds / 60)
@@ -395,6 +430,76 @@ function RemoteControl() {
             </button>
           ))}
         </div>
+      </div>
+
+      {/* Message Broadcasting Section */}
+      <div className="message-section" style={{
+        background: 'white',
+        borderRadius: '12px',
+        padding: '20px',
+        marginBottom: '20px',
+        boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+      }}>
+        <h4 style={{ marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <span>📢</span>
+          <span>Envoyer un message</span>
+        </h4>
+        <div style={{ display: 'flex', gap: '8px', marginBottom: state.message_actuel ? '12px' : '0' }}>
+          <input
+            type="text"
+            placeholder="Message à afficher sur l'écran principal..."
+            value={message}
+            onChange={(e) => setMessage(e.target.value)}
+            onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
+            style={{
+              flex: 1,
+              padding: '12px',
+              border: '2px solid var(--gray-200)',
+              borderRadius: '8px',
+              fontSize: '0.9375rem',
+              fontFamily: 'inherit'
+            }}
+          />
+          <button
+            onClick={handleSendMessage}
+            disabled={!message.trim()}
+            style={{
+              padding: '12px 20px',
+              background: message.trim() ? 'var(--brand-primary)' : 'var(--gray-300)',
+              color: 'white',
+              border: 'none',
+              borderRadius: '8px',
+              cursor: message.trim() ? 'pointer' : 'not-allowed',
+              fontWeight: '600',
+              whiteSpace: 'nowrap'
+            }}
+          >
+            Envoyer
+          </button>
+        </div>
+        {state.message_actuel && (
+          <div style={{
+            padding: '12px',
+            background: 'rgba(255, 222, 89, 0.2)',
+            border: '2px solid var(--brand-accent)',
+            borderRadius: '8px',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center'
+          }}>
+            <span style={{ fontWeight: '600', color: 'var(--brand-dark)' }}>📢 {state.message_actuel}</span>
+            <button onClick={handleClearMessage} style={{
+              padding: '4px 12px',
+              background: 'rgba(0,0,0,0.1)',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: 'pointer',
+              fontWeight: '600'
+            }}>
+              ✕
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Statistics Section */}

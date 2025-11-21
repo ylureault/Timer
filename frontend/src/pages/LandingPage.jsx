@@ -1,7 +1,6 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { THEMES, applyTheme } from '../utils/features'
 import '../styles/LandingPage.css'
 import '../styles/HeroButtons.css'
 import '../styles/PremiumEffects.css'
@@ -9,35 +8,6 @@ import '../styles/PremiumEffects.css'
 function LandingPage() {
   const navigate = useNavigate()
   const [joinCode, setJoinCode] = useState('')
-  const [demoTime, setDemoTime] = useState(1800) // 30 minutes
-  const [demoRunning, setDemoRunning] = useState(false)
-  const [currentTheme, setCurrentTheme] = useState(localStorage.getItem('selected_theme') || 'light')
-
-  // Demo timer
-  useEffect(() => {
-    if (demoRunning && demoTime > 0) {
-      const interval = setInterval(() => {
-        setDemoTime(prev => Math.max(0, prev - 1))
-      }, 1000)
-      return () => clearInterval(interval)
-    }
-  }, [demoRunning, demoTime])
-
-  // Load theme on mount
-  useEffect(() => {
-    applyTheme(currentTheme)
-  }, [])
-
-  const handleThemeChange = (themeName) => {
-    setCurrentTheme(themeName)
-    applyTheme(themeName)
-  }
-
-  const formatTime = (seconds) => {
-    const mins = Math.floor(seconds / 60)
-    const secs = seconds % 60
-    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`
-  }
 
   const handleCreateSalon = () => {
     navigate('/create')
@@ -48,8 +18,6 @@ function LandingPage() {
       navigate(`/salon/${joinCode}`)
     }
   }
-
-  const progress = ((1800 - demoTime) / 1800) * 100
 
   return (
     <div className="landing-page-modern">
@@ -172,96 +140,6 @@ function LandingPage() {
           </motion.div>
         </div>
 
-        {/* Floating Premium Circular Timer Preview */}
-        <motion.div
-          className="hero-demo-float breathe"
-          initial={{ opacity: 0, scale: 0.8, y: 50 }}
-          animate={{ opacity: 1, scale: 1, y: 0 }}
-          transition={{ delay: 0.3, duration: 0.8, type: "spring" }}
-        >
-          <div className="demo-timer-premium shadow-depth-4 glow-insuffle">
-            {/* Circular timer */}
-            <div className="demo-circular-timer">
-              {/* Metal bezel */}
-              <div className="demo-bezel"></div>
-
-              {/* Watch face */}
-              <div className="demo-face">
-                {/* Tick marks */}
-                <div className="demo-marks"></div>
-
-                {/* Progress arc */}
-                <svg className="demo-progress-svg" viewBox="0 0 200 200">
-                  <circle
-                    cx="100"
-                    cy="100"
-                    r="85"
-                    fill="none"
-                    stroke="rgba(255,255,255,0.1)"
-                    strokeWidth="8"
-                  />
-                  <motion.circle
-                    cx="100"
-                    cy="100"
-                    r="85"
-                    fill="none"
-                    stroke="url(#gradient-demo)"
-                    strokeWidth="8"
-                    strokeLinecap="round"
-                    strokeDasharray={534.07}
-                    animate={{
-                      strokeDashoffset: 534.07 * (1 - progress / 100),
-                      rotate: -90
-                    }}
-                    transition={{ duration: 1 }}
-                    style={{ transformOrigin: 'center' }}
-                  />
-                  <defs>
-                    <linearGradient id="gradient-demo" x1="0%" y1="0%" x2="100%" y2="100%">
-                      <stop offset="0%" stopColor="#1f3a8b" />
-                      <stop offset="100%" stopColor="#3b82f6" />
-                    </linearGradient>
-                  </defs>
-                </svg>
-
-                {/* Center display */}
-                <div className="demo-center-display">
-                  <div className="demo-time-big">{formatTime(demoTime)}</div>
-                  <div className="demo-session-label">Session Focus</div>
-                </div>
-              </div>
-
-              {/* Glass overlay */}
-              <div className="demo-glass"></div>
-
-              {/* Center button */}
-              <motion.button
-                className={`demo-center-btn ${demoRunning ? 'playing' : ''}`}
-                onClick={() => setDemoRunning(!demoRunning)}
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                {demoRunning ? '⏸' : '▶'}
-              </motion.button>
-            </div>
-
-            {/* Controls below */}
-            <div className="demo-controls-modern">
-              <motion.button
-                className="demo-control-btn glass"
-                onClick={() => setDemoTime(1800)}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                ↻ Reset
-              </motion.button>
-              <motion.div className="demo-live-indicator" animate={{ opacity: [0.5, 1, 0.5] }} transition={{ duration: 2, repeat: Infinity }}>
-                <span className="demo-live-dot"></span>
-                <span>Live Demo</span>
-              </motion.div>
-            </div>
-          </div>
-        </motion.div>
       </section>
 
       {/* FEATURES SECTION */}
@@ -409,8 +287,8 @@ function LandingPage() {
                 gradient: 'linear-gradient(135deg, #3b82f6 0%, #ffde59 100%)'
               },
               {
-                title: 'Réunions Agiles',
-                description: 'Time-boxing efficace pour vos retros',
+                title: 'Réunions & Workshops',
+                description: 'Time-boxing efficace pour vos événements',
                 icon: '💼',
                 gradient: 'linear-gradient(135deg, #1f3a8b 0%, #ffde59 100%)'
               }

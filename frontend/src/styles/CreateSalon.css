@@ -1,10 +1,11 @@
 /* ========================================
-   CREATE SALON - ULTRA SIMPLE & FUN
+   CREATE SALON - INSUFFLE DESIGN
    ======================================== */
 .create-salon-modern {
   min-height: 100vh;
-  background: linear-gradient(135deg, #f8fafc 0%, #e0f2fe 100%);
+  background: var(--brand-dark);
   padding: 2rem 1rem;
+  color: var(--text-white);
 }
 
 .create-header-modern {
@@ -18,21 +19,22 @@
   align-items: center;
   gap: 0.5rem;
   padding: 0.75rem 1.5rem;
-  background: white;
-  border: none;
-  color: var(--gray-700);
+  background: var(--brand-card);
+  border: 1px solid rgba(59, 130, 246, 0.2);
+  color: var(--text-white);
   font-weight: 600;
   cursor: pointer;
   border-radius: var(--radius-full);
   transition: all var(--transition-base);
-  box-shadow: var(--shadow);
+  box-shadow: 0 4px 12px rgba(31, 58, 139, 0.2);
   margin-bottom: 2rem;
 }
 
 .btn-back:hover {
-  background: var(--gray-50);
+  background: rgba(31, 58, 139, 0.2);
   transform: translateY(-2px);
-  box-shadow: var(--shadow-lg);
+  box-shadow: 0 8px 24px rgba(31, 58, 139, 0.3);
+  border-color: var(--brand-primary);
 }
 
 .create-content-modern {
@@ -49,7 +51,7 @@
 .create-title-section h1 {
   font-size: clamp(2rem, 5vw, 3rem);
   font-weight: 900;
-  background: var(--gradient-primary);
+  background: linear-gradient(135deg, var(--brand-primary-light) 0%, var(--brand-accent) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -71,7 +73,7 @@
 
 .create-title-section p {
   font-size: 1.25rem;
-  color: var(--gray-600);
+  color: var(--text-muted);
   max-width: 600px;
   margin: 0 auto;
   animation: fadeIn 0.8s ease-out 0.2s both;
@@ -86,21 +88,21 @@
   }
 }
 
-/* Fun Card Design */
+/* INSUFFLE Card Design */
 .create-card-modern {
-  background: white;
+  background: var(--brand-card);
   border-radius: var(--radius-3xl);
   padding: 3rem 2.5rem;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.08);
-  border: 2px solid rgba(20, 184, 166, 0.1);
+  box-shadow: 0 20px 60px rgba(31, 58, 139, 0.2);
+  border: 2px solid rgba(59, 130, 246, 0.2);
   animation: fadeInUp 0.8s ease-out;
   transition: all 0.3s ease;
 }
 
 .create-card-modern:hover {
-  box-shadow: 0 25px 80px rgba(20, 184, 166, 0.12);
+  box-shadow: 0 25px 80px rgba(31, 58, 139, 0.3);
   transform: translateY(-5px);
-  border-color: rgba(20, 184, 166, 0.2);
+  border-color: var(--brand-primary);
 }
 
 @keyframes fadeInUp {
@@ -123,20 +125,23 @@
   margin-bottom: 0.75rem;
   font-weight: 700;
   font-size: 1.125rem;
-  color: var(--gray-900);
+  color: var(--text-white);
 }
 
 .form-section-modern .input {
   font-size: 1.125rem;
   padding: 1rem 1.5rem;
   border-width: 2px;
-  color: var(--gray-900);
-  background: white;
+  color: var(--text-white);
+  background: rgba(31, 58, 139, 0.1);
+  border-color: rgba(59, 130, 246, 0.3);
 }
 
 .form-section-modern .input:focus {
   transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(20, 184, 166, 0.15);
+  box-shadow: 0 8px 20px rgba(31, 58, 139, 0.3);
+  border-color: var(--brand-primary);
+  background: rgba(31, 58, 139, 0.15);
 }
 
 /* Sessions Section */
@@ -152,13 +157,13 @@
 .section-header-create h2 {
   font-size: 1.75rem;
   font-weight: 800;
-  color: var(--gray-900);
+  color: var(--text-white);
   margin: 0;
 }
 
 .section-subtitle {
   font-size: 0.875rem;
-  color: var(--gray-500);
+  color: var(--text-muted);
   margin-top: 0.25rem;
 }
 
@@ -187,12 +192,12 @@
   box-shadow: var(--shadow-lg);
 }
 
-/* Add Session Card - Super Fun */
+/* Add Session Card - INSUFFLE Style */
 .add-session-card {
   padding: 2rem;
   margin-bottom: 2rem;
-  background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 100%);
-  border: 3px dashed var(--primary);
+  background: rgba(31, 58, 139, 0.1);
+  border: 3px dashed var(--brand-primary);
   border-radius: var(--radius-2xl);
   animation: pulse-border 2s ease-in-out infinite;
 }
@@ -209,7 +214,7 @@
 .add-session-card h3 {
   font-size: 1.5rem;
   font-weight: 800;
-  color: var(--gray-900);
+  color: var(--text-white);
   margin-bottom: 1.5rem;
 }
 
@@ -223,7 +228,7 @@
 .add-session-grid label {
   display: block;
   font-weight: 600;
-  color: var(--gray-700);
+  color: var(--text-white);
   margin-bottom: 0.5rem;
   font-size: 0.9375rem;
 }
@@ -232,12 +237,12 @@
 .add-session-grid select {
   width: 100%;
   padding: 0.875rem 1rem;
-  border: 2px solid var(--gray-200);
+  border: 2px solid rgba(59, 130, 246, 0.3);
   border-radius: var(--radius-lg);
   font-size: 1rem;
   transition: all var(--transition-base);
-  background: white;
-  color: var(--gray-900);
+  background: rgba(31, 58, 139, 0.1);
+  color: var(--text-white);
 }
 
 .add-session-grid input:focus,
@@ -301,8 +306,8 @@
   align-items: center;
   gap: 1rem;
   padding: 1.25rem 1.5rem;
-  background: white;
-  border: 2px solid var(--gray-100);
+  background: rgba(31, 58, 139, 0.1);
+  border: 2px solid rgba(59, 130, 246, 0.2);
   border-radius: var(--radius-xl);
   transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   cursor: move;
@@ -396,14 +401,14 @@
   background: transparent;
   font-size: 1.125rem;
   font-weight: 700;
-  color: var(--gray-900);
+  color: var(--text-white);
   padding: 0.25rem 0;
   transition: all var(--transition-base);
 }
 
 .session-name-modern:focus {
   outline: none;
-  background: var(--gray-50);
+  background: rgba(31, 58, 139, 0.2);
   padding: 0.25rem 0.75rem;
   border-radius: var(--radius-md);
 }
@@ -431,23 +436,24 @@
 }
 
 .badge-primary {
-  background: rgba(20, 184, 166, 0.1);
-  color: var(--primary-700);
+  background: rgba(59, 130, 246, 0.2);
+  color: var(--brand-primary-light);
 }
 
 .badge-pause {
-  background: rgba(100, 116, 139, 0.1);
-  color: var(--gray-700);
+  background: rgba(100, 116, 139, 0.2);
+  color: var(--text-muted);
 }
 
 .session-duration-modern {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  background: var(--gray-50);
+  background: rgba(31, 58, 139, 0.15);
   padding: 0.5rem 1rem;
   border-radius: var(--radius-lg);
   flex-shrink: 0;
+  color: var(--text-white);
 }
 
 .session-duration-modern input {
@@ -456,19 +462,19 @@
   background: transparent;
   font-size: 1.125rem;
   font-weight: 700;
-  color: var(--gray-900);
+  color: var(--text-white);
   text-align: center;
 }
 
 .session-duration-modern input:focus {
   outline: none;
-  background: white;
+  background: rgba(31, 58, 139, 0.3);
   border-radius: var(--radius-md);
 }
 
 .session-duration-modern span {
   font-weight: 600;
-  color: var(--gray-500);
+  color: var(--text-muted);
   font-size: 0.875rem;
 }
 
@@ -478,10 +484,10 @@
   justify-content: center;
   width: 36px;
   height: 36px;
-  background: var(--gray-100);
+  background: rgba(239, 68, 68, 0.1);
   border: none;
   border-radius: 50%;
-  color: var(--gray-500);
+  color: rgba(239, 68, 68, 0.7);
   cursor: pointer;
   transition: all var(--transition-base);
   flex-shrink: 0;
@@ -684,13 +690,13 @@
 
 /* CODE DISPLAY - GIANT TICKET NUMBER */
 .code-display-modern {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, var(--brand-primary) 0%, var(--brand-accent) 100%);
   padding: 2rem;
   border-radius: var(--radius-xl);
   text-align: center;
   position: relative;
   overflow: hidden;
-  box-shadow: 0 8px 32px rgba(102, 126, 234, 0.3);
+  box-shadow: 0 8px 32px rgba(31, 58, 139, 0.4);
 }
 
 .code-display-modern::before {
@@ -729,24 +735,24 @@
   line-height: 1;
 }
 
-/* URL displays */
+/* URL displays - INSUFFLE */
 .url-display-modern {
   display: flex;
   align-items: center;
   gap: 0.75rem;
   padding: 1rem 1.25rem;
-  background: var(--gray-50);
-  border: 2px solid var(--gray-200);
+  background: rgba(31, 58, 139, 0.1);
+  border: 2px solid rgba(59, 130, 246, 0.3);
   border-radius: var(--radius-lg);
   font-family: monospace;
   font-size: 0.875rem;
-  color: var(--gray-700);
+  color: var(--text-white);
   transition: all var(--transition-base);
 }
 
 .url-display-modern:hover {
-  border-color: var(--primary);
-  background: var(--primary-50);
+  border-color: var(--brand-primary);
+  background: rgba(31, 58, 139, 0.2);
 }
 
 .url-display-modern span {
@@ -757,11 +763,12 @@
 }
 
 .btn-copy {
-  background: white;
-  border: 2px solid var(--gray-200);
+  background: var(--brand-card);
+  border: 2px solid rgba(59, 130, 246, 0.3);
   border-radius: var(--radius-md);
   padding: 0.5rem 0.75rem;
   font-size: 1.25rem;
+  color: var(--text-white);
   cursor: pointer;
   transition: all var(--transition-base);
   flex-shrink: 0;

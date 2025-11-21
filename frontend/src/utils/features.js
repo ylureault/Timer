@@ -3,8 +3,8 @@
 // ============================================
 
 export const SESSION_TEMPLATES = {
-  scrum: {
-    name: 'Daily Scrum',
+  daily: {
+    name: 'Daily Meeting',
     sessions: [
       { nom_session: 'Tour de table', duree_minutes: 10, couleur: '#3B82F6', type: 'session' },
       { nom_session: 'Points bloquants', duree_minutes: 5, couleur: '#EF4444', type: 'session' },

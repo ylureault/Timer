@@ -37,11 +37,30 @@ db.exec(`
     temps_restant INTEGER DEFAULT 0,
     mode TEXT DEFAULT 'pause',
     timestamp_dernier_update INTEGER,
+    message_actuel TEXT DEFAULT NULL,
+    message_timestamp INTEGER DEFAULT NULL,
     FOREIGN KEY (salon_id) REFERENCES salons(id) ON DELETE CASCADE
   );
 
   CREATE INDEX IF NOT EXISTS idx_sessions_salon ON sessions(salon_id);
   CREATE INDEX IF NOT EXISTS idx_timer_salon ON timer_states(salon_id);
 `);
+
+// Migration: Add message columns if they don't exist
+try {
+  db.exec(`
+    ALTER TABLE timer_states ADD COLUMN message_actuel TEXT DEFAULT NULL;
+  `);
+} catch (e) {
+  // Column already exists
+}
+
+try {
+  db.exec(`
+    ALTER TABLE timer_states ADD COLUMN message_timestamp INTEGER DEFAULT NULL;
+  `);
+} catch (e) {
+  // Column already exists
+}
 
 export default db;

@@ -193,6 +193,37 @@ function SalonDisplay() {
         </div>
       </motion.div>
 
+      {/* Message Banner */}
+      {state.message_actuel && (
+        <motion.div
+          className="message-banner"
+          initial={{ opacity: 0, y: -30 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -30 }}
+          style={{
+            position: 'fixed',
+            top: '100px',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            zIndex: 1000,
+            background: 'linear-gradient(135deg, var(--brand-accent) 0%, rgba(255, 222, 89, 0.9) 100%)',
+            color: 'var(--brand-dark)',
+            padding: '20px 40px',
+            borderRadius: '16px',
+            fontSize: '1.5rem',
+            fontWeight: '700',
+            boxShadow: '0 10px 40px rgba(255, 222, 89, 0.4), 0 0 0 3px rgba(255, 255, 255, 0.2)',
+            maxWidth: '80%',
+            textAlign: 'center',
+            backdropFilter: 'blur(10px)',
+            animation: 'pulse-glow 2s ease-in-out infinite'
+          }}
+        >
+          <span style={{ marginRight: '12px', fontSize: '1.8rem' }}>📢</span>
+          {state.message_actuel}
+        </motion.div>
+      )}
+
       {/* Le timer circulaire premium */}
       <div className="timer-stage">
         <motion.div

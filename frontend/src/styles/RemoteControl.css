@@ -1,7 +1,7 @@
 .remote-control {
   min-height: 100vh;
-  background: linear-gradient(135deg, #1F2937 0%, #111827 100%);
-  color: white;
+  background: var(--brand-dark);
+  color: var(--text-white);
   padding: 20px;
   padding-bottom: 40px;
   overflow-y: auto;
@@ -10,21 +10,21 @@
   gap: 20px;
 }
 
-/* Action Feedback Toast */
+/* Action Feedback Toast - INSUFFLE */
 .action-feedback {
   position: fixed;
   top: 20px;
   left: 50%;
   transform: translateX(-50%);
-  background: rgba(16, 185, 129, 0.95);
-  color: white;
+  background: var(--brand-accent);
+  color: var(--brand-dark);
   padding: 15px 30px;
   border-radius: 50px;
   font-size: 1.5rem;
   font-weight: 700;
   z-index: 1000;
   animation: fadeIn 0.3s ease, fadeOut 0.3s ease 1.2s;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 4px 20px rgba(31, 58, 139, 0.4);
 }
 
 @keyframes fadeOut {
@@ -34,15 +34,16 @@
   }
 }
 
-/* Header */
+/* Header - INSUFFLE */
 .remote-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   padding: 15px 20px;
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--brand-card);
   border-radius: 15px;
   backdrop-filter: blur(10px);
+  border: 1px solid rgba(59, 130, 246, 0.2);
 }
 
 .salon-info h3 {
@@ -77,13 +78,14 @@
   transform: scale(0.9);
 }
 
-/* Current Session Card */
+/* Current Session Card - INSUFFLE */
 .current-session-card {
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--brand-card);
   border-radius: 20px;
   padding: 30px;
   border: 3px solid;
   backdrop-filter: blur(10px);
+  box-shadow: 0 10px 40px rgba(31, 58, 139, 0.2);
 }
 
 .session-header {

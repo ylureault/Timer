@@ -543,6 +543,61 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', timestamp: Date.now() });
 });
 
+// ============================
+// MESSAGE SENDING
+// ============================
+
+app.post('/api/salon/:code/message', (req, res) => {
+  try {
+    const { code } = req.params;
+    const { message } = req.body;
+
+    if (!message || message.trim() === '') {
+      return res.status(400).json({ success: false, error: 'Message cannot be empty' });
+    }
+
+    const salon = db.prepare('SELECT id FROM salons WHERE code_4chiffres = ? OR url_unique = ?').get(code, code);
+    if (!salon) {
+      return res.status(404).json({ success: false, error: 'Salon not found' });
+    }
+
+    // Update the message in timer_states
+    db.prepare(`
+      UPDATE timer_states
+      SET message_actuel = ?, message_timestamp = ?
+      WHERE salon_id = ?
+    `).run(message.trim(), Date.now(), salon.id);
+
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Error sending message:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+app.post('/api/salon/:code/message/clear', (req, res) => {
+  try {
+    const { code } = req.params;
+
+    const salon = db.prepare('SELECT id FROM salons WHERE code_4chiffres = ? OR url_unique = ?').get(code, code);
+    if (!salon) {
+      return res.status(404).json({ success: false, error: 'Salon not found' });
+    }
+
+    // Clear the message
+    db.prepare(`
+      UPDATE timer_states
+      SET message_actuel = NULL, message_timestamp = NULL
+      WHERE salon_id = ?
+    `).run(salon.id);
+
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Error clearing message:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
 app.listen(PORT, () => {
   console.log(`🚀 Timer Salon API running on http://localhost:${PORT}`);
 });
