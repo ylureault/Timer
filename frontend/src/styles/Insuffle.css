@@ -324,6 +324,7 @@
 
 .verbatim-card {
   background: var(--brand-card);
+  backdrop-filter: blur(10px);
   padding: 1.5rem;
   border-radius: 0.5rem;
   border-left: 4px solid var(--brand-accent);
@@ -374,6 +375,7 @@
 
 .pilier-card {
   background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(10px);
   padding: 2.5rem;
   border-radius: 1rem;
   border-top: 4px solid var(--brand-primary);
@@ -620,6 +622,7 @@
   top: 100px;
   margin-bottom: 2rem;
   background: var(--brand-card);
+  backdrop-filter: blur(15px);
   padding: 2.5rem;
   border-radius: 1rem;
   border-left: 4px solid var(--brand-accent);
@@ -676,6 +679,7 @@
 
 .door-card {
   background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(15px);
   border-radius: 1rem;
   overflow: hidden;
   border: 1px solid rgba(255, 255, 255, 0.1);
@@ -785,6 +789,7 @@
   max-width: 800px;
   margin: 0 auto;
   background: var(--brand-card);
+  backdrop-filter: blur(20px);
   padding: 4rem;
   border-radius: 2rem;
   border: 4px solid var(--brand-primary);
