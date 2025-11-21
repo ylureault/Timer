@@ -345,14 +345,14 @@
 }
 
 .session-drag-handle {
-  color: var(--gray-400);
+  color: var(--text-muted);
   cursor: grab;
   transition: color var(--transition-base);
   flex-shrink: 0;
 }
 
 .session-drag-handle:hover {
-  color: var(--primary);
+  color: var(--brand-primary-light);
 }
 
 .session-drag-handle:active {
@@ -414,7 +414,8 @@
 }
 
 .session-name-modern::placeholder {
-  color: var(--gray-400);
+  color: var(--text-muted);
+  opacity: 0.6;
 }
 
 .session-meta {
@@ -517,13 +518,13 @@
 .empty-state-fun h3 {
   font-size: 1.5rem;
   font-weight: 800;
-  color: var(--gray-900);
+  color: var(--text-white);
   margin-bottom: 0.5rem;
 }
 
 .empty-state-fun p {
   font-size: 1rem;
-  color: var(--gray-600);
+  color: var(--text-muted);
 }
 
 /* Action Buttons */

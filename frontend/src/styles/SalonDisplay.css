@@ -10,14 +10,16 @@
    ======================================== */
 .salon-display-premium[data-theme="applat"] {
   min-height: 100vh;
+  height: 100vh;
   background: #f8fafc;
   color: #0f172a;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  padding: 2rem;
+  justify-content: space-between;
+  padding: 0;
   font-family: 'Inter', sans-serif;
+  position: relative;
 }
 
 .salon-display-premium[data-theme="applat"] .display-header-minimal {
@@ -57,7 +59,11 @@
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
   gap: 2rem;
+  flex: 1;
+  width: 100%;
+  padding: 2rem;
 }
 
 /* Timer applat carré */
@@ -161,6 +167,7 @@
    ======================================== */
 .salon-display-premium[data-theme="luxe"] {
   min-height: 100vh;
+  height: 100vh;
   background: #121214;
   background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.05'/%3E%3C/svg%3E"),
                     radial-gradient(circle at 50% 0%, #2a2a30 0%, #121214 70%);
@@ -168,19 +175,21 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  padding: 2rem;
+  justify-content: space-between;
+  padding: 0;
   font-family: 'Inter', sans-serif;
   overflow: hidden;
+  position: relative;
 }
 
 .salon-display-premium[data-theme="luxe"] .display-header-minimal {
-  position: absolute;
-  top: 2rem;
+  position: fixed;
+  top: 1.5rem;
   left: 50%;
   transform: translateX(-50%);
   text-align: center;
-  z-index: 10;
+  z-index: 100;
+  width: auto;
 }
 
 .salon-display-premium[data-theme="luxe"] .session-progress-bar {
@@ -215,7 +224,11 @@
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
   gap: 2rem;
+  flex: 1;
+  width: 100%;
+  padding: 2rem;
 }
 
 .salon-display-premium[data-theme="luxe"] .timer-container-lux {
@@ -427,19 +440,26 @@
 }
 
 .salon-display-premium[data-theme="luxe"] .display-footer-minimal {
-  position: absolute;
-  bottom: 2rem;
+  position: fixed;
+  bottom: 1rem;
   left: 50%;
   transform: translateX(-50%);
+  z-index: 100;
+  opacity: 0.7;
+  transition: opacity 0.3s ease;
+}
+
+.salon-display-premium[data-theme="luxe"] .display-footer-minimal:hover {
+  opacity: 1;
 }
 
 .salon-display-premium[data-theme="luxe"] .footer-info-minimal {
   display: flex;
   align-items: center;
   gap: 1rem;
-  font-size: 0.875rem;
-  color: rgba(255, 255, 255, 0.7);
-  padding: 0.75rem 1.5rem;
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.6);
+  padding: 0.5rem 1rem;
   border-radius: 20px;
 }
 
@@ -463,6 +483,7 @@
    ======================================== */
 .salon-display-premium[data-theme="neon"] {
   min-height: 100vh;
+  height: 100vh;
   background: #0a0a0f;
   background-image:
     repeating-linear-gradient(
@@ -477,8 +498,8 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  padding: 2rem;
+  justify-content: space-between;
+  padding: 0;
   font-family: 'Inter', monospace;
   overflow: hidden;
   position: relative;
@@ -546,7 +567,11 @@
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
   gap: 2rem;
+  flex: 1;
+  width: 100%;
+  padding: 2rem;
   z-index: 1;
 }
 
@@ -700,6 +725,7 @@
    ======================================== */
 .salon-display-premium[data-theme="aurora"] {
   min-height: 100vh;
+  height: 100vh;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
   background-size: 200% 200%;
   animation: gradient-shift 15s ease infinite;
@@ -707,8 +733,8 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  padding: 2rem;
+  justify-content: space-between;
+  padding: 0;
   font-family: 'Inter', sans-serif;
   overflow: hidden;
   position: relative;
@@ -801,7 +827,11 @@
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
   gap: 2rem;
+  flex: 1;
+  width: 100%;
+  padding: 2rem;
   z-index: 1;
 }
 
