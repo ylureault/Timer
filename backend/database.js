@@ -80,4 +80,13 @@ try {
   // Column already exists
 }
 
+// Migration: Add auto_mode column
+try {
+  db.exec(`
+    ALTER TABLE timer_states ADD COLUMN auto_mode INTEGER DEFAULT 0;
+  `);
+} catch (e) {
+  // Column already exists
+}
+
 export default db;

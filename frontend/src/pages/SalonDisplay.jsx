@@ -176,13 +176,14 @@ function SalonDisplay() {
   const isPlaying = mode === 'play'
   const isCompleted = mode === 'termine'
 
-  // Calculate dynamic dial numbers based on session duration (in minutes)
-  const durationMinutes = Math.floor(totalDuration / 60)
+  // Calculate dynamic dial numbers based on REMAINING time (in minutes)
+  // This ensures the dial shows the actual time at each position
+  const remainingMinutes = Math.ceil(temps_restant / 60)
   const dialNumbers = {
-    n0: durationMinutes, // Top (start)
-    n15: Math.floor(durationMinutes * 0.75), // Right (75%)
-    n30: Math.floor(durationMinutes * 0.5), // Bottom (50%)
-    n45: Math.floor(durationMinutes * 0.25) // Left (25%)
+    n0: remainingMinutes, // Top - current remaining time
+    n15: Math.ceil(remainingMinutes * 0.75), // Right - 75% of remaining
+    n30: Math.ceil(remainingMinutes * 0.5), // Bottom - 50% of remaining
+    n45: Math.ceil(remainingMinutes * 0.25) // Left - 25% of remaining
   }
 
   const isPaused = mode === 'pause'

@@ -16,6 +16,8 @@ function RemoteControl() {
   const [stats, setStats] = useState(null)
   const [currentTheme, setCurrentTheme] = useState(localStorage.getItem('display_theme') || 'luxe')
   const [message, setMessage] = useState('')
+  const [viewMode, setViewMode] = useState('agenda') // 'normal' or 'agenda' - for local remote view
+  const [autoMode, setAutoMode] = useState(false) // Auto-advance to next session when current ends
   const pollingInterval = useRef(null)
   const themeChannel = useRef(null)
 
@@ -96,6 +98,11 @@ function RemoteControl() {
         if (data.theme_actif && data.theme_actif !== currentTheme) {
           setCurrentTheme(data.theme_actif)
           localStorage.setItem('display_theme', data.theme_actif)
+        }
+
+        // Sync auto mode from database
+        if (data.auto_mode !== undefined) {
+          setAutoMode(data.auto_mode)
         }
       } else {
         setError(data.error || 'Salon non trouvé')
@@ -238,6 +245,30 @@ function RemoteControl() {
     }
   }
 
+  const handleAutoModeToggle = async () => {
+    const newAutoMode = !autoMode
+    setAutoMode(newAutoMode)
+
+    try {
+      const response = await fetch(`/api/salon/${code}/auto-mode`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ auto_mode: newAutoMode })
+      })
+
+      if (response.ok) {
+        showFeedback(newAutoMode ? '✓ Mode AUTO activé' : '✓ Mode AUTO désactivé')
+      } else {
+        showFeedback('✗ Erreur')
+        setAutoMode(!newAutoMode) // Revert on error
+      }
+    } catch (err) {
+      console.error('Error toggling auto mode:', err)
+      showFeedback('✗ Erreur')
+      setAutoMode(!newAutoMode) // Revert on error
+    }
+  }
+
   const formatTime = (seconds) => {
     const mins = Math.floor(seconds / 60)
     const secs = seconds % 60
@@ -299,7 +330,29 @@ function RemoteControl() {
           <h3>Télécommande</h3>
           <p>Code: {state.salon.code}</p>
         </div>
-        <div style={{ display: 'flex', gap: '8px' }}>
+        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+          <button
+            onClick={handleAutoModeToggle}
+            style={{
+              padding: '8px 12px',
+              background: autoMode ? 'var(--brand-primary)' : 'rgba(255, 255, 255, 0.1)',
+              color: 'white',
+              border: '2px solid',
+              borderColor: autoMode ? 'var(--brand-primary)' : 'rgba(255, 255, 255, 0.3)',
+              borderRadius: '8px',
+              cursor: 'pointer',
+              fontWeight: '600',
+              fontSize: '0.8rem',
+              transition: 'all 0.2s',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '4px'
+            }}
+            title={autoMode ? 'Mode AUTO activé - Les sessions avancent automatiquement' : 'Mode AUTO désactivé - Contrôle manuel'}
+          >
+            <span>{autoMode ? '⚡' : '🔘'}</span>
+            <span>AUTO</span>
+          </button>
           <button
             className="btn-icon"
             onClick={() => navigate(`/admin/${state.salon.code}`)}
@@ -439,44 +492,43 @@ function RemoteControl() {
       <div className="theme-selector-section" style={{
         background: 'var(--brand-card)',
         borderRadius: '12px',
-        padding: '20px',
-        marginBottom: '20px',
+        padding: '16px',
+        marginBottom: '16px',
         boxShadow: '0 4px 12px rgba(31, 58, 139, 0.3)',
         border: '1px solid rgba(59, 130, 246, 0.2)'
       }}>
-        <h4 style={{ marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--text-white)' }}>
-          <span>🎨</span>
-          <span>Thème d'affichage</span>
+        <h4 style={{ marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--text-white)', fontSize: '0.9rem' }}>
+          <span style={{ fontSize: '1rem' }}>🎨</span>
+          <span>Thème</span>
         </h4>
         <div style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(2, 1fr)',
-          gap: '12px'
+          gridTemplateColumns: 'repeat(4, 1fr)',
+          gap: '8px'
         }}>
           {themes.map(theme => (
             <button
               key={theme.id}
               onClick={() => handleThemeChange(theme.id)}
               style={{
-                padding: '16px 12px',
+                padding: '10px 6px',
                 background: currentTheme === theme.id ? 'var(--brand-primary)' : 'rgba(31, 58, 139, 0.1)',
                 color: currentTheme === theme.id ? 'white' : 'var(--text-white)',
                 border: '2px solid',
                 borderColor: currentTheme === theme.id ? 'var(--brand-primary)' : 'rgba(59, 130, 246, 0.3)',
-                borderRadius: '12px',
+                borderRadius: '8px',
                 cursor: 'pointer',
                 transition: 'all 0.2s',
                 textAlign: 'center',
-                fontSize: '0.9375rem',
+                fontSize: '0.8rem',
                 fontWeight: '600',
                 display: 'flex',
                 flexDirection: 'column',
-                gap: '4px'
+                gap: '3px'
               }}
             >
-              <span style={{ fontSize: '2rem' }}>{theme.emoji}</span>
-              <span>{theme.name}</span>
-              <span style={{ fontSize: '0.75rem', opacity: 0.8 }}>{theme.desc}</span>
+              <span style={{ fontSize: '1.5rem' }}>{theme.emoji}</span>
+              <span style={{ fontSize: '0.7rem' }}>{theme.name}</span>
             </button>
           ))}
         </div>
@@ -486,65 +538,63 @@ function RemoteControl() {
       <div style={{
         background: 'var(--brand-card)',
         borderRadius: '12px',
-        padding: '20px',
-        marginBottom: '20px',
+        padding: '16px',
+        marginBottom: '16px',
         boxShadow: '0 4px 12px rgba(31, 58, 139, 0.3)',
         border: '1px solid rgba(59, 130, 246, 0.2)'
       }}>
-        <h4 style={{ marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--text-white)' }}>
-          <span>📺</span>
-          <span>Mode d'affichage</span>
+        <h4 style={{ marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--text-white)', fontSize: '0.9rem' }}>
+          <span style={{ fontSize: '1rem' }}>📺</span>
+          <span>Affichage principal</span>
         </h4>
         <div style={{
           display: 'grid',
           gridTemplateColumns: 'repeat(2, 1fr)',
-          gap: '12px'
+          gap: '8px'
         }}>
           <button
             onClick={() => handleDisplayModeChange('timer')}
             style={{
-              padding: '16px 12px',
+              padding: '10px',
               background: state?.mode_affichage === 'timer' || !state?.mode_affichage ? 'var(--brand-primary)' : 'rgba(31, 58, 139, 0.1)',
               color: state?.mode_affichage === 'timer' || !state?.mode_affichage ? 'white' : 'var(--text-white)',
               border: '2px solid',
               borderColor: state?.mode_affichage === 'timer' || !state?.mode_affichage ? 'var(--brand-primary)' : 'rgba(59, 130, 246, 0.3)',
-              borderRadius: '12px',
+              borderRadius: '8px',
               cursor: 'pointer',
               transition: 'all 0.2s',
               textAlign: 'center',
-              fontSize: '0.9375rem',
+              fontSize: '0.85rem',
               fontWeight: '600',
               display: 'flex',
               flexDirection: 'column',
-              gap: '4px'
+              gap: '3px'
             }}
           >
-            <span style={{ fontSize: '2rem' }}>⏱️</span>
+            <span style={{ fontSize: '1.5rem' }}>⏱️</span>
             <span>Timer</span>
-            <span style={{ fontSize: '0.75rem', opacity: 0.8 }}>Vue circulaire</span>
           </button>
           <button
             onClick={() => handleDisplayModeChange('list')}
             style={{
-              padding: '16px 12px',
+              padding: '10px',
               background: state?.mode_affichage === 'list' ? 'var(--brand-primary)' : 'rgba(31, 58, 139, 0.1)',
               color: state?.mode_affichage === 'list' ? 'white' : 'var(--text-white)',
               border: '2px solid',
               borderColor: state?.mode_affichage === 'list' ? 'var(--brand-primary)' : 'rgba(59, 130, 246, 0.3)',
-              borderRadius: '12px',
+              borderRadius: '8px',
               cursor: 'pointer',
               transition: 'all 0.2s',
               textAlign: 'center',
-              fontSize: '0.9375rem',
+              fontSize: '0.85rem',
               fontWeight: '600',
               display: 'flex',
               flexDirection: 'column',
-              gap: '4px'
+              gap: '3px'
             }}
           >
-            <span style={{ fontSize: '2rem' }}>📋</span>
+            <span style={{ fontSize: '1.5rem' }}>📋</span>
             <span>Liste</span>
-            <span style={{ fontSize: '0.75rem', opacity: 0.8 }}>Agenda sessions</span>
           </button>
         </div>
       </div>
@@ -753,11 +803,11 @@ function RemoteControl() {
             borderRadius: '8px'
           }}>
             <button
-              onClick={() => handleDisplayModeChange('timer')}
+              onClick={() => setViewMode('normal')}
               style={{
                 padding: '8px 16px',
-                background: state?.mode_affichage === 'timer' || !state?.mode_affichage ? 'var(--brand-primary)' : 'transparent',
-                color: state?.mode_affichage === 'timer' || !state?.mode_affichage ? 'white' : 'var(--text-muted)',
+                background: viewMode === 'normal' ? 'var(--brand-primary)' : 'transparent',
+                color: viewMode === 'normal' ? 'white' : 'var(--text-muted)',
                 border: 'none',
                 borderRadius: '6px',
                 cursor: 'pointer',
@@ -766,14 +816,14 @@ function RemoteControl() {
                 transition: 'all 0.2s'
               }}
             >
-              ⏱️ Timer
+              📑 Normal
             </button>
             <button
-              onClick={() => handleDisplayModeChange('list')}
+              onClick={() => setViewMode('agenda')}
               style={{
                 padding: '8px 16px',
-                background: state?.mode_affichage === 'list' ? 'var(--brand-primary)' : 'transparent',
-                color: state?.mode_affichage === 'list' ? 'white' : 'var(--text-muted)',
+                background: viewMode === 'agenda' ? 'var(--brand-primary)' : 'transparent',
+                color: viewMode === 'agenda' ? 'white' : 'var(--text-muted)',
                 border: 'none',
                 borderRadius: '6px',
                 cursor: 'pointer',
@@ -782,12 +832,12 @@ function RemoteControl() {
                 transition: 'all 0.2s'
               }}
             >
-              📋 Liste
+              📅 Agenda
             </button>
           </div>
         </div>
 
-        {false ? (
+        {viewMode === 'normal' ? (
           // Vue normale (liste compacte) - DÉSACTIVÉE, on affiche toujours la vue agenda
           <div className="sessions-scroll" style={{ maxHeight: '400px', overflowY: 'auto' }}>
             {state.sessions.map((session, idx) => (

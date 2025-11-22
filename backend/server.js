@@ -404,6 +404,59 @@ app.get('/api/salon/:code/state', (req, res) => {
     const currentSession = sessions[timerState.session_en_cours] || sessions[0];
     const actualRemaining = calculateTimeRemaining(timerState, currentSession);
 
+    // AUTO MODE: Automatically advance to next session when current ends
+    if (timerState.auto_mode === 1 && timerState.mode === 'play' && actualRemaining <= 0) {
+      if (timerState.session_en_cours + 1 < sessions.length) {
+        // Auto-advance to next session
+        const nextSession = sessions[timerState.session_en_cours + 1];
+        db.prepare(`
+          UPDATE timer_states
+          SET session_en_cours = ?,
+              temps_restant = ?,
+              mode = 'play',
+              timestamp_dernier_update = ?
+          WHERE salon_id = ?
+        `).run(timerState.session_en_cours + 1, nextSession.duree_secondes, Date.now(), salon.id);
+
+        // Refresh state after auto-advance
+        const newTimerState = db.prepare('SELECT * FROM timer_states WHERE salon_id = ?').get(salon.id);
+        const newCurrentSession = sessions[newTimerState.session_en_cours];
+        const newActualRemaining = calculateTimeRemaining(newTimerState, newCurrentSession);
+        const newProgress = newCurrentSession ? 1 - (newActualRemaining / newCurrentSession.duree_secondes) : 0;
+
+        return res.json({
+          success: true,
+          mode: newTimerState.mode,
+          session_en_cours: newTimerState.session_en_cours,
+          temps_restant: newActualRemaining,
+          temps_ecoule: newCurrentSession ? newCurrentSession.duree_secondes - newActualRemaining : 0,
+          progress: Math.max(0, Math.min(1, newProgress)),
+          current_session: newCurrentSession,
+          sessions: sessions,
+          total_sessions: sessions.length,
+          message_actuel: newTimerState.message_actuel,
+          message_timestamp: newTimerState.message_timestamp,
+          theme_actif: newTimerState.theme_actif || 'luxe',
+          mode_affichage: newTimerState.mode_affichage || 'timer',
+          auto_mode: newTimerState.auto_mode === 1,
+          salon: {
+            code: salon.code_4chiffres,
+            nom: salon.nom,
+            url: salon.url_unique
+          }
+        });
+      } else {
+        // End of sessions
+        db.prepare(`
+          UPDATE timer_states
+          SET mode = 'termine',
+              temps_restant = 0,
+              timestamp_dernier_update = ?
+          WHERE salon_id = ?
+        `).run(Date.now(), salon.id);
+      }
+    }
+
     // Calculate progress (0 to 1)
     const progress = currentSession ?
       1 - (actualRemaining / currentSession.duree_secondes) : 0;
@@ -422,6 +475,7 @@ app.get('/api/salon/:code/state', (req, res) => {
       message_timestamp: timerState.message_timestamp,
       theme_actif: timerState.theme_actif || 'luxe',
       mode_affichage: timerState.mode_affichage || 'timer',
+      auto_mode: timerState.auto_mode === 1,
       salon: {
         code: salon.code_4chiffres,
         nom: salon.nom,
@@ -661,6 +715,35 @@ app.post('/api/salon/:code/display-mode', (req, res) => {
     res.json({ success: true, mode });
   } catch (error) {
     console.error('Error updating display mode:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// AUTO MODE ENDPOINT
+app.post('/api/salon/:code/auto-mode', (req, res) => {
+  try {
+    const { code } = req.params;
+    const { auto_mode } = req.body;
+
+    if (typeof auto_mode !== 'boolean') {
+      return res.status(400).json({ success: false, error: 'Invalid auto_mode. Must be boolean' });
+    }
+
+    const salon = db.prepare('SELECT id FROM salons WHERE code_4chiffres = ? OR url_unique = ?').get(code, code);
+    if (!salon) {
+      return res.status(404).json({ success: false, error: 'Salon not found' });
+    }
+
+    // Update auto mode in timer_states (store as INTEGER: 1 or 0)
+    db.prepare(`
+      UPDATE timer_states
+      SET auto_mode = ?
+      WHERE salon_id = ?
+    `).run(auto_mode ? 1 : 0, salon.id);
+
+    res.json({ success: true, auto_mode });
+  } catch (error) {
+    console.error('Error updating auto mode:', error);
     res.status(500).json({ success: false, error: error.message });
   }
 });
