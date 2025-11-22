@@ -239,7 +239,13 @@ function SalonDisplay() {
           <div className="timer-bezel"></div>
 
           {/* Cadran */}
-          <div className="timer-face">
+          <div
+            className="timer-face"
+            style={{
+              '--progress': `${progress * 100}`,
+              '--session-color': current_session.couleur
+            }}
+          >
             {/* Graduations */}
             <div className="timer-marks"></div>
 

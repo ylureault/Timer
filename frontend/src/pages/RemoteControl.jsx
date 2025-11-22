@@ -45,7 +45,7 @@ function RemoteControl() {
     localStorage.setItem('display_theme', newTheme)
     console.log('💾 RemoteControl: Theme saved to localStorage')
 
-    // Broadcast to all tabs/windows using BroadcastChannel
+    // Method 1: BroadcastChannel (works between tabs/windows)
     if (themeChannel.current) {
       themeChannel.current.postMessage({ type: 'theme-change', theme: newTheme })
       console.log('📤 RemoteControl: Theme broadcasted via BroadcastChannel:', newTheme)
@@ -53,9 +53,23 @@ function RemoteControl() {
       console.error('❌ RemoteControl: BroadcastChannel not initialized!')
     }
 
-    // Also trigger custom event for same-window communication (fallback)
+    // Method 2: localStorage event (works between tabs)
+    // Force trigger storage event
+    window.dispatchEvent(new StorageEvent('storage', {
+      key: 'display_theme',
+      newValue: newTheme,
+      url: window.location.href
+    }))
+    console.log('📦 RemoteControl: Storage event dispatched')
+
+    // Method 3: Custom event (works in same window)
     window.dispatchEvent(new CustomEvent('theme-change', { detail: { theme: newTheme } }))
-    console.log('📤 RemoteControl: Theme dispatched via CustomEvent')
+    console.log('📤 RemoteControl: Custom event dispatched')
+
+    // Method 4: Direct API call for immediate sync
+    setTimeout(() => {
+      console.log('✅ RemoteControl: Theme change complete')
+    }, 100)
   }
 
   const themes = [

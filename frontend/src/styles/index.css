@@ -436,38 +436,40 @@ body {
 .input {
   width: 100%;
   padding: 0.875rem 1.25rem;
-  border: 2px solid var(--gray-200);
+  border: 2px solid rgba(59, 130, 246, 0.2);
   border-radius: var(--radius-lg);
   font-size: 1rem;
   font-family: 'Inter', sans-serif;
   transition: all var(--transition-base);
-  background: white;
-  color: var(--gray-900);
+  background: var(--brand-card);
+  color: var(--text-white);
 }
 
 .input:focus {
   outline: none;
-  border-color: var(--primary);
-  box-shadow: 0 0 0 4px rgba(20, 184, 166, 0.1);
+  border-color: var(--brand-primary);
+  box-shadow: 0 0 0 4px rgba(31, 58, 139, 0.3);
 }
 
 .input::placeholder {
-  color: var(--gray-400);
+  color: var(--text-muted);
+  opacity: 0.7;
 }
 
 /* CARDS */
 .card {
-  background: white;
+  background: var(--brand-card);
   border-radius: var(--radius-xl);
   padding: var(--spacing-xl);
-  box-shadow: var(--shadow);
+  box-shadow: 0 10px 40px rgba(31, 58, 139, 0.2);
   transition: all var(--transition-base);
-  border: 1px solid var(--gray-100);
+  border: 1px solid rgba(59, 130, 246, 0.2);
 }
 
 .card:hover {
-  box-shadow: var(--shadow-lg);
+  box-shadow: 0 20px 60px rgba(31, 58, 139, 0.3);
   transform: translateY(-2px);
+  border-color: rgba(59, 130, 246, 0.4);
 }
 
 .card-glass {

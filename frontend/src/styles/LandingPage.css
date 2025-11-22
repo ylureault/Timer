@@ -191,11 +191,11 @@
 .join-input-modern input {
   flex: 1;
   border: none;
-  background: white;
+  background: var(--brand-card);
   padding: 0.75rem 1rem;
   font-size: 1.125rem;
   font-weight: 700;
-  color: var(--gray-900);
+  color: var(--text-white);
   font-family: monospace;
   letter-spacing: 0.5rem;
   text-align: center;
@@ -205,13 +205,15 @@
 
 .join-input-modern input:focus {
   outline: none;
-  background: white;
+  background: var(--brand-card);
+  box-shadow: 0 0 0 2px var(--brand-primary);
 }
 
 .join-input-modern input::placeholder {
-  color: var(--gray-500);
+  color: var(--text-muted);
   letter-spacing: 0.2rem;
   font-weight: 600;
+  opacity: 0.6;
 }
 
 .join-input-modern button {
