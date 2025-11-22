@@ -63,4 +63,21 @@ try {
   // Column already exists
 }
 
+// Migration: Add theme and display mode columns
+try {
+  db.exec(`
+    ALTER TABLE timer_states ADD COLUMN theme_actif TEXT DEFAULT 'luxe';
+  `);
+} catch (e) {
+  // Column already exists
+}
+
+try {
+  db.exec(`
+    ALTER TABLE timer_states ADD COLUMN mode_affichage TEXT DEFAULT 'timer';
+  `);
+} catch (e) {
+  // Column already exists
+}
+
 export default db;

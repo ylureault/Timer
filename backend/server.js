@@ -420,6 +420,8 @@ app.get('/api/salon/:code/state', (req, res) => {
       total_sessions: sessions.length,
       message_actuel: timerState.message_actuel,
       message_timestamp: timerState.message_timestamp,
+      theme_actif: timerState.theme_actif || 'luxe',
+      mode_affichage: timerState.mode_affichage || 'timer',
       salon: {
         code: salon.code_4chiffres,
         nom: salon.nom,
@@ -597,6 +599,68 @@ app.post('/api/salon/:code/message/clear', (req, res) => {
     res.json({ success: true });
   } catch (error) {
     console.error('Error clearing message:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// ============================
+// THEME AND DISPLAY MODE
+// ============================
+
+app.post('/api/salon/:code/theme', (req, res) => {
+  try {
+    const { code } = req.params;
+    const { theme } = req.body;
+
+    const validThemes = ['applat', 'luxe', 'neon', 'aurora'];
+    if (!theme || !validThemes.includes(theme)) {
+      return res.status(400).json({ success: false, error: 'Invalid theme. Must be one of: applat, luxe, neon, aurora' });
+    }
+
+    const salon = db.prepare('SELECT id FROM salons WHERE code_4chiffres = ? OR url_unique = ?').get(code, code);
+    if (!salon) {
+      return res.status(404).json({ success: false, error: 'Salon not found' });
+    }
+
+    // Update theme in timer_states
+    db.prepare(`
+      UPDATE timer_states
+      SET theme_actif = ?
+      WHERE salon_id = ?
+    `).run(theme, salon.id);
+
+    res.json({ success: true, theme });
+  } catch (error) {
+    console.error('Error updating theme:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+app.post('/api/salon/:code/display-mode', (req, res) => {
+  try {
+    const { code } = req.params;
+    const { mode } = req.body;
+
+    const validModes = ['timer', 'list'];
+    if (!mode || !validModes.includes(mode)) {
+      return res.status(400).json({ success: false, error: 'Invalid mode. Must be one of: timer, list' });
+    }
+
+    const salon = db.prepare('SELECT id FROM salons WHERE code_4chiffres = ? OR url_unique = ?').get(code, code);
+    if (!salon) {
+      return res.status(404).json({ success: false, error: 'Salon not found' });
+    }
+
+    // Update display mode in timer_states
+    db.prepare(`
+      UPDATE timer_states
+      SET mode_affichage = ?
+      WHERE salon_id = ?
+    `).run(mode, salon.id);
+
+    res.json({ success: true, mode });
+  } catch (error) {
+    console.error('Error updating display mode:', error);
     res.status(500).json({ success: false, error: error.message });
   }
 });

@@ -41,37 +41,39 @@ function RemoteControl() {
     }
   }, [])
 
-  const handleThemeChange = (newTheme) => {
+  const handleThemeChange = async (newTheme) => {
     console.log('🎨 RemoteControl: Changing theme to:', newTheme)
     setCurrentTheme(newTheme)
-    localStorage.setItem('display_theme', newTheme)
-    console.log('💾 RemoteControl: Theme saved to localStorage')
 
-    // Method 1: BroadcastChannel (works between tabs/windows)
-    if (themeChannel.current) {
-      themeChannel.current.postMessage({ type: 'theme-change', theme: newTheme })
-      console.log('📤 RemoteControl: Theme broadcasted via BroadcastChannel:', newTheme)
-    } else {
-      console.error('❌ RemoteControl: BroadcastChannel not initialized!')
+    // Save to database via API (primary method)
+    try {
+      const response = await fetch(`/api/salon/${code}/theme`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ theme: newTheme })
+      })
+
+      if (response.ok) {
+        console.log('✅ RemoteControl: Theme saved to database:', newTheme)
+        showFeedback('✓ Thème changé')
+
+        // Also save to localStorage for backward compatibility
+        localStorage.setItem('display_theme', newTheme)
+
+        // Broadcast to other tabs
+        if (themeChannel.current) {
+          themeChannel.current.postMessage({ type: 'theme-change', theme: newTheme })
+        }
+
+        fetchState() // Refresh state immediately
+      } else {
+        console.error('❌ RemoteControl: Failed to save theme to database')
+        showFeedback('✗ Erreur')
+      }
+    } catch (err) {
+      console.error('Error changing theme:', err)
+      showFeedback('✗ Erreur')
     }
-
-    // Method 2: localStorage event (works between tabs)
-    // Force trigger storage event
-    window.dispatchEvent(new StorageEvent('storage', {
-      key: 'display_theme',
-      newValue: newTheme,
-      url: window.location.href
-    }))
-    console.log('📦 RemoteControl: Storage event dispatched')
-
-    // Method 3: Custom event (works in same window)
-    window.dispatchEvent(new CustomEvent('theme-change', { detail: { theme: newTheme } }))
-    console.log('📤 RemoteControl: Custom event dispatched')
-
-    // Method 4: Direct API call for immediate sync
-    setTimeout(() => {
-      console.log('✅ RemoteControl: Theme change complete')
-    }, 100)
   }
 
   const themes = [
@@ -89,6 +91,12 @@ function RemoteControl() {
       if (data.success) {
         setState(data)
         setError(null)
+
+        // Sync theme from database
+        if (data.theme_actif && data.theme_actif !== currentTheme) {
+          setCurrentTheme(data.theme_actif)
+          localStorage.setItem('display_theme', data.theme_actif)
+        }
       } else {
         setError(data.error || 'Salon non trouvé')
       }
@@ -206,6 +214,26 @@ function RemoteControl() {
       }
     } catch (err) {
       console.error('Error clearing message:', err)
+      showFeedback('✗ Erreur')
+    }
+  }
+
+  const handleDisplayModeChange = async (newMode) => {
+    try {
+      const response = await fetch(`/api/salon/${code}/display-mode`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ mode: newMode })
+      })
+
+      if (response.ok) {
+        showFeedback('✓ Mode changé')
+        fetchState() // Refresh state immediately
+      } else {
+        showFeedback('✗ Erreur')
+      }
+    } catch (err) {
+      console.error('Error changing display mode:', err)
       showFeedback('✗ Erreur')
     }
   }
@@ -451,6 +479,73 @@ function RemoteControl() {
               <span style={{ fontSize: '0.75rem', opacity: 0.8 }}>{theme.desc}</span>
             </button>
           ))}
+        </div>
+      </div>
+
+      {/* Display Mode Toggle */}
+      <div style={{
+        background: 'var(--brand-card)',
+        borderRadius: '12px',
+        padding: '20px',
+        marginBottom: '20px',
+        boxShadow: '0 4px 12px rgba(31, 58, 139, 0.3)',
+        border: '1px solid rgba(59, 130, 246, 0.2)'
+      }}>
+        <h4 style={{ marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--text-white)' }}>
+          <span>📺</span>
+          <span>Mode d'affichage</span>
+        </h4>
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(2, 1fr)',
+          gap: '12px'
+        }}>
+          <button
+            onClick={() => handleDisplayModeChange('timer')}
+            style={{
+              padding: '16px 12px',
+              background: state?.mode_affichage === 'timer' || !state?.mode_affichage ? 'var(--brand-primary)' : 'rgba(31, 58, 139, 0.1)',
+              color: state?.mode_affichage === 'timer' || !state?.mode_affichage ? 'white' : 'var(--text-white)',
+              border: '2px solid',
+              borderColor: state?.mode_affichage === 'timer' || !state?.mode_affichage ? 'var(--brand-primary)' : 'rgba(59, 130, 246, 0.3)',
+              borderRadius: '12px',
+              cursor: 'pointer',
+              transition: 'all 0.2s',
+              textAlign: 'center',
+              fontSize: '0.9375rem',
+              fontWeight: '600',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '4px'
+            }}
+          >
+            <span style={{ fontSize: '2rem' }}>⏱️</span>
+            <span>Timer</span>
+            <span style={{ fontSize: '0.75rem', opacity: 0.8 }}>Vue circulaire</span>
+          </button>
+          <button
+            onClick={() => handleDisplayModeChange('list')}
+            style={{
+              padding: '16px 12px',
+              background: state?.mode_affichage === 'list' ? 'var(--brand-primary)' : 'rgba(31, 58, 139, 0.1)',
+              color: state?.mode_affichage === 'list' ? 'white' : 'var(--text-white)',
+              border: '2px solid',
+              borderColor: state?.mode_affichage === 'list' ? 'var(--brand-primary)' : 'rgba(59, 130, 246, 0.3)',
+              borderRadius: '12px',
+              cursor: 'pointer',
+              transition: 'all 0.2s',
+              textAlign: 'center',
+              fontSize: '0.9375rem',
+              fontWeight: '600',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '4px'
+            }}
+          >
+            <span style={{ fontSize: '2rem' }}>📋</span>
+            <span>Liste</span>
+            <span style={{ fontSize: '0.75rem', opacity: 0.8 }}>Agenda sessions</span>
+          </button>
         </div>
       </div>
 

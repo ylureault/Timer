@@ -71,6 +71,12 @@ function SalonDisplay() {
       if (data.success) {
         setState(data)
         setError(null)
+
+        // Sync theme from database
+        if (data.theme_actif) {
+          setTheme(data.theme_actif)
+          localStorage.setItem('display_theme', data.theme_actif)
+        }
       } else {
         setError(data.error || 'Salon non trouvé')
       }
@@ -227,88 +233,232 @@ function SalonDisplay() {
         </motion.div>
       )}
 
-      {/* Le timer circulaire premium */}
-      <div className="timer-stage">
-        <motion.div
-          className="timer-container-lux"
-          initial={{ scale: 0.8, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          transition={{ duration: 0.6, ease: "easeOut" }}
-        >
-          {/* Lunette métallique brossée */}
-          <div className="timer-bezel"></div>
+      {/* Conditional rendering: Timer mode vs List mode */}
+      {state.mode_affichage === 'list' ? (
+        /* MODE LISTE: Agenda view with all sessions */
+        <div style={{
+          maxWidth: '1200px',
+          margin: '0 auto',
+          padding: '40px 20px',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '20px'
+        }}>
+          {state.sessions.map((session, idx) => {
+            const isCompleted = idx < session_en_cours
+            const isCurrent = idx === session_en_cours
+            const isUpcoming = idx > session_en_cours
 
-          {/* Cadran */}
-          <div
-            className="timer-face"
-            style={{
-              '--progress': `${progress * 100}`,
-              '--session-color': current_session.couleur
-            }}
+            let progressPercent = 0
+            if (isCurrent) {
+              const elapsed = current_session.duree_secondes - temps_restant
+              progressPercent = (elapsed / current_session.duree_secondes) * 100
+            }
+
+            return (
+              <motion.div
+                key={session.id}
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: idx * 0.05 }}
+                style={{
+                  position: 'relative',
+                  padding: isCurrent ? '40px' : '30px',
+                  borderRadius: '20px',
+                  border: `3px solid ${isCurrent ? session.couleur : 'rgba(59, 130, 246, 0.2)'}`,
+                  background: isCompleted
+                    ? 'linear-gradient(135deg, rgba(220, 38, 38, 0.15) 0%, rgba(127, 29, 29, 0.1) 100%)'
+                    : isCurrent
+                    ? `linear-gradient(135deg, ${session.couleur}20 0%, ${session.couleur}10 100%)`
+                    : 'rgba(31, 58, 139, 0.05)',
+                  boxShadow: isCurrent
+                    ? `0 20px 60px ${session.couleur}40, 0 0 0 1px ${session.couleur}20`
+                    : '0 4px 12px rgba(0, 0, 0, 0.1)',
+                  opacity: isUpcoming ? 0.6 : 1,
+                  overflow: 'hidden',
+                  transition: 'all 0.3s ease'
+                }}
+              >
+                {/* Progress bar background for current session */}
+                {isCurrent && (
+                  <div style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    height: '100%',
+                    width: `${progressPercent}%`,
+                    background: `linear-gradient(90deg, ${session.couleur}30, ${session.couleur}15)`,
+                    transition: 'width 0.3s linear',
+                    borderRadius: '17px 0 0 17px'
+                  }} />
+                )}
+
+                <div style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', gap: '30px' }}>
+                  {/* Status icon */}
+                  <div style={{
+                    fontSize: isCurrent ? '4rem' : '3rem',
+                    flexShrink: 0,
+                    opacity: isUpcoming ? 0.4 : 1
+                  }}>
+                    {isCompleted ? '✓' : isCurrent ? '▶' : '⭕'}
+                  </div>
+
+                  {/* Session info */}
+                  <div style={{ flex: 1 }}>
+                    <div style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '15px',
+                      marginBottom: isCurrent ? '15px' : '10px'
+                    }}>
+                      <span style={{
+                        padding: '8px 16px',
+                        borderRadius: '12px',
+                        background: session.couleur,
+                        color: 'white',
+                        fontSize: isCurrent ? '1.1rem' : '0.95rem',
+                        fontWeight: '700'
+                      }}>
+                        {session.type === 'pause' ? '☕' : '🎯'}
+                      </span>
+                      <h3 style={{
+                        fontSize: isCurrent ? '2.5rem' : '1.8rem',
+                        fontWeight: '700',
+                        color: 'var(--text-white)',
+                        margin: 0
+                      }}>
+                        {session.nom_session}
+                      </h3>
+                    </div>
+
+                    {isCurrent && (
+                      <div style={{
+                        fontSize: '1.2rem',
+                        color: 'var(--text-muted)',
+                        marginTop: '10px'
+                      }}>
+                        {isPlaying ? '▶ En cours' : isCompleted ? '✓ Terminé' : '⏸ En pause'}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Time display */}
+                  <div style={{
+                    textAlign: 'right',
+                    flexShrink: 0
+                  }}>
+                    {isCurrent ? (
+                      <div style={{
+                        fontSize: '5rem',
+                        fontWeight: '700',
+                        fontFamily: 'monospace',
+                        color: session.couleur,
+                        lineHeight: 1,
+                        textShadow: `0 0 20px ${session.couleur}40`
+                      }}>
+                        {formatTime(temps_restant)}
+                      </div>
+                    ) : (
+                      <div style={{
+                        fontSize: '2rem',
+                        fontWeight: '600',
+                        color: 'var(--text-muted)',
+                        fontFamily: 'monospace',
+                        opacity: isCompleted ? 0.5 : 0.7
+                      }}>
+                        {formatTime(session.duree_secondes)}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </motion.div>
+            )
+          })}
+        </div>
+      ) : (
+        /* MODE TIMER: Circular timer view */
+        <div className="timer-stage">
+          <motion.div
+            className="timer-container-lux"
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ duration: 0.6, ease: "easeOut" }}
           >
-            {/* Graduations */}
-            <div className="timer-marks"></div>
+            {/* Lunette métallique brossée */}
+            <div className="timer-bezel"></div>
 
-            {/* Chiffres sur le cadran (quarts) - dynamiques basés sur la durée */}
-            <div className="timer-numbers">
-              <div className="num n0">{dialNumbers.n0}</div>
-              <div className="num n15">{dialNumbers.n15}</div>
-              <div className="num n30">{dialNumbers.n30}</div>
-              <div className="num n45">{dialNumbers.n45}</div>
+            {/* Cadran */}
+            <div
+              className="timer-face"
+              style={{
+                '--progress': `${progress * 100}`,
+                '--session-color': current_session.couleur
+              }}
+            >
+              {/* Graduations */}
+              <div className="timer-marks"></div>
+
+              {/* Chiffres sur le cadran (quarts) - dynamiques basés sur la durée */}
+              <div className="timer-numbers">
+                <div className="num n0">{dialNumbers.n0}</div>
+                <div className="num n15">{dialNumbers.n15}</div>
+                <div className="num n30">{dialNumbers.n30}</div>
+                <div className="num n45">{dialNumbers.n45}</div>
+              </div>
+
+              {/* Disque de progression avec la couleur de session */}
+              <div
+                className="color-wedge"
+                style={{
+                  '--angle': `${angle}deg`,
+                  '--session-color': current_session.couleur,
+                  '--session-color-dark': current_session.couleur + 'dd'
+                }}
+              ></div>
             </div>
 
-            {/* Disque de progression avec la couleur de session */}
-            <div
-              className="color-wedge"
-              style={{
-                '--angle': `${angle}deg`,
-                '--session-color': current_session.couleur,
-                '--session-color-dark': current_session.couleur + 'dd'
-              }}
-            ></div>
-          </div>
+            {/* Vitre en verre */}
+            <div className="glass-overlay"></div>
 
-          {/* Vitre en verre */}
-          <div className="glass-overlay"></div>
+            {/* Bouton central */}
+            <div className="center-knob"></div>
+          </motion.div>
 
-          {/* Bouton central */}
-          <div className="center-knob"></div>
-        </motion.div>
+          {/* Temps digital sous le timer */}
+          <motion.div
+            className="digital-time-display"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+            key={temps_restant}
+          >
+            {formatTime(temps_restant)}
+          </motion.div>
 
-        {/* Temps digital sous le timer */}
-        <motion.div
-          className="digital-time-display"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-          key={temps_restant}
-        >
-          {formatTime(temps_restant)}
-        </motion.div>
+          {/* Nom de la session */}
+          <motion.div
+            className="session-name-display"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.4 }}
+          >
+            <span className="session-badge" style={{ backgroundColor: current_session.couleur }}>
+              {current_session.type === 'pause' ? '☕' : '🎯'}
+            </span>
+            <h2>{current_session.nom_session}</h2>
+          </motion.div>
 
-        {/* Nom de la session */}
-        <motion.div
-          className="session-name-display"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.4 }}
-        >
-          <span className="session-badge" style={{ backgroundColor: current_session.couleur }}>
-            {current_session.type === 'pause' ? '☕' : '🎯'}
-          </span>
-          <h2>{current_session.nom_session}</h2>
-        </motion.div>
-
-        {/* État */}
-        <motion.div
-          className="mode-indicator"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.5 }}
-        >
-          {isPlaying ? '▶ En cours' : isCompleted ? '✓ Terminé' : '⏸ En pause'}
-        </motion.div>
-      </div>
+          {/* État */}
+          <motion.div
+            className="mode-indicator"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.5 }}
+          >
+            {isPlaying ? '▶ En cours' : isCompleted ? '✓ Terminé' : '⏸ En pause'}
+          </motion.div>
+        </div>
+      )}
 
       {/* Footer minimaliste */}
       <motion.div className="display-footer-minimal" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.6 }}>
