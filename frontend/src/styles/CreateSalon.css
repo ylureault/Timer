@@ -518,13 +518,13 @@
 .empty-state-fun h3 {
   font-size: 1.5rem;
   font-weight: 800;
-  color: var(--text-white);
+  color: var(--brand-dark);
   margin-bottom: 0.5rem;
 }
 
 .empty-state-fun p {
   font-size: 1rem;
-  color: var(--text-muted);
+  color: rgba(15, 23, 42, 0.7);
 }
 
 /* Action Buttons */

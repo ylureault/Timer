@@ -526,14 +526,14 @@
   position: fixed;
   bottom: 1rem;
   left: 1rem;
-  font-size: 0.625rem;
-  color: rgba(255, 255, 255, 0.3);
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.5);
   z-index: 999;
-  font-weight: 500;
+  font-weight: 600;
   letter-spacing: 0.5px;
   transition: color 0.3s ease;
 }
 
 .insuffle-credit:hover {
-  color: rgba(255, 255, 255, 0.6);
+  color: rgba(255, 255, 255, 0.8);
 }
