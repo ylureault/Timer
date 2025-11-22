@@ -15,6 +15,7 @@ function RemoteControl() {
   const [stats, setStats] = useState(null)
   const [currentTheme, setCurrentTheme] = useState(localStorage.getItem('display_theme') || 'luxe')
   const [message, setMessage] = useState('')
+  const [viewMode, setViewMode] = useState('normal') // 'normal' or 'agenda'
   const pollingInterval = useRef(null)
   const themeChannel = useRef(null)
 
@@ -619,28 +620,256 @@ function RemoteControl() {
         )}
       </div>
 
-      {/* Sessions List */}
-      <div className="sessions-list-remote">
-        <h4>Toutes les sessions</h4>
-        <div className="sessions-scroll">
-          {state.sessions.map((session, idx) => (
-            <div
-              key={idx}
-              className={`session-item-remote ${idx === session_en_cours ? 'active' : ''} ${idx < session_en_cours ? 'completed' : ''}`}
-              style={{ borderLeftColor: session.couleur }}
+      {/* Sessions View - Toggle between Normal and Agenda */}
+      <div style={{
+        background: 'var(--brand-card)',
+        borderRadius: '12px',
+        padding: '20px',
+        marginBottom: '20px',
+        boxShadow: '0 4px 12px rgba(31, 58, 139, 0.3)',
+        border: '1px solid rgba(59, 130, 246, 0.2)'
+      }}>
+        <div style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          marginBottom: '16px'
+        }}>
+          <h4 style={{ margin: 0, color: 'var(--text-white)' }}>📋 Sessions</h4>
+          <div style={{
+            display: 'flex',
+            gap: '8px',
+            background: 'rgba(31, 58, 139, 0.2)',
+            padding: '4px',
+            borderRadius: '8px'
+          }}>
+            <button
+              onClick={() => setViewMode('normal')}
+              style={{
+                padding: '8px 16px',
+                background: viewMode === 'normal' ? 'var(--brand-primary)' : 'transparent',
+                color: viewMode === 'normal' ? 'white' : 'var(--text-muted)',
+                border: 'none',
+                borderRadius: '6px',
+                cursor: 'pointer',
+                fontWeight: '600',
+                fontSize: '0.875rem',
+                transition: 'all 0.2s'
+              }}
             >
-              <div className="session-item-number">
-                {idx < session_en_cours ? '✓' : idx + 1}
-              </div>
-              <div className="session-item-info">
-                <div className="session-item-name">{session.nom_session}</div>
-                <div className="session-item-duration">
-                  {Math.floor(session.duree_secondes / 60)} min
+              📑 Normal
+            </button>
+            <button
+              onClick={() => setViewMode('agenda')}
+              style={{
+                padding: '8px 16px',
+                background: viewMode === 'agenda' ? 'var(--brand-primary)' : 'transparent',
+                color: viewMode === 'agenda' ? 'white' : 'var(--text-muted)',
+                border: 'none',
+                borderRadius: '6px',
+                cursor: 'pointer',
+                fontWeight: '600',
+                fontSize: '0.875rem',
+                transition: 'all 0.2s'
+              }}
+            >
+              📅 Agenda
+            </button>
+          </div>
+        </div>
+
+        {viewMode === 'normal' ? (
+          // Vue normale (liste compacte)
+          <div className="sessions-scroll" style={{ maxHeight: '400px', overflowY: 'auto' }}>
+            {state.sessions.map((session, idx) => (
+              <div
+                key={idx}
+                className={`session-item-remote ${idx === session_en_cours ? 'active' : ''} ${idx < session_en_cours ? 'completed' : ''}`}
+                style={{
+                  borderLeft: `4px solid ${session.couleur}`,
+                  padding: '12px',
+                  marginBottom: '8px',
+                  borderRadius: '8px',
+                  background: idx === session_en_cours
+                    ? 'rgba(59, 130, 246, 0.15)'
+                    : idx < session_en_cours
+                    ? 'rgba(239, 68, 68, 0.1)'
+                    : 'rgba(31, 58, 139, 0.05)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '12px'
+                }}
+              >
+                <div style={{
+                  width: '32px',
+                  height: '32px',
+                  borderRadius: '50%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontWeight: '700',
+                  fontSize: '1rem',
+                  background: idx === session_en_cours
+                    ? 'var(--brand-accent)'
+                    : idx < session_en_cours
+                    ? '#ef4444'
+                    : 'rgba(100, 116, 139, 0.3)',
+                  color: idx === session_en_cours ? 'var(--brand-dark)' : 'white'
+                }}>
+                  {idx < session_en_cours ? '✓' : idx + 1}
+                </div>
+                <div style={{ flex: 1 }}>
+                  <div style={{
+                    fontWeight: '600',
+                    color: 'var(--text-white)',
+                    marginBottom: '2px'
+                  }}>
+                    {session.nom_session}
+                  </div>
+                  <div style={{
+                    fontSize: '0.875rem',
+                    color: 'var(--text-muted)'
+                  }}>
+                    {Math.floor(session.duree_secondes / 60)} min
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        ) : (
+          // Vue AGENDA (planning vertical avec jauges)
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            {state.sessions.map((session, idx) => {
+              const isCompleted = idx < session_en_cours
+              const isCurrent = idx === session_en_cours
+              const isUpcoming = idx > session_en_cours
+
+              // Calcul de la progression pour la session en cours
+              let progressPercent = 0
+              if (isCurrent && state.current_session) {
+                const elapsed = state.current_session.duree_secondes - temps_restant
+                progressPercent = (elapsed / state.current_session.duree_secondes) * 100
+              }
+
+              return (
+                <div
+                  key={idx}
+                  style={{
+                    position: 'relative',
+                    padding: '16px',
+                    borderRadius: '12px',
+                    border: `2px solid ${isCurrent ? session.couleur : 'rgba(59, 130, 246, 0.2)'}`,
+                    background: isCompleted
+                      ? 'rgba(239, 68, 68, 0.1)'
+                      : isCurrent
+                      ? 'rgba(31, 58, 139, 0.15)'
+                      : 'rgba(100, 116, 139, 0.05)',
+                    overflow: 'hidden',
+                    boxShadow: isCurrent
+                      ? `0 0 20px ${session.couleur}40`
+                      : '0 2px 8px rgba(0,0,0,0.1)',
+                    transition: 'all 0.3s ease'
+                  }}
+                >
+                  {/* Jauge de progression pour session en cours */}
+                  {isCurrent && (
+                    <div
+                      style={{
+                        position: 'absolute',
+                        left: 0,
+                        top: 0,
+                        bottom: 0,
+                        width: `${progressPercent}%`,
+                        background: `linear-gradient(90deg, ${session.couleur}20, ${session.couleur}40)`,
+                        transition: 'width 0.3s ease',
+                        zIndex: 0
+                      }}
+                    />
+                  )}
+
+                  <div style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    {/* Icône de statut */}
+                    <div style={{
+                      width: '48px',
+                      height: '48px',
+                      borderRadius: '50%',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontWeight: '900',
+                      fontSize: '1.5rem',
+                      background: isCompleted
+                        ? '#ef4444'
+                        : isCurrent
+                        ? session.couleur
+                        : 'rgba(100, 116, 139, 0.3)',
+                      color: isCompleted || isCurrent ? 'white' : 'rgba(255,255,255,0.5)',
+                      boxShadow: isCurrent ? `0 0 15px ${session.couleur}60` : 'none',
+                      flexShrink: 0
+                    }}>
+                      {isCompleted ? '✓' : isUpcoming ? '⭕' : '▶'}
+                    </div>
+
+                    {/* Infos session */}
+                    <div style={{ flex: 1 }}>
+                      <div style={{
+                        fontWeight: '700',
+                        fontSize: '1.125rem',
+                        color: 'var(--text-white)',
+                        marginBottom: '4px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '8px'
+                      }}>
+                        <span>{session.nom_session}</span>
+                        {session.type === 'pause' && <span>☕</span>}
+                        {session.type === 'travail' && <span>🎯</span>}
+                      </div>
+                      <div style={{
+                        fontSize: '0.875rem',
+                        color: 'var(--text-muted)',
+                        display: 'flex',
+                        gap: '12px',
+                        alignItems: 'center'
+                      }}>
+                        <span>⏱ {Math.floor(session.duree_secondes / 60)} min</span>
+                        {isCompleted && <span style={{ color: '#ef4444', fontWeight: '600' }}>✓ Terminée</span>}
+                        {isUpcoming && <span style={{ color: 'var(--text-muted)' }}>À venir</span>}
+                      </div>
+                    </div>
+
+                    {/* Temps restant pour session en cours */}
+                    {isCurrent && (
+                      <div style={{
+                        textAlign: 'right',
+                        flexShrink: 0
+                      }}>
+                        <div style={{
+                          fontSize: '2rem',
+                          fontWeight: '900',
+                          color: 'var(--brand-accent)',
+                          lineHeight: 1,
+                          fontVariantNumeric: 'tabular-nums',
+                          textShadow: '0 0 10px rgba(255, 222, 89, 0.5)'
+                        }}>
+                          {formatTime(temps_restant)}
+                        </div>
+                        <div style={{
+                          fontSize: '0.75rem',
+                          color: 'var(--text-muted)',
+                          marginTop: '4px',
+                          fontWeight: '600'
+                        }}>
+                          {Math.round(progressPercent)}% écoulé
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        )}
       </div>
 
       {/* Danger Zone */}
