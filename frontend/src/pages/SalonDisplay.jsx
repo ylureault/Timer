@@ -185,10 +185,13 @@ function SalonDisplay() {
     n45: Math.floor(durationMinutes * 0.25) // Left (25%)
   }
 
+  const isPaused = mode === 'pause'
+
   return (
     <motion.div
-      className={`salon-display-premium ${isPlaying ? 'is-running' : ''}`}
+      className={`salon-display-premium ${isPlaying ? 'is-running' : ''} ${isPaused ? 'is-paused' : ''}`}
       data-theme={theme}
+      style={{ '--progress': progress * 100 }}
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
     >

@@ -77,10 +77,11 @@ function RemoteControl() {
   }
 
   const themes = [
-    { id: 'applat', name: 'Applat', desc: 'Design minimaliste', emoji: '⬜', color: '#3B82F6' },
-    { id: 'luxe', name: 'Luxe', desc: 'Timer circulaire premium', emoji: '⌚', color: '#0d9488' },
-    { id: 'neon', name: 'Néon', desc: 'Futuriste cyber', emoji: '🌐', color: '#00ffff' },
-    { id: 'aurora', name: 'Aurora', desc: 'Dégradés colorés', emoji: '🌈', color: '#ec4899' }
+    { id: 'gradient', name: 'Gradient', desc: 'Fond = jauge', emoji: '🌅', color: '#8B5CF6' },
+    { id: 'applat', name: 'Applat', desc: 'Barre sobre', emoji: '▬', color: '#3B82F6' },
+    { id: 'luxe', name: 'Luxe', desc: 'Montre', emoji: '⌚', color: '#888' },
+    { id: 'neon', name: 'Néon', desc: 'Cyber', emoji: '▭', color: '#00d9ff' },
+    { id: 'aurora', name: 'Aurora', desc: 'Radial', emoji: '◉', color: '#ec4899' }
   ]
 
   const fetchState = async () => {

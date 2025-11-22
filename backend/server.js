@@ -612,9 +612,9 @@ app.post('/api/salon/:code/theme', (req, res) => {
     const { code } = req.params;
     const { theme } = req.body;
 
-    const validThemes = ['applat', 'luxe', 'neon', 'aurora'];
+    const validThemes = ['gradient', 'applat', 'luxe', 'neon', 'aurora'];
     if (!theme || !validThemes.includes(theme)) {
-      return res.status(400).json({ success: false, error: 'Invalid theme. Must be one of: applat, luxe, neon, aurora' });
+      return res.status(400).json({ success: false, error: 'Invalid theme. Must be one of: gradient, applat, luxe, neon, aurora' });
     }
 
     const salon = db.prepare('SELECT id FROM salons WHERE code_4chiffres = ? OR url_unique = ?').get(code, code);
