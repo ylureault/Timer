@@ -242,10 +242,14 @@ function SalonDisplay() {
         <div style={{
           maxWidth: '1200px',
           margin: '0 auto',
-          padding: '40px 20px',
+          padding: '7rem 20px 5rem',
           display: 'flex',
           flexDirection: 'column',
-          gap: '20px'
+          gap: '20px',
+          minHeight: '100vh',
+          justifyContent: 'center',
+          position: 'relative',
+          zIndex: 1
         }}>
           {state.sessions.map((session, idx) => {
             const isCompleted = idx < session_en_cours
@@ -433,7 +437,6 @@ function SalonDisplay() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
-            key={temps_restant}
           >
             {formatTime(temps_restant)}
           </motion.div>

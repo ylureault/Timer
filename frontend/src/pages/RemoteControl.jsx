@@ -16,7 +16,6 @@ function RemoteControl() {
   const [stats, setStats] = useState(null)
   const [currentTheme, setCurrentTheme] = useState(localStorage.getItem('display_theme') || 'luxe')
   const [message, setMessage] = useState('')
-  const [viewMode, setViewMode] = useState('normal') // 'normal' or 'agenda'
   const pollingInterval = useRef(null)
   const themeChannel = useRef(null)
 
@@ -754,11 +753,11 @@ function RemoteControl() {
             borderRadius: '8px'
           }}>
             <button
-              onClick={() => setViewMode('normal')}
+              onClick={() => handleDisplayModeChange('timer')}
               style={{
                 padding: '8px 16px',
-                background: viewMode === 'normal' ? 'var(--brand-primary)' : 'transparent',
-                color: viewMode === 'normal' ? 'white' : 'var(--text-muted)',
+                background: state?.mode_affichage === 'timer' || !state?.mode_affichage ? 'var(--brand-primary)' : 'transparent',
+                color: state?.mode_affichage === 'timer' || !state?.mode_affichage ? 'white' : 'var(--text-muted)',
                 border: 'none',
                 borderRadius: '6px',
                 cursor: 'pointer',
@@ -767,14 +766,14 @@ function RemoteControl() {
                 transition: 'all 0.2s'
               }}
             >
-              📑 Normal
+              ⏱️ Timer
             </button>
             <button
-              onClick={() => setViewMode('agenda')}
+              onClick={() => handleDisplayModeChange('list')}
               style={{
                 padding: '8px 16px',
-                background: viewMode === 'agenda' ? 'var(--brand-primary)' : 'transparent',
-                color: viewMode === 'agenda' ? 'white' : 'var(--text-muted)',
+                background: state?.mode_affichage === 'list' ? 'var(--brand-primary)' : 'transparent',
+                color: state?.mode_affichage === 'list' ? 'white' : 'var(--text-muted)',
                 border: 'none',
                 borderRadius: '6px',
                 cursor: 'pointer',
@@ -783,13 +782,13 @@ function RemoteControl() {
                 transition: 'all 0.2s'
               }}
             >
-              📅 Agenda
+              📋 Liste
             </button>
           </div>
         </div>
 
-        {viewMode === 'normal' ? (
-          // Vue normale (liste compacte)
+        {false ? (
+          // Vue normale (liste compacte) - DÉSACTIVÉE, on affiche toujours la vue agenda
           <div className="sessions-scroll" style={{ maxHeight: '400px', overflowY: 'auto' }}>
             {state.sessions.map((session, idx) => (
               <div
