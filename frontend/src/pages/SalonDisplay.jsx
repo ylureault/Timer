@@ -486,6 +486,44 @@ function SalonDisplay() {
         </div>
       </motion.div>
 
+      {/* QR Code - Affichage sur mobile */}
+      <motion.div
+        className="qr-code-display"
+        initial={{ opacity: 0, scale: 0.8 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ delay: 0.8 }}
+      >
+        <div style={{
+          background: 'white',
+          padding: '0.75rem',
+          borderRadius: '12px',
+          boxShadow: '0 4px 20px rgba(0, 0, 0, 0.15)',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          gap: '0.5rem'
+        }}>
+          <img
+            src={`https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${encodeURIComponent(window.location.origin)}/salon/${state.salon.code}`}
+            alt="QR Code"
+            style={{
+              width: '120px',
+              height: '120px',
+              display: 'block'
+            }}
+          />
+          <div style={{
+            fontSize: '0.625rem',
+            color: '#333',
+            fontWeight: '600',
+            textAlign: 'center',
+            lineHeight: 1.3
+          }}>
+            Scannez pour<br/>voir sur mobile
+          </div>
+        </div>
+      </motion.div>
+
       {/* Crédit Insuffle */}
       <div className="insuffle-credit">Créé par Insuffle</div>
     </motion.div>

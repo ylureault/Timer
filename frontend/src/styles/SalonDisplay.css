@@ -97,6 +97,19 @@
   backdrop-filter: blur(10px);
 }
 
+/* QR Code - bas droite */
+.qr-code-display {
+  position: fixed;
+  bottom: 1rem;
+  right: 1rem;
+  z-index: 999;
+  transition: transform 0.3s ease;
+}
+
+.qr-code-display:hover {
+  transform: scale(1.05);
+}
+
 /* Crédit Insuffle - bas gauche */
 .insuffle-credit {
   position: fixed;
@@ -902,5 +915,10 @@
 
   .timer-stage {
     padding-top: 5rem;
+  }
+
+  /* Cacher QR code sur mobile (pas de sens de scanner sur même écran) */
+  .qr-code-display {
+    display: none;
   }
 }
