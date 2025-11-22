@@ -12,6 +12,7 @@ function RemoteControl() {
   const [actionFeedback, setActionFeedback] = useState(null)
   const [notes, setNotes] = useState('')
   const [showNotes, setShowNotes] = useState(false)
+  const [showStats, setShowStats] = useState(false)
   const [stats, setStats] = useState(null)
   const [currentTheme, setCurrentTheme] = useState(localStorage.getItem('display_theme') || 'luxe')
   const [message, setMessage] = useState('')
@@ -526,56 +527,68 @@ function RemoteControl() {
         )}
       </div>
 
-      {/* Statistics Section */}
+      {/* Statistics Section - Collapsible */}
       {stats && (
         <div className="stats-section" style={{
           background: 'var(--brand-card)',
           borderRadius: '12px',
-          padding: '20px',
-          marginBottom: '20px',
+          padding: '16px',
+          marginBottom: '16px',
           boxShadow: '0 4px 12px rgba(31, 58, 139, 0.3)',
           border: '1px solid rgba(59, 130, 246, 0.2)'
         }}>
-          <h4 style={{ marginBottom: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', color: 'var(--text-white)' }}>
-            <span>Statistiques</span>
-            <span style={{
-              fontSize: '2rem',
-              fontWeight: '900',
-              color: 'var(--brand-accent)'
-            }}>
-              {stats.progress_percentage}%
-            </span>
+          <h4 style={{
+            marginBottom: showStats ? '12px' : '0',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            cursor: 'pointer',
+            color: 'var(--text-white)'
+          }} onClick={() => setShowStats(!showStats)}>
+            <span>📊 Statistiques</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span style={{
+                fontSize: '1.5rem',
+                fontWeight: '900',
+                color: 'var(--brand-accent)'
+              }}>
+                {stats.progress_percentage}%
+              </span>
+              <span style={{ fontSize: '1.25rem' }}>{showStats ? '▼' : '▶'}</span>
+            </div>
           </h4>
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(2, 1fr)',
-            gap: '12px'
-          }}>
+          {showStats && (
             <div style={{
-              padding: '12px',
-              background: 'rgba(31, 58, 139, 0.15)',
-              borderRadius: '8px'
+              display: 'grid',
+              gridTemplateColumns: 'repeat(2, 1fr)',
+              gap: '8px'
             }}>
-              <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '4px' }}>
-                Sessions
+              <div style={{
+                padding: '8px',
+                background: 'rgba(31, 58, 139, 0.15)',
+                borderRadius: '8px'
+              }}>
+                <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginBottom: '2px' }}>
+                  Sessions
+                </div>
+                <div style={{ fontSize: '1.25rem', fontWeight: '700', color: 'var(--text-white)' }}>
+                  {stats.completed_sessions}/{stats.total_sessions}
+                </div>
               </div>
-              <div style={{ fontSize: '1.5rem', fontWeight: '700', color: 'var(--text-white)' }}>
-                {stats.completed_sessions}/{stats.total_sessions}
+              <div style={{
+                padding: '8px',
+                background: 'rgba(31, 58, 139, 0.15)',
+                borderRadius: '8px'
+              }}>
+                <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginBottom: '2px' }}>
+                  Temps écoulé
+                </div>
+                <div style={{ fontSize: '1.25rem', fontWeight: '700', color: 'var(--text-white)' }}>
+                  {stats.completed_duration_minutes}/{stats.total_duration_minutes} min
+                </div>
               </div>
             </div>
-            <div style={{
-              padding: '12px',
-              background: 'rgba(31, 58, 139, 0.15)',
-              borderRadius: '8px'
-            }}>
-              <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '4px' }}>
-                Temps écoulé
-              </div>
-              <div style={{ fontSize: '1.5rem', fontWeight: '700', color: 'var(--text-white)' }}>
-                {stats.completed_duration_minutes}/{stats.total_duration_minutes} min
-              </div>
-            </div>
-          </div>
+          )}
         </div>
       )}
 

@@ -774,12 +774,6 @@
     0 0 60px #ff00ff;
   position: relative;
   z-index: 2;
-  animation: flicker 0.15s infinite;
-}
-
-@keyframes flicker {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.97; }
 }
 
 .salon-display-premium[data-theme="neon"] .session-name-display {
