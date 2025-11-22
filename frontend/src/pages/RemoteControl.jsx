@@ -995,6 +995,9 @@ function RemoteControl() {
           Voir l'affichage principal ↗
         </a>
       </div>
+
+      {/* Crédit Insuffle */}
+      <div className="insuffle-credit">Créé par Insuffle</div>
     </div>
   )
 }

@@ -520,3 +520,20 @@
     min-height: 50px;
   }
 }
+
+/* Crédit Insuffle */
+.insuffle-credit {
+  position: fixed;
+  bottom: 1rem;
+  left: 1rem;
+  font-size: 0.625rem;
+  color: rgba(255, 255, 255, 0.3);
+  z-index: 999;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+  transition: color 0.3s ease;
+}
+
+.insuffle-credit:hover {
+  color: rgba(255, 255, 255, 0.6);
+}

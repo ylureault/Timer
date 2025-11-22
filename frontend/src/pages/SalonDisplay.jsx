@@ -482,6 +482,9 @@ function SalonDisplay() {
           </button>
         </div>
       </motion.div>
+
+      {/* Crédit Insuffle */}
+      <div className="insuffle-credit">Créé par Insuffle</div>
     </motion.div>
   )
 }
