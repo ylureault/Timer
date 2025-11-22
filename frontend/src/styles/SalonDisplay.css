@@ -695,30 +695,91 @@
   background: transparent;
   box-shadow: none;
   width: 100%;
-  height: 100%;
+  height: 400px;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
+  gap: 2rem;
+  position: relative;
+}
+
+/* NEON - Vertical bars visualizer (cyberpunk oscilloscope) */
+.salon-display-premium[data-theme="neon"] .timer-face::before {
+  content: '';
+  position: absolute;
+  width: 100%;
+  height: 200px;
+  background:
+    repeating-linear-gradient(90deg,
+      transparent 0px,
+      transparent 18px,
+      rgba(0, 255, 255, 0.1) 18px,
+      rgba(0, 255, 255, 0.1) 20px
+    );
+  border: 2px solid #00ffff;
+  border-radius: 4px;
+  box-shadow:
+    0 0 20px rgba(0, 255, 255, 0.5),
+    inset 0 0 20px rgba(0, 255, 255, 0.2);
+  z-index: 0;
+}
+
+/* Animated progress bars */
+.salon-display-premium[data-theme="neon"] .timer-face::after {
+  content: '';
+  position: absolute;
+  width: calc(var(--progress, 100) * 1%);
+  height: 200px;
+  background:
+    repeating-linear-gradient(90deg,
+      #00ffff 0px,
+      #00ffff 8px,
+      #ff00ff 8px,
+      #ff00ff 16px,
+      #00ffff 16px,
+      #00ffff 18px,
+      transparent 18px,
+      transparent 20px
+    );
+  background-size: 20px 100%;
+  animation: neon-scan 2s linear infinite;
+  box-shadow:
+    0 0 30px rgba(0, 255, 255, 0.8),
+    0 0 60px rgba(255, 0, 255, 0.6);
+  border-radius: 2px;
+  z-index: 1;
+  transition: width 0.3s ease;
+  clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
+}
+
+@keyframes neon-scan {
+  0% { filter: hue-rotate(0deg) brightness(1); }
+  50% { filter: hue-rotate(20deg) brightness(1.2); }
+  100% { filter: hue-rotate(0deg) brightness(1); }
 }
 
 .salon-display-premium[data-theme="neon"] .digital-time-display {
-  font-size: clamp(3rem, 12vw, 6rem);
+  font-size: clamp(4rem, 15vw, 8rem);
   font-weight: 900;
   color: #00ffff;
-  letter-spacing: -4px;
+  letter-spacing: -6px;
   font-variant-numeric: tabular-nums;
+  font-family: 'Courier New', monospace;
   text-shadow:
     0 0 10px #00ffff,
     0 0 20px #00ffff,
     0 0 30px #00ffff,
-    0 0 40px #ff00ff;
-  position: absolute;
+    0 0 40px #ff00ff,
+    0 0 60px #ff00ff;
+  position: relative;
+  z-index: 2;
   animation: flicker 0.15s infinite;
 }
 
 @keyframes flicker {
   0%, 100% { opacity: 1; }
-  50% { opacity: 0.98; }
+  50% { opacity: 0.97; }
 }
 
 .salon-display-premium[data-theme="neon"] .session-name-display {
@@ -897,18 +958,16 @@
   z-index: 1;
 }
 
-/* Timer aurora - Cercle avec dégradés */
+/* Timer aurora - RADIAL SUNBURST (Organic waves) */
 .salon-display-premium[data-theme="aurora"] .timer-container-lux {
   position: relative;
-  width: min(500px, 90vw);
-  height: min(500px, 90vw);
+  width: min(550px, 90vw);
+  height: min(550px, 90vw);
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(20px);
-  border: 4px solid rgba(255, 255, 255, 0.3);
-  box-shadow:
-    0 30px 80px rgba(0, 0, 0, 0.2),
-    inset 0 0 60px rgba(255, 255, 255, 0.1);
+  background: transparent;
+  backdrop-filter: none;
+  border: none;
+  box-shadow: none;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -940,7 +999,7 @@
 }
 
 .salon-display-premium[data-theme="aurora"] .timer-face {
-  transform: rotate(-90deg);
+  transform: none;
   background: transparent;
   box-shadow: none;
   width: 100%;
@@ -950,52 +1009,115 @@
   align-items: center;
   justify-content: center;
   position: relative;
-  overflow: hidden;
+  overflow: visible;
 }
 
-/* Progress arc avec dégradé coloré */
+/* Radial sunburst waves (organic progress visualization) */
 .salon-display-premium[data-theme="aurora"] .color-wedge {
   position: absolute;
-  inset: 20px;
+  inset: 0;
   border-radius: 50%;
-  background: conic-gradient(
-    from 0deg,
-    #f093fb 0deg,
-    #f59e0b calc(var(--angle) * 0.5),
-    #ec4899 var(--angle),
-    transparent var(--angle)
-  );
+  background:
+    conic-gradient(
+      from 0deg,
+      #f093fb 0deg,
+      #fbbf24 calc(var(--angle, 360deg) * 0.33),
+      #ec4899 calc(var(--angle, 360deg) * 0.66),
+      #667eea var(--angle, 360deg),
+      transparent var(--angle, 360deg)
+    );
   transition: --angle 0.3s ease;
-  z-index: 2;
-  filter: blur(1px);
+  z-index: 1;
+  filter: blur(3px);
+  animation: aurora-rotate 20s linear infinite;
+}
+
+/* Multiple layered sunburst rings */
+.salon-display-premium[data-theme="aurora"] .color-wedge::before {
+  content: '';
+  position: absolute;
+  inset: 40px;
+  border-radius: 50%;
+  background:
+    conic-gradient(
+      from 90deg,
+      #667eea 0deg,
+      #f093fb calc(var(--angle, 360deg) * 0.33),
+      #fbbf24 calc(var(--angle, 360deg) * 0.66),
+      #ec4899 var(--angle, 360deg),
+      transparent var(--angle, 360deg)
+    );
+  filter: blur(2px);
+  opacity: 0.7;
+  animation: aurora-rotate 15s linear infinite reverse;
+}
+
+.salon-display-premium[data-theme="aurora"] .color-wedge::after {
+  content: '';
+  position: absolute;
+  inset: 80px;
+  border-radius: 50%;
+  background:
+    conic-gradient(
+      from 180deg,
+      #ec4899 0deg,
+      #667eea calc(var(--angle, 360deg) * 0.33),
+      #f093fb calc(var(--angle, 360deg) * 0.66),
+      #fbbf24 var(--angle, 360deg),
+      transparent var(--angle, 360deg)
+    );
+  filter: blur(4px);
+  opacity: 0.5;
+  animation: aurora-rotate 25s linear infinite;
+}
+
+@keyframes aurora-rotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }
 
 .salon-display-premium[data-theme="aurora"] .glass-overlay {
   position: absolute;
   inset: 0;
   border-radius: 50%;
-  background: radial-gradient(
-    circle at 30% 30%,
-    rgba(255, 255, 255, 0.3) 0%,
-    rgba(255, 255, 255, 0) 70%
-  );
+  background:
+    radial-gradient(
+      circle at 30% 30%,
+      rgba(255, 255, 255, 0.2) 0%,
+      rgba(255, 255, 255, 0) 50%
+    ),
+    radial-gradient(
+      circle at 70% 70%,
+      rgba(236, 72, 153, 0.1) 0%,
+      rgba(236, 72, 153, 0) 50%
+    );
   pointer-events: none;
   z-index: 10;
+  mix-blend-mode: overlay;
 }
 
 .salon-display-premium[data-theme="aurora"] .digital-time-display {
-  font-size: clamp(4rem, 12vw, 7rem);
+  font-size: clamp(5rem, 15vw, 9rem);
   font-weight: 900;
-  background: linear-gradient(135deg, #ffffff 0%, #fbbf24 50%, #ec4899 100%);
+  background: linear-gradient(135deg, #ffffff 0%, #fbbf24 40%, #ec4899 80%, #667eea 100%);
+  background-size: 200% 200%;
+  animation: aurora-gradient-shift 4s ease-in-out infinite;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
-  letter-spacing: -4px;
+  letter-spacing: -6px;
   font-variant-numeric: tabular-nums;
   text-shadow: none;
-  filter: drop-shadow(0 4px 20px rgba(255, 255, 255, 0.3));
-  z-index: 3;
+  filter:
+    drop-shadow(0 0 20px rgba(255, 255, 255, 0.5))
+    drop-shadow(0 0 40px rgba(236, 72, 153, 0.4));
+  z-index: 11;
   position: relative;
+}
+
+@keyframes aurora-gradient-shift {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
 }
 
 .salon-display-premium[data-theme="aurora"] .session-name-display {
