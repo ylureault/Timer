@@ -422,7 +422,7 @@ function RemoteControl() {
         </h4>
         <div style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(3, 1fr)',
+          gridTemplateColumns: 'repeat(2, 1fr)',
           gap: '12px'
         }}>
           {themes.map(theme => (
@@ -505,17 +505,18 @@ function RemoteControl() {
         {state.message_actuel && (
           <div style={{
             padding: '12px',
-            background: 'rgba(255, 222, 89, 0.2)',
+            background: 'rgba(255, 222, 89, 0.15)',
             border: '2px solid var(--brand-accent)',
             borderRadius: '8px',
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center'
           }}>
-            <span style={{ fontWeight: '600', color: 'var(--brand-dark)' }}>📢 {state.message_actuel}</span>
+            <span style={{ fontWeight: '600', color: 'var(--text-white)' }}>📢 {state.message_actuel}</span>
             <button onClick={handleClearMessage} style={{
               padding: '4px 12px',
-              background: 'rgba(0,0,0,0.1)',
+              background: 'rgba(255, 255, 255, 0.1)',
+              color: 'var(--text-white)',
               border: 'none',
               borderRadius: '4px',
               cursor: 'pointer',
