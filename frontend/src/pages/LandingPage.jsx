@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import '../styles/LandingPage.css'
@@ -8,6 +8,23 @@ import '../styles/PremiumEffects.css'
 function LandingPage() {
   const navigate = useNavigate()
   const [joinCode, setJoinCode] = useState('')
+
+  // Rotating words animation
+  const words = [
+    'ateliers', 'réunions', 'Codir', 'formations', 'webinaires', 'conférences',
+    'workshops', 'séminaires', 'brainstormings', 'stand-ups', 'sprints',
+    'retrospectives', 'présentations', 'démos', 'trainings', 'sessions',
+    'événements', 'cérémonies', 'interventions', 'masterclass'
+  ]
+  const [currentWordIndex, setCurrentWordIndex] = useState(0)
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentWordIndex((prev) => (prev + 1) % words.length)
+    }, 2000) // Change word every 2 seconds
+
+    return () => clearInterval(interval)
+  }, [])
 
   const handleCreateSalon = () => {
     navigate('/create')
@@ -60,7 +77,9 @@ function LandingPage() {
 
             <h1 className="hero-title-modern">
               Orchestrez le temps de vos{' '}
-              <span className="text-shine">ateliers</span>
+              <span className="text-shine rotating-word" key={currentWordIndex}>
+                {words[currentWordIndex]}
+              </span>
             </h1>
 
             <p className="hero-subtitle-modern">
