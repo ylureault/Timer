@@ -176,16 +176,6 @@ function SalonDisplay() {
   const isPlaying = mode === 'play'
   const isCompleted = mode === 'termine'
 
-  // Calculate dynamic dial numbers based on REMAINING time (in minutes)
-  // This ensures the dial shows the actual time at each position
-  const remainingMinutes = Math.ceil(temps_restant / 60)
-  const dialNumbers = {
-    n0: remainingMinutes, // Top - current remaining time
-    n15: Math.ceil(remainingMinutes * 0.75), // Right - 75% of remaining
-    n30: Math.ceil(remainingMinutes * 0.5), // Bottom - 50% of remaining
-    n45: Math.ceil(remainingMinutes * 0.25) // Left - 25% of remaining
-  }
-
   const isPaused = mode === 'pause'
 
   return (
@@ -196,16 +186,6 @@ function SalonDisplay() {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
     >
-      {/* Header compact */}
-      <motion.div className="display-header-minimal" initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }}>
-        <div className="session-progress-bar">
-          <div className="progress-fill" style={{ width: `${((session_en_cours + 1) / total_sessions) * 100}%` }}></div>
-        </div>
-        <div className="session-indicator">
-          Session {session_en_cours + 1} / {total_sessions}
-        </div>
-      </motion.div>
-
       {/* Message Banner */}
       {state.message_actuel && (
         <motion.div
@@ -406,14 +386,6 @@ function SalonDisplay() {
               {/* Graduations */}
               <div className="timer-marks"></div>
 
-              {/* Chiffres sur le cadran (quarts) - dynamiques basés sur la durée */}
-              <div className="timer-numbers">
-                <div className="num n0">{dialNumbers.n0}</div>
-                <div className="num n15">{dialNumbers.n15}</div>
-                <div className="num n30">{dialNumbers.n30}</div>
-                <div className="num n45">{dialNumbers.n45}</div>
-              </div>
-
               {/* Disque de progression avec la couleur de session */}
               <div
                 className="color-wedge"
@@ -440,6 +412,47 @@ function SalonDisplay() {
             transition={{ delay: 0.3 }}
           >
             {formatTime(temps_restant)}
+          </motion.div>
+
+          {/* Session indicator sous le temps */}
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.35 }}
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: '8px',
+              margin: '1rem 0 0.5rem'
+            }}
+          >
+            <div style={{
+              fontSize: '0.9rem',
+              fontWeight: '600',
+              color: 'var(--text-white)',
+              opacity: 0.8,
+              letterSpacing: '0.5px'
+            }}>
+              Session {session_en_cours + 1} / {total_sessions}
+            </div>
+            <div style={{
+              width: '200px',
+              height: '4px',
+              background: 'rgba(255, 255, 255, 0.15)',
+              borderRadius: '2px',
+              overflow: 'hidden'
+            }}>
+              <div
+                style={{
+                  height: '100%',
+                  width: `${((session_en_cours + 1) / total_sessions) * 100}%`,
+                  background: 'linear-gradient(90deg, var(--brand-accent), var(--brand-primary))',
+                  transition: 'width 0.3s ease',
+                  borderRadius: '2px'
+                }}
+              />
+            </div>
           </motion.div>
 
           {/* Nom de la session */}
