@@ -1358,26 +1358,27 @@ function RemoteControl() {
         </a>
       </div>
 
-      {/* Crédit Insuffle - Discret */}
+      {/* Crédit Insuffle - Visible à gauche */}
       <a
         href="https://www.insuffle.com"
         target="_blank"
         rel="noopener noreferrer"
         style={{
           position: 'fixed',
-          bottom: '10px',
-          right: '15px',
-          fontSize: '0.7rem',
-          color: 'rgba(255, 255, 255, 0.4)',
+          bottom: '15px',
+          left: '20px',
+          fontSize: '0.85rem',
+          color: 'rgba(255, 255, 255, 0.7)',
           textDecoration: 'none',
           transition: 'color 0.2s ease',
-          zIndex: 1500
+          zIndex: 1500,
+          fontWeight: '500'
         }}
         onMouseEnter={(e) => {
-          e.currentTarget.style.color = 'rgba(255, 255, 255, 0.8)'
+          e.currentTarget.style.color = 'rgba(255, 255, 255, 1)'
         }}
         onMouseLeave={(e) => {
-          e.currentTarget.style.color = 'rgba(255, 255, 255, 0.4)'
+          e.currentTarget.style.color = 'rgba(255, 255, 255, 0.7)'
         }}
       >
         Créé par Insuffle
