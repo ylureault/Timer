@@ -186,34 +186,43 @@ function SalonDisplay() {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
     >
-      {/* Message Banner */}
+      {/* Message Banner - Notification visible en haut */}
       {state.message_actuel && (
         <motion.div
           className="message-banner"
-          initial={{ opacity: 0, y: -30 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -30 }}
+          initial={{ opacity: 0, y: -50, scale: 0.9 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          exit={{ opacity: 0, y: -50, scale: 0.9 }}
+          transition={{ type: 'spring', stiffness: 300, damping: 25 }}
           style={{
             position: 'fixed',
-            top: '100px',
+            top: '30px',
             left: '50%',
             transform: 'translateX(-50%)',
-            zIndex: 1000,
-            background: 'linear-gradient(135deg, var(--brand-accent) 0%, rgba(255, 222, 89, 0.9) 100%)',
-            color: 'var(--brand-dark)',
-            padding: '20px 40px',
-            borderRadius: '16px',
-            fontSize: '1.5rem',
-            fontWeight: '700',
-            boxShadow: '0 10px 40px rgba(255, 222, 89, 0.4), 0 0 0 3px rgba(255, 255, 255, 0.2)',
-            maxWidth: '80%',
+            zIndex: 2000,
+            background: 'linear-gradient(135deg, #FFB800 0%, #FFA000 100%)',
+            color: '#1a1a1a',
+            padding: '24px 50px',
+            borderRadius: '20px',
+            fontSize: '2rem',
+            fontWeight: '800',
+            boxShadow: '0 20px 60px rgba(255, 184, 0, 0.5), 0 0 0 4px rgba(255, 255, 255, 0.3)',
+            minWidth: '400px',
+            maxWidth: '90%',
             textAlign: 'center',
-            backdropFilter: 'blur(10px)',
-            animation: 'pulse-glow 2s ease-in-out infinite'
+            backdropFilter: 'blur(20px)',
+            border: '3px solid rgba(255, 255, 255, 0.4)'
           }}
         >
-          <span style={{ marginRight: '12px', fontSize: '1.8rem' }}>📢</span>
-          {state.message_actuel}
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '16px'
+          }}>
+            <span style={{ fontSize: '2.5rem' }}>📢</span>
+            <span>{state.message_actuel}</span>
+          </div>
         </motion.div>
       )}
 
@@ -423,22 +432,23 @@ function SalonDisplay() {
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'center',
-              gap: '8px',
-              margin: '1rem 0 0.5rem'
+              gap: '6px',
+              margin: '0.75rem 0 0.5rem'
             }}
           >
             <div style={{
-              fontSize: '0.9rem',
+              fontSize: '0.75rem',
               fontWeight: '600',
               color: 'var(--text-white)',
-              opacity: 0.8,
-              letterSpacing: '0.5px'
+              opacity: 0.7,
+              letterSpacing: '1px',
+              textTransform: 'uppercase'
             }}>
               Session {session_en_cours + 1} / {total_sessions}
             </div>
             <div style={{
-              width: '200px',
-              height: '4px',
+              width: '100px',
+              height: '3px',
               background: 'rgba(255, 255, 255, 0.15)',
               borderRadius: '2px',
               overflow: 'hidden'
@@ -449,7 +459,8 @@ function SalonDisplay() {
                   width: `${((session_en_cours + 1) / total_sessions) * 100}%`,
                   background: 'linear-gradient(90deg, var(--brand-accent), var(--brand-primary))',
                   transition: 'width 0.3s ease',
-                  borderRadius: '2px'
+                  borderRadius: '2px',
+                  boxShadow: '0 0 8px var(--brand-accent)'
                 }}
               />
             </div>

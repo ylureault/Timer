@@ -18,7 +18,9 @@ function RemoteControl() {
   const [message, setMessage] = useState('')
   const [viewMode, setViewMode] = useState('agenda') // 'normal' or 'agenda' - for local remote view
   const [autoMode, setAutoMode] = useState(false) // Auto-advance to next session when current ends
-  const [soundEnabled, setSoundEnabled] = useState(localStorage.getItem('sound_enabled') === 'true')
+  const [soundEnabled, setSoundEnabled] = useState(
+    localStorage.getItem('sound_enabled') === null ? true : localStorage.getItem('sound_enabled') === 'true'
+  )
   const [isScrolled, setIsScrolled] = useState(false)
   const pollingInterval = useRef(null)
   const themeChannel = useRef(null)
@@ -55,11 +57,17 @@ function RemoteControl() {
   }
 
   // Play a short beep sound (for time changes)
-  const playBeep = () => {
+  const playBeep = async () => {
     if (!soundEnabled) return
 
     try {
       const audioContext = getAudioContext()
+
+      // Resume AudioContext if suspended (browser autoplay policy)
+      if (audioContext.state === 'suspended') {
+        await audioContext.resume()
+      }
+
       const oscillator = audioContext.createOscillator()
       const gainNode = audioContext.createGain()
 
