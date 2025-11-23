@@ -18,9 +18,25 @@ function RemoteControl() {
   const [message, setMessage] = useState('')
   const [viewMode, setViewMode] = useState('agenda') // 'normal' or 'agenda' - for local remote view
   const [autoMode, setAutoMode] = useState(false) // Auto-advance to next session when current ends
-  const [soundEnabled, setSoundEnabled] = useState(
-    localStorage.getItem('sound_enabled') === null ? true : localStorage.getItem('sound_enabled') === 'true'
-  )
+
+  // Initialize sound enabled - ALWAYS TRUE by default unless explicitly disabled
+  const initSoundEnabled = () => {
+    const stored = localStorage.getItem('sound_enabled')
+    console.log('🔊 Sound init - localStorage value:', stored)
+
+    // If never set, default to TRUE
+    if (stored === null || stored === undefined) {
+      console.log('🔊 Sound init - Setting default to TRUE')
+      localStorage.setItem('sound_enabled', 'true')
+      return true
+    }
+
+    const enabled = stored === 'true'
+    console.log('🔊 Sound init - Result:', enabled)
+    return enabled
+  }
+
+  const [soundEnabled, setSoundEnabled] = useState(initSoundEnabled())
   const [isScrolled, setIsScrolled] = useState(false)
   const pollingInterval = useRef(null)
   const themeChannel = useRef(null)
@@ -58,14 +74,21 @@ function RemoteControl() {
 
   // Play a short beep sound (for time changes)
   const playBeep = async () => {
-    if (!soundEnabled) return
+    console.log('🔊 playBeep called - soundEnabled:', soundEnabled)
+    if (!soundEnabled) {
+      console.log('🔊 playBeep - Sound disabled, returning')
+      return
+    }
 
     try {
       const audioContext = getAudioContext()
+      console.log('🔊 playBeep - AudioContext state:', audioContext.state)
 
       // Resume AudioContext if suspended (browser autoplay policy)
       if (audioContext.state === 'suspended') {
+        console.log('🔊 playBeep - Resuming suspended AudioContext')
         await audioContext.resume()
+        console.log('🔊 playBeep - AudioContext resumed, new state:', audioContext.state)
       }
 
       const oscillator = audioContext.createOscillator()
@@ -82,19 +105,24 @@ function RemoteControl() {
 
       oscillator.start(audioContext.currentTime)
       oscillator.stop(audioContext.currentTime + 0.1)
+      console.log('🔊 playBeep - Beep played successfully')
     } catch (err) {
-      console.error('Error playing beep:', err)
+      console.error('❌ Error playing beep:', err)
     }
   }
 
   // Play a bell sound (manual alert)
   const playBell = async () => {
+    console.log('🔔 playBell called - soundEnabled:', soundEnabled)
     try {
       const audioContext = getAudioContext()
+      console.log('🔔 playBell - AudioContext state:', audioContext.state)
 
       // Resume AudioContext if suspended (browser autoplay policy)
       if (audioContext.state === 'suspended') {
+        console.log('🔔 playBell - Resuming suspended AudioContext')
         await audioContext.resume()
+        console.log('🔔 playBell - AudioContext resumed, new state:', audioContext.state)
       }
 
       // Create a bell-like sound with multiple frequencies
@@ -119,9 +147,10 @@ function RemoteControl() {
         oscillator.stop(startTime + duration)
       })
 
+      console.log('🔔 playBell - Bell played successfully')
       showFeedback('🔔 Ding!')
     } catch (err) {
-      console.error('Error playing bell:', err)
+      console.error('❌ Error playing bell:', err)
       showFeedback('❌ Erreur son')
     }
   }
@@ -129,24 +158,33 @@ function RemoteControl() {
   // Toggle sound on/off
   const toggleSound = () => {
     const newValue = !soundEnabled
+    console.log('🔊 toggleSound - Changing from', soundEnabled, 'to', newValue)
     setSoundEnabled(newValue)
     localStorage.setItem('sound_enabled', newValue.toString())
+    console.log('🔊 toggleSound - Saved to localStorage:', newValue.toString())
     showFeedback(newValue ? '🔊 Sons activés' : '🔇 Sons désactivés')
 
     // Play a test beep if enabling
     if (newValue) {
+      console.log('🔊 toggleSound - Playing test beep in 100ms')
       setTimeout(playBeep, 100)
     }
   }
 
   // Detect time changes and play sound
   useEffect(() => {
-    if (!state || !soundEnabled) return
+    console.log('🔊 Time change effect - state:', state?.temps_restant, 'soundEnabled:', soundEnabled, 'previous:', previousTimeRef.current)
+
+    if (!state || !soundEnabled) {
+      console.log('🔊 Time change effect - Skipping (no state or sound disabled)')
+      return
+    }
 
     const currentTime = state.temps_restant
 
     // If time changed (not just first load)
     if (previousTimeRef.current !== null && previousTimeRef.current !== currentTime) {
+      console.log('🔊 Time change effect - Time changed from', previousTimeRef.current, 'to', currentTime, '- Playing beep')
       playBeep()
     }
 
