@@ -80,9 +80,14 @@ function RemoteControl() {
   }
 
   // Play a bell sound (manual alert)
-  const playBell = () => {
+  const playBell = async () => {
     try {
       const audioContext = getAudioContext()
+
+      // Resume AudioContext if suspended (browser autoplay policy)
+      if (audioContext.state === 'suspended') {
+        await audioContext.resume()
+      }
 
       // Create a bell-like sound with multiple frequencies
       const frequencies = [800, 1000, 1200]
@@ -109,6 +114,7 @@ function RemoteControl() {
       showFeedback('🔔 Ding!')
     } catch (err) {
       console.error('Error playing bell:', err)
+      showFeedback('❌ Erreur son')
     }
   }
 
@@ -526,55 +532,33 @@ function RemoteControl() {
           <h3>Télécommande</h3>
           <p>Code: {state.salon.code}</p>
         </div>
-        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+        <div style={{ display: 'flex', gap: '4px', alignItems: 'center', flexShrink: 0 }}>
           <button
             onClick={handleAutoModeToggle}
+            className="header-btn-compact"
             style={{
-              padding: '8px 12px',
               background: autoMode ? 'var(--brand-primary)' : 'rgba(255, 255, 255, 0.1)',
-              color: 'white',
-              border: '2px solid',
-              borderColor: autoMode ? 'var(--brand-primary)' : 'rgba(255, 255, 255, 0.3)',
-              borderRadius: '8px',
-              cursor: 'pointer',
-              fontWeight: '600',
-              fontSize: '0.8rem',
-              transition: 'all 0.2s',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '4px'
+              borderColor: autoMode ? 'var(--brand-primary)' : 'rgba(255, 255, 255, 0.3)'
             }}
-            title={autoMode ? 'Mode AUTO activé - Les sessions avancent automatiquement' : 'Mode AUTO désactivé - Contrôle manuel'}
+            title={autoMode ? 'Mode AUTO activé' : 'Mode AUTO désactivé'}
           >
-            <span>{autoMode ? '⚡' : '🔘'}</span>
-            <span>AUTO</span>
+            {autoMode ? '⚡' : '🔘'}
           </button>
           <button
             onClick={toggleSound}
+            className="header-btn-compact"
             style={{
-              padding: '8px 12px',
               background: soundEnabled ? 'var(--brand-primary)' : 'rgba(255, 255, 255, 0.1)',
-              color: 'white',
-              border: '2px solid',
-              borderColor: soundEnabled ? 'var(--brand-primary)' : 'rgba(255, 255, 255, 0.3)',
-              borderRadius: '8px',
-              cursor: 'pointer',
-              fontWeight: '600',
-              fontSize: '0.8rem',
-              transition: 'all 0.2s',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '4px'
+              borderColor: soundEnabled ? 'var(--brand-primary)' : 'rgba(255, 255, 255, 0.3)'
             }}
-            title={soundEnabled ? 'Sons activés - Cliquer pour désactiver' : 'Sons désactivés - Cliquer pour activer'}
+            title={soundEnabled ? 'Sons activés' : 'Sons désactivés'}
           >
-            <span>{soundEnabled ? '🔊' : '🔇'}</span>
-            <span>SON</span>
+            {soundEnabled ? '🔊' : '🔇'}
           </button>
           <button
             className="btn-icon"
             onClick={() => navigate(`/admin/${state.salon.code}`)}
-            title="Modifier le salon"
+            title="Modifier"
           >
             ✏️
           </button>
@@ -711,21 +695,46 @@ function RemoteControl() {
       {!isCompleted && (
         <div className="time-controls">
           <h4>Ajuster le temps</h4>
-          <div className="time-buttons">
-            <button className="btn-time" onClick={() => handleAddTime(-60)}>
+          <div className="time-buttons-grid">
+            <button
+              className="btn-time btn-time-negative"
+              onClick={() => handleAddTime(-60)}
+              style={{
+                background: 'rgba(239, 68, 68, 0.15)',
+                borderColor: 'rgba(239, 68, 68, 0.3)'
+              }}
+            >
               -1 min
             </button>
-            <button className="btn-time" onClick={() => handleAddTime(-30)}>
+            <button
+              className="btn-time btn-time-negative"
+              onClick={() => handleAddTime(-30)}
+              style={{
+                background: 'rgba(239, 68, 68, 0.15)',
+                borderColor: 'rgba(239, 68, 68, 0.3)'
+              }}
+            >
               -30 sec
             </button>
-            <button className="btn-time" onClick={() => handleAddTime(30)}>
+            <button
+              className="btn-time btn-time-positive"
+              onClick={() => handleAddTime(30)}
+              style={{
+                background: 'rgba(34, 197, 94, 0.15)',
+                borderColor: 'rgba(34, 197, 94, 0.3)'
+              }}
+            >
               +30 sec
             </button>
-            <button className="btn-time" onClick={() => handleAddTime(60)}>
+            <button
+              className="btn-time btn-time-positive"
+              onClick={() => handleAddTime(60)}
+              style={{
+                background: 'rgba(34, 197, 94, 0.15)',
+                borderColor: 'rgba(34, 197, 94, 0.3)'
+              }}
+            >
               +1 min
-            </button>
-            <button className="btn-time" onClick={() => handleAddTime(300)}>
-              +5 min
             </button>
           </div>
         </div>
