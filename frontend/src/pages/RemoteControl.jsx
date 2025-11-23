@@ -18,8 +18,11 @@ function RemoteControl() {
   const [message, setMessage] = useState('')
   const [viewMode, setViewMode] = useState('agenda') // 'normal' or 'agenda' - for local remote view
   const [autoMode, setAutoMode] = useState(false) // Auto-advance to next session when current ends
+  const [soundEnabled, setSoundEnabled] = useState(localStorage.getItem('sound_enabled') === 'true')
   const pollingInterval = useRef(null)
   const themeChannel = useRef(null)
+  const previousTimeRef = useRef(null)
+  const audioContextRef = useRef(null)
 
   // Initialize BroadcastChannel for reliable cross-tab communication
   useEffect(() => {
@@ -41,6 +44,99 @@ function RemoteControl() {
       }
     }
   }, [])
+
+  // Initialize Audio Context
+  const getAudioContext = () => {
+    if (!audioContextRef.current) {
+      audioContextRef.current = new (window.AudioContext || window.webkitAudioContext)()
+    }
+    return audioContextRef.current
+  }
+
+  // Play a short beep sound (for time changes)
+  const playBeep = () => {
+    if (!soundEnabled) return
+
+    try {
+      const audioContext = getAudioContext()
+      const oscillator = audioContext.createOscillator()
+      const gainNode = audioContext.createGain()
+
+      oscillator.connect(gainNode)
+      gainNode.connect(audioContext.destination)
+
+      oscillator.frequency.value = 800 // Hz
+      oscillator.type = 'sine'
+
+      gainNode.gain.setValueAtTime(0.1, audioContext.currentTime)
+      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1)
+
+      oscillator.start(audioContext.currentTime)
+      oscillator.stop(audioContext.currentTime + 0.1)
+    } catch (err) {
+      console.error('Error playing beep:', err)
+    }
+  }
+
+  // Play a bell sound (manual alert)
+  const playBell = () => {
+    try {
+      const audioContext = getAudioContext()
+
+      // Create a bell-like sound with multiple frequencies
+      const frequencies = [800, 1000, 1200]
+      const duration = 0.8
+
+      frequencies.forEach((freq, index) => {
+        const oscillator = audioContext.createOscillator()
+        const gainNode = audioContext.createGain()
+
+        oscillator.connect(gainNode)
+        gainNode.connect(audioContext.destination)
+
+        oscillator.frequency.value = freq
+        oscillator.type = 'sine'
+
+        const startTime = audioContext.currentTime + (index * 0.05)
+        gainNode.gain.setValueAtTime(0.15, startTime)
+        gainNode.gain.exponentialRampToValueAtTime(0.01, startTime + duration)
+
+        oscillator.start(startTime)
+        oscillator.stop(startTime + duration)
+      })
+
+      showFeedback('🔔 Ding!')
+    } catch (err) {
+      console.error('Error playing bell:', err)
+    }
+  }
+
+  // Toggle sound on/off
+  const toggleSound = () => {
+    const newValue = !soundEnabled
+    setSoundEnabled(newValue)
+    localStorage.setItem('sound_enabled', newValue.toString())
+    showFeedback(newValue ? '🔊 Sons activés' : '🔇 Sons désactivés')
+
+    // Play a test beep if enabling
+    if (newValue) {
+      setTimeout(playBeep, 100)
+    }
+  }
+
+  // Detect time changes and play sound
+  useEffect(() => {
+    if (!state || !soundEnabled) return
+
+    const currentTime = state.temps_restant
+
+    // If time changed (not just first load)
+    if (previousTimeRef.current !== null && previousTimeRef.current !== currentTime) {
+      playBeep()
+    }
+
+    previousTimeRef.current = currentTime
+  }, [state?.temps_restant, soundEnabled])
 
   const handleThemeChange = async (newTheme) => {
     console.log('🎨 RemoteControl: Changing theme to:', newTheme)
@@ -354,6 +450,28 @@ function RemoteControl() {
             <span>AUTO</span>
           </button>
           <button
+            onClick={toggleSound}
+            style={{
+              padding: '8px 12px',
+              background: soundEnabled ? 'var(--brand-primary)' : 'rgba(255, 255, 255, 0.1)',
+              color: 'white',
+              border: '2px solid',
+              borderColor: soundEnabled ? 'var(--brand-primary)' : 'rgba(255, 255, 255, 0.3)',
+              borderRadius: '8px',
+              cursor: 'pointer',
+              fontWeight: '600',
+              fontSize: '0.8rem',
+              transition: 'all 0.2s',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '4px'
+            }}
+            title={soundEnabled ? 'Sons activés - Cliquer pour désactiver' : 'Sons désactivés - Cliquer pour activer'}
+          >
+            <span>{soundEnabled ? '🔊' : '🔇'}</span>
+            <span>SON</span>
+          </button>
+          <button
             className="btn-icon"
             onClick={() => navigate(`/admin/${state.salon.code}`)}
             title="Modifier le salon"
@@ -415,32 +533,57 @@ function RemoteControl() {
 
       {/* Main Controls */}
       <div className="main-controls">
-        {!isCompleted && (
-          <button
-            className={`btn-control btn-play-pause ${isPlaying ? 'playing' : ''}`}
-            onClick={isPlaying ? handlePause : handleStart}
-            style={{ backgroundColor: current_session.couleur }}
-          >
-            {isPlaying ? (
-              <>
-                <span className="control-icon">⏸</span>
-                <span>Pause</span>
-              </>
-            ) : (
-              <>
-                <span className="control-icon">▶</span>
-                <span>Démarrer</span>
-              </>
-            )}
-          </button>
-        )}
+        <div style={{ display: 'flex', gap: '12px', alignItems: 'center', width: '100%' }}>
+          {!isCompleted && (
+            <button
+              className={`btn-control btn-play-pause ${isPlaying ? 'playing' : ''}`}
+              onClick={isPlaying ? handlePause : handleStart}
+              style={{ backgroundColor: current_session.couleur, flex: 1 }}
+            >
+              {isPlaying ? (
+                <>
+                  <span className="control-icon">⏸</span>
+                  <span>Pause</span>
+                </>
+              ) : (
+                <>
+                  <span className="control-icon">▶</span>
+                  <span>Démarrer</span>
+                </>
+              )}
+            </button>
+          )}
 
-        {isCompleted && (
-          <div className="completed-message">
-            <span className="completed-icon">✓</span>
-            <span>Toutes les sessions terminées</span>
-          </div>
-        )}
+          {isCompleted && (
+            <div className="completed-message" style={{ flex: 1 }}>
+              <span className="completed-icon">✓</span>
+              <span>Toutes les sessions terminées</span>
+            </div>
+          )}
+
+          <button
+            onClick={playBell}
+            style={{
+              padding: '16px',
+              background: '#f59e0b',
+              color: 'white',
+              border: 'none',
+              borderRadius: '12px',
+              cursor: 'pointer',
+              fontWeight: '700',
+              fontSize: '1.5rem',
+              transition: 'all 0.2s',
+              boxShadow: '0 4px 12px rgba(245, 158, 11, 0.3)',
+              minWidth: '64px'
+            }}
+            onMouseDown={(e) => e.currentTarget.style.transform = 'scale(0.95)'}
+            onMouseUp={(e) => e.currentTarget.style.transform = 'scale(1)'}
+            onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
+            title="Sonnerie - Faire sonner la cloche pour alerter"
+          >
+            🔔
+          </button>
+        </div>
       </div>
 
       {/* Navigation Controls */}

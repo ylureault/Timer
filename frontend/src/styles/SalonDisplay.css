@@ -25,14 +25,14 @@
   transform: translateX(-50%);
   text-align: center;
   z-index: 1000; /* Au-dessus de tout */
-  display: flex;
+  display: inline-flex;
   flex-direction: column;
   align-items: center;
   gap: 0.5rem;
 }
 
 .session-progress-bar {
-  width: 100%;
+  align-self: stretch;
   height: 4px;
   background: rgba(255, 255, 255, 0.15);
   border-radius: 2px;
@@ -55,7 +55,6 @@
   border-radius: 8px;
   letter-spacing: 0.02em;
   white-space: nowrap;
-  width: max-content;
 }
 
 /* Timer Stage */
