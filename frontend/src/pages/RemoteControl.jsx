@@ -19,6 +19,7 @@ function RemoteControl() {
   const [viewMode, setViewMode] = useState('agenda') // 'normal' or 'agenda' - for local remote view
   const [autoMode, setAutoMode] = useState(false) // Auto-advance to next session when current ends
   const [soundEnabled, setSoundEnabled] = useState(localStorage.getItem('sound_enabled') === 'true')
+  const [isScrolled, setIsScrolled] = useState(false)
   const pollingInterval = useRef(null)
   const themeChannel = useRef(null)
   const previousTimeRef = useRef(null)
@@ -137,6 +138,16 @@ function RemoteControl() {
 
     previousTimeRef.current = currentTime
   }, [state?.temps_restant, soundEnabled])
+
+  // Track scroll position for sticky header
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 100)
+    }
+
+    window.addEventListener('scroll', handleScroll)
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [])
 
   const handleThemeChange = async (newTheme) => {
     console.log('🎨 RemoteControl: Changing theme to:', newTheme)
@@ -287,6 +298,38 @@ function RemoteControl() {
   }
   const handleAddTime = (seconds) => handleAction('addtime', { seconds })
 
+  // Jump to a specific session and start it
+  const handleJumpToSession = async (sessionIndex) => {
+    if (sessionIndex === session_en_cours) {
+      // Already on this session, just ensure it's started
+      if (!isPlaying) {
+        handleStart()
+      }
+      return
+    }
+
+    try {
+      // First, navigate to the session
+      const direction = sessionIndex > session_en_cours ? 'next' : 'previous'
+      const steps = Math.abs(sessionIndex - session_en_cours)
+
+      // Call next/previous multiple times to reach target session
+      for (let i = 0; i < steps; i++) {
+        await handleAction(direction)
+        await new Promise(resolve => setTimeout(resolve, 100)) // Small delay between steps
+      }
+
+      // Then start the session
+      setTimeout(() => {
+        handleStart()
+        showFeedback(`✓ Session ${sessionIndex + 1} lancée`)
+      }, 200)
+    } catch (err) {
+      console.error('Error jumping to session:', err)
+      showFeedback('✗ Erreur')
+    }
+  }
+
   const handleSendMessage = async () => {
     if (!message.trim()) return
     try {
@@ -418,6 +461,63 @@ function RemoteControl() {
       {/* Feedback Toast */}
       {actionFeedback && (
         <div className="action-feedback">{actionFeedback}</div>
+      )}
+
+      {/* Sticky Header - Appears on scroll */}
+      {isScrolled && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          zIndex: 1000,
+          background: 'linear-gradient(135deg, var(--brand-dark) 0%, var(--brand-primary) 100%)',
+          boxShadow: '0 4px 20px rgba(0, 0, 0, 0.3)',
+          padding: '12px 20px',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          animation: 'slideDown 0.3s ease-out'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+            <div style={{
+              fontSize: '1.5rem',
+              fontWeight: '900',
+              color: 'white'
+            }}>
+              {formatTime(temps_restant)}
+            </div>
+            <div style={{ color: 'rgba(255, 255, 255, 0.9)', fontSize: '0.9rem', fontWeight: '600' }}>
+              {current_session.nom_session}
+            </div>
+          </div>
+          <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+            <div style={{
+              fontSize: '0.75rem',
+              color: 'rgba(255, 255, 255, 0.7)',
+              fontWeight: '600'
+            }}>
+              Session {session_en_cours + 1}/{total_sessions}
+            </div>
+            {!isCompleted && (
+              <button
+                onClick={isPlaying ? handlePause : handleStart}
+                style={{
+                  padding: '6px 12px',
+                  background: isPlaying ? 'rgba(255, 255, 255, 0.2)' : current_session.couleur,
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                  fontWeight: '600',
+                  fontSize: '0.8rem'
+                }}
+              >
+                {isPlaying ? '⏸ Pause' : '▶ Play'}
+              </button>
+            )}
+          </div>
+        </div>
       )}
 
       {/* Header */}
@@ -986,6 +1086,7 @@ function RemoteControl() {
             {state.sessions.map((session, idx) => (
               <div
                 key={idx}
+                onClick={() => handleJumpToSession(idx)}
                 className={`session-item-remote ${idx === session_en_cours ? 'active' : ''} ${idx < session_en_cours ? 'completed' : ''}`}
                 style={{
                   borderLeft: `4px solid ${session.couleur}`,
@@ -999,8 +1100,12 @@ function RemoteControl() {
                     : 'rgba(31, 58, 139, 0.05)',
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '12px'
+                  gap: '12px',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s'
                 }}
+                onMouseEnter={(e) => e.currentTarget.style.transform = 'translateX(4px)'}
+                onMouseLeave={(e) => e.currentTarget.style.transform = 'translateX(0)'}
               >
                 <div style={{
                   width: '32px',
@@ -1056,6 +1161,7 @@ function RemoteControl() {
               return (
                 <div
                   key={idx}
+                  onClick={() => handleJumpToSession(idx)}
                   style={{
                     position: 'relative',
                     padding: '16px',
@@ -1070,7 +1176,16 @@ function RemoteControl() {
                     boxShadow: isCurrent
                       ? `0 0 20px ${session.couleur}40`
                       : '0 2px 8px rgba(0,0,0,0.1)',
-                    transition: 'all 0.3s ease'
+                    transition: 'all 0.3s ease',
+                    cursor: 'pointer'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.transform = 'scale(1.02)'
+                    e.currentTarget.style.boxShadow = `0 4px 20px ${session.couleur}30`
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.transform = 'scale(1)'
+                    e.currentTarget.style.boxShadow = isCurrent ? `0 0 20px ${session.couleur}40` : '0 2px 8px rgba(0,0,0,0.1)'
                   }}
                 >
                   {/* Jauge de progression pour session en cours */}
