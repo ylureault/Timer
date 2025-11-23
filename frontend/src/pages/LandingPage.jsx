@@ -12,9 +12,9 @@ function LandingPage() {
   // Rotating words animation
   const words = [
     'ateliers', 'réunions', 'Codir', 'formations', 'webinaires', 'conférences',
-    'workshops', 'séminaires', 'brainstormings', 'stand-ups', 'sprints',
-    'retrospectives', 'présentations', 'démos', 'trainings', 'sessions',
-    'événements', 'cérémonies', 'interventions', 'masterclass'
+    'workshops', 'séminaires', 'présentations', 'démos', 'trainings', 'sessions',
+    'événements', 'cérémonies', 'interventions', 'masterclass', 'rendez-vous',
+    'rencontres', 'animations', 'plénières'
   ]
   const [currentWordIndex, setCurrentWordIndex] = useState(0)
 
@@ -76,7 +76,8 @@ function LandingPage() {
             </motion.div>
 
             <h1 className="hero-title-modern">
-              Orchestrez le temps de vos{' '}
+              Orchestrez le temps de vos
+              <br />
               <span className="text-shine rotating-word" key={currentWordIndex}>
                 {words[currentWordIndex]}
               </span>
