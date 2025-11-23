@@ -366,16 +366,54 @@ function LandingPage() {
               <p>Orchestrez le temps de vos ateliers</p>
             </div>
             <div className="footer-links-modern">
-              <a href="https://github.com/anthropics/claude-code" target="_blank" rel="noopener noreferrer">GitHub</a>
+              <a href="https://www.insuffle.com" target="_blank" rel="noopener noreferrer">Insuffle</a>
               <a href="#features">Fonctionnalités</a>
               <a href="#" onClick={(e) => { e.preventDefault(); handleCreateSalon(); }}>Créer un salon</a>
             </div>
           </div>
           <div className="footer-copy">
-            © 2025 Timer Salon. Créé avec ❤️ pour les facilitateurs.
+            © 2025 Timer Salon. Créé avec ❤️ par <a href="https://www.insuffle.com" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--brand-primary)', fontWeight: '600', textDecoration: 'none' }}>Insuffle</a> pour les facilitateurs.
           </div>
         </div>
       </footer>
+
+      {/* Crédit Insuffle - Badge flottant */}
+      <a
+        href="https://www.insuffle.com"
+        target="_blank"
+        rel="noopener noreferrer"
+        style={{
+          position: 'fixed',
+          bottom: '20px',
+          right: '20px',
+          padding: '12px 24px',
+          background: 'linear-gradient(135deg, #3B82F6 0%, #1E40AF 100%)',
+          color: 'white',
+          textDecoration: 'none',
+          borderRadius: '12px',
+          fontSize: '0.9rem',
+          fontWeight: '600',
+          boxShadow: '0 4px 20px rgba(59, 130, 246, 0.4)',
+          transition: 'all 0.3s ease',
+          zIndex: 1500,
+          display: 'flex',
+          alignItems: 'center',
+          gap: '8px',
+          border: '2px solid rgba(255, 255, 255, 0.2)',
+          backdropFilter: 'blur(10px)'
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.transform = 'translateY(-2px)'
+          e.currentTarget.style.boxShadow = '0 8px 30px rgba(59, 130, 246, 0.6)'
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.transform = 'translateY(0)'
+          e.currentTarget.style.boxShadow = '0 4px 20px rgba(59, 130, 246, 0.4)'
+        }}
+      >
+        <span style={{ fontSize: '1.2rem' }}>✨</span>
+        <span>Créé par Insuffle</span>
+      </a>
     </div>
   )
 }

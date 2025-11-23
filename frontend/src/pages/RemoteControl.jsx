@@ -1358,8 +1358,44 @@ function RemoteControl() {
         </a>
       </div>
 
-      {/* Crédit Insuffle */}
-      <div className="insuffle-credit">Créé par Insuffle</div>
+      {/* Crédit Insuffle - Visible et cliquable */}
+      <a
+        href="https://www.insuffle.com"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="insuffle-credit"
+        style={{
+          position: 'fixed',
+          bottom: '20px',
+          right: '20px',
+          padding: '12px 24px',
+          background: 'linear-gradient(135deg, #3B82F6 0%, #1E40AF 100%)',
+          color: 'white',
+          textDecoration: 'none',
+          borderRadius: '12px',
+          fontSize: '0.9rem',
+          fontWeight: '600',
+          boxShadow: '0 4px 20px rgba(59, 130, 246, 0.4)',
+          transition: 'all 0.3s ease',
+          zIndex: 1500,
+          display: 'flex',
+          alignItems: 'center',
+          gap: '8px',
+          border: '2px solid rgba(255, 255, 255, 0.2)',
+          backdropFilter: 'blur(10px)'
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.transform = 'translateY(-2px)'
+          e.currentTarget.style.boxShadow = '0 8px 30px rgba(59, 130, 246, 0.6)'
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.transform = 'translateY(0)'
+          e.currentTarget.style.boxShadow = '0 4px 20px rgba(59, 130, 246, 0.4)'
+        }}
+      >
+        <span style={{ fontSize: '1.2rem' }}>✨</span>
+        <span>Créé par Insuffle</span>
+      </a>
     </div>
   )
 }
