@@ -33,8 +33,16 @@ if (existsSync(frontendDistPath)) {
 // UTILITY FUNCTIONS
 // ============================
 
+const generate6CharCode = () => {
+  // Generate XXX-XXX format code for better security
+  const part1 = Math.floor(100 + Math.random() * 900).toString();
+  const part2 = Math.floor(100 + Math.random() * 900).toString();
+  return `${part1}-${part2}`;
+};
+
+// Keep old function for backward compatibility (returns same format for new codes)
 const generate4DigitCode = () => {
-  return Math.floor(1000 + Math.random() * 9000).toString();
+  return generate6CharCode();
 };
 
 const generateUniqueId = () => {
