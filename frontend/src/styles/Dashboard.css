@@ -662,15 +662,22 @@
 
 .sessions-header {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
   margin-bottom: 16px;
+}
+
+.sessions-header > div {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 
 .sessions-header h3 {
   font-size: 1rem;
   font-weight: 600;
   color: white;
+  margin: 0;
 }
 
 .add-session-btn {
@@ -709,8 +716,8 @@
 .session-item {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 12px;
+  gap: 8px;
+  padding: 10px 12px;
   background: rgba(255, 255, 255, 0.03);
   border: 1px solid rgba(255, 255, 255, 0.05);
   border-radius: 12px;
@@ -732,6 +739,8 @@
   justify-content: center;
   transition: color 0.2s;
   flex-shrink: 0;
+  width: 24px;
+  height: 24px;
 }
 
 .drag-handle:hover {
@@ -743,19 +752,21 @@
 }
 
 .sessions-hint {
-  font-size: 0.8rem;
+  font-size: 0.75rem;
   color: rgba(255, 255, 255, 0.4);
-  margin-top: 2px;
+  margin: 0;
 }
 
 .session-type-select {
-  padding: 10px 8px;
+  padding: 8px 10px;
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 8px;
   color: white;
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   cursor: pointer;
+  width: 85px;
+  flex-shrink: 0;
 }
 
 .session-type-select:focus {
@@ -769,19 +780,20 @@
 }
 
 .session-color-indicator {
-  width: 8px;
-  height: 40px;
-  border-radius: 4px;
+  width: 6px;
+  height: 36px;
+  border-radius: 3px;
   flex-shrink: 0;
 }
 
 .session-name {
   flex: 1;
-  padding: 10px 12px;
+  min-width: 120px;
+  padding: 8px 12px;
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 8px;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   color: white;
 }
 
@@ -791,12 +803,13 @@
 }
 
 .session-duration {
-  width: 80px;
+  width: 70px;
+  flex-shrink: 0;
 }
 
 .session-duration input {
   width: 100%;
-  padding: 10px 12px;
+  padding: 8px 10px;
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 8px;
@@ -811,14 +824,15 @@
 }
 
 .session-color-picker {
-  width: 40px;
-  height: 40px;
+  width: 36px;
+  height: 36px;
   padding: 0;
   border: 2px solid rgba(255, 255, 255, 0.1);
   border-radius: 8px;
   cursor: pointer;
   overflow: hidden;
   background: transparent;
+  flex-shrink: 0;
 }
 
 .session-color-picker::-webkit-color-swatch-wrapper {
@@ -831,8 +845,8 @@
 }
 
 .session-action {
-  width: 36px;
-  height: 36px;
+  width: 32px;
+  height: 32px;
   border-radius: 8px;
   border: none;
   display: flex;
@@ -840,6 +854,7 @@
   justify-content: center;
   cursor: pointer;
   transition: all 0.2s;
+  flex-shrink: 0;
 }
 
 .session-action svg {
@@ -937,12 +952,45 @@
 
   .session-item {
     flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .drag-handle {
+    order: 0;
+  }
+
+  .session-color-indicator {
+    order: 1;
   }
 
   .session-name {
-    order: 1;
-    flex: 1 1 100%;
-    margin-top: 8px;
+    order: 2;
+    flex: 1 1 calc(100% - 120px);
+    min-width: 0;
+  }
+
+  .session-duration {
+    order: 3;
+    width: 65px;
+  }
+
+  .session-color-picker {
+    order: 4;
+    width: 32px;
+    height: 32px;
+  }
+
+  .session-type-select {
+    order: 5;
+    width: 75px;
+    padding: 6px 8px;
+    font-size: 0.75rem;
+  }
+
+  .session-action {
+    order: 6;
+    width: 28px;
+    height: 28px;
   }
 
   .templates-grid {
@@ -1115,35 +1163,39 @@
 }
 
 .share-option {
-  flex: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 12px;
-  padding: 20px;
+  justify-content: center;
+  gap: 8px;
+  padding: 16px 12px;
   background: rgba(255, 255, 255, 0.03);
   border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 16px;
+  border-radius: 12px;
   color: white;
   cursor: pointer;
   transition: all 0.2s;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-decoration: none;
+  text-align: center;
 }
 
 .share-option:hover {
   background: rgba(108, 92, 231, 0.15);
   border-color: rgba(108, 92, 231, 0.4);
+  transform: translateY(-2px);
 }
 
 .share-option svg {
-  width: 20px;
-  height: 20px;
+  width: 22px;
+  height: 22px;
   color: #6C5CE7;
 }
 
 .share-option.linkedin {
   background: #0A66C2;
   border-color: #0A66C2;
-  text-decoration: none;
 }
 
 .share-option.linkedin svg {
@@ -1158,7 +1210,6 @@
 .share-option.facebook {
   background: #1877F2;
   border-color: #1877F2;
-  text-decoration: none;
 }
 
 .share-option.facebook svg {
@@ -1177,6 +1228,6 @@
   }
 
   .share-options {
-    flex-direction: column;
+    grid-template-columns: 1fr;
   }
 }
