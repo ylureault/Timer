@@ -3,8 +3,12 @@ import { useParams, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import '../styles/RemoteControlV2.css';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
-const WS_URL = import.meta.env.VITE_WS_URL || 'ws://localhost:3001';
+const API_URL = import.meta.env.VITE_API_URL ?? '';
+const getWsUrl = () => {
+  if (import.meta.env.VITE_WS_URL) return import.meta.env.VITE_WS_URL;
+  const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+  return `${protocol}//${window.location.host}/ws`;
+};
 
 // Animated background orb
 const Orb = ({ delay, size, color, x, y }) => (
@@ -159,7 +163,7 @@ export default function RemoteControlV2() {
   // Connect WebSocket
   useEffect(() => {
     const connect = () => {
-      wsRef.current = new WebSocket(`${WS_URL}?code=${code}`);
+      wsRef.current = new WebSocket(`${getWsUrl()}?code=${code}`);
 
       wsRef.current.onopen = () => {
         console.log('WebSocket connected');
