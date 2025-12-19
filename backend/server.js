@@ -5,7 +5,13 @@ import jwt from 'jsonwebtoken';
 import { WebSocketServer } from 'ws';
 import { createServer } from 'http';
 import { v4 as uuidv4 } from 'uuid';
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
+import { existsSync } from 'fs';
 import db from './database.js';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -16,6 +22,12 @@ const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET || 'insuffle-timer-v2-
 // Middleware
 app.use(cors());
 app.use(express.json());
+
+// Serve static files from frontend build in production
+const frontendDistPath = join(__dirname, '../frontend/dist');
+if (existsSync(frontendDistPath)) {
+  app.use(express.static(frontendDistPath));
+}
 
 // ============================
 // UTILITY FUNCTIONS
@@ -1126,8 +1138,15 @@ function broadcastTimerUpdate(code) {
   });
 }
 
+// SPA fallback - serve index.html for all non-API routes (must be after all API routes)
+if (existsSync(frontendDistPath)) {
+  app.get('*', (req, res) => {
+    res.sendFile(join(frontendDistPath, 'index.html'));
+  });
+}
+
 // Start server
-server.listen(PORT, () => {
-  console.log(`🚀 Insuffle Timer API V2 running on http://localhost:${PORT}`);
-  console.log(`🔌 WebSocket server running on ws://localhost:${WS_PORT}`);
+server.listen(PORT, '0.0.0.0', () => {
+  console.log(`🚀 Insuffle Timer API V2 running on http://0.0.0.0:${PORT}`);
+  console.log(`🔌 WebSocket server running on ws://0.0.0.0:${WS_PORT}`);
 });

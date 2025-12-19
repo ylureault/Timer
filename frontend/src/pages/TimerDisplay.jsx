@@ -388,7 +388,7 @@ export default function TimerDisplay() {
           <span className="join-code">Code: <strong>{code}</strong></span>
         </div>
         <div className="footer-center">
-          <a href="https://insuffle.be" target="_blank" rel="noopener noreferrer" className="insuffle-link">
+          <a href="https://insuffle.com" target="_blank" rel="noopener noreferrer" className="insuffle-link">
             <span>Propulsé par</span>
             <strong>Insuffle</strong>
           </a>

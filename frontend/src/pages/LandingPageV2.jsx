@@ -337,7 +337,7 @@ export default function LandingPageV2() {
           </div>
           <div className="footer-links">
             <span>Propulsé par</span>
-            <a href="https://insuffle.be" target="_blank" rel="noopener noreferrer">
+            <a href="https://insuffle.com" target="_blank" rel="noopener noreferrer">
               <strong>Insuffle</strong>
             </a>
             <span>•</span>

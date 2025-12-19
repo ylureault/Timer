@@ -223,7 +223,7 @@ export default function AdminPanel() {
 
       {/* Footer */}
       <footer className="admin-footer">
-        Propulsé par <a href="https://insuffle.be" target="_blank" rel="noopener noreferrer">Insuffle</a>
+        Propulsé par <a href="https://insuffle.com" target="_blank" rel="noopener noreferrer">Insuffle</a>
       </footer>
     </div>
   );

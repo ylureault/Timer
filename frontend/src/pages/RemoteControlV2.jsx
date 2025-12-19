@@ -580,7 +580,7 @@ export default function RemoteControlV2() {
       {/* Footer branding */}
       <footer className="remote-footer">
         <span>Propulsé par</span>
-        <a href="https://insuffle.be" target="_blank" rel="noopener noreferrer">
+        <a href="https://insuffle.com" target="_blank" rel="noopener noreferrer">
           Insuffle
         </a>
       </footer>

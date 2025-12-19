@@ -226,7 +226,7 @@ export default function AuthPage() {
 
         {/* Insuffle branding */}
         <div className="auth-branding">
-          Propulsé par <a href="https://insuffle.be" target="_blank" rel="noopener noreferrer">Insuffle</a>
+          Propulsé par <a href="https://insuffle.com" target="_blank" rel="noopener noreferrer">Insuffle</a>
         </div>
       </motion.div>
     </div>

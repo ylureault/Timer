@@ -378,7 +378,7 @@ export default function Dashboard() {
 
       {/* Insuffle branding */}
       <footer className="dashboard-footer">
-        Propulsé par <a href="https://insuffle.be" target="_blank" rel="noopener noreferrer">Insuffle</a>
+        Propulsé par <a href="https://insuffle.com" target="_blank" rel="noopener noreferrer">Insuffle</a>
       </footer>
 
       {/* Create Modal */}
