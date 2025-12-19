@@ -352,6 +352,47 @@
   color: white;
 }
 
+/* QR Code section */
+.timer-qr-section {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 16px;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: 12px;
+  border: 1px dashed rgba(255, 255, 255, 0.1);
+}
+
+.qr-code-mini {
+  flex-shrink: 0;
+}
+
+.qr-code-mini img {
+  width: 60px;
+  height: 60px;
+  border-radius: 8px;
+  background: white;
+  padding: 4px;
+}
+
+.qr-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.qr-label {
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.qr-code-text {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #6C5CE7;
+}
+
 /* Empty state */
 .empty-state {
   grid-column: 1 / -1;
@@ -673,6 +714,58 @@
   background: rgba(255, 255, 255, 0.03);
   border: 1px solid rgba(255, 255, 255, 0.05);
   border-radius: 12px;
+  position: relative;
+  transition: all 0.2s ease;
+}
+
+.session-item:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(108, 92, 231, 0.3);
+}
+
+.drag-handle {
+  cursor: grab;
+  color: rgba(255, 255, 255, 0.3);
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.2s;
+  flex-shrink: 0;
+}
+
+.drag-handle:hover {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.drag-handle:active {
+  cursor: grabbing;
+}
+
+.sessions-hint {
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.4);
+  margin-top: 2px;
+}
+
+.session-type-select {
+  padding: 10px 8px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  color: white;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.session-type-select:focus {
+  outline: none;
+  border-color: #6C5CE7;
+}
+
+.session-type-select option {
+  background: #1a1a2e;
+  color: white;
 }
 
 .session-color-indicator {

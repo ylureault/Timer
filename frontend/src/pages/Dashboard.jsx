@@ -1,8 +1,24 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+  useSortable,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 import { useAuth } from '../contexts/AuthContext';
-import { SESSION_TEMPLATES, exportSalonConfig, importSalonConfig } from '../utils/features';
+import { SESSION_TEMPLATES, exportSalonConfig, importSalonConfig, generateQRCodeSVG } from '../utils/features';
 import '../styles/Dashboard.css';
 
 const API_URL = import.meta.env.VITE_API_URL ?? '';
@@ -23,6 +39,94 @@ const TEMPLATE_ICONS = {
   formation: '📚',
   pomodoro: '🍅'
 };
+
+// Sortable Session Item Component
+function SortableSessionItem({ session, index, onUpdate, onDuplicate, onRemove, formatDuration, parseDuration }) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: session.id || index });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+    zIndex: isDragging ? 1000 : 1,
+  };
+
+  return (
+    <div ref={setNodeRef} style={style} className="session-item">
+      <div className="drag-handle" {...attributes} {...listeners}>
+        <svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor">
+          <circle cx="7" cy="5" r="1.5"/>
+          <circle cx="13" cy="5" r="1.5"/>
+          <circle cx="7" cy="10" r="1.5"/>
+          <circle cx="13" cy="10" r="1.5"/>
+          <circle cx="7" cy="15" r="1.5"/>
+          <circle cx="13" cy="15" r="1.5"/>
+        </svg>
+      </div>
+      <div
+        className="session-color-indicator"
+        style={{ backgroundColor: session.couleur }}
+      />
+      <input
+        type="text"
+        className="session-name"
+        value={session.nom_session}
+        onChange={(e) => onUpdate(index, 'nom_session', e.target.value)}
+        placeholder="Nom de la session"
+      />
+      <div className="session-duration">
+        <input
+          type="text"
+          value={formatDuration(session.duree_secondes)}
+          onChange={(e) => onUpdate(index, 'duree_secondes', parseDuration(e.target.value))}
+          placeholder="5:00"
+        />
+      </div>
+      <input
+        type="color"
+        className="session-color-picker"
+        value={session.couleur}
+        onChange={(e) => onUpdate(index, 'couleur', e.target.value)}
+        title="Choisir la couleur"
+      />
+      <select
+        className="session-type-select"
+        value={session.type || 'session'}
+        onChange={(e) => onUpdate(index, 'type', e.target.value)}
+      >
+        <option value="session">Session</option>
+        <option value="pause">Pause</option>
+      </select>
+      <button
+        className="session-action duplicate"
+        onClick={() => onDuplicate(index)}
+        title="Dupliquer"
+      >
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+          <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+        </svg>
+      </button>
+      <button
+        className="session-action delete"
+        onClick={() => onRemove(index)}
+        title="Supprimer"
+      >
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <line x1="18" y1="6" x2="6" y2="18"/>
+          <line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+    </div>
+  );
+}
 
 export default function Dashboard() {
   const { user, logout, authFetch, isAuthenticated, loading: authLoading } = useAuth();
@@ -47,6 +151,29 @@ export default function Dashboard() {
   // Share form state
   const [shareEmail, setShareEmail] = useState('');
   const [showShareForm, setShowShareForm] = useState(false);
+
+  // DnD sensors
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
+  // Handle drag end for sessions
+  const handleDragEnd = (event) => {
+    const { active, over } = event;
+    if (active.id !== over?.id && editingTimer) {
+      const oldIndex = editingTimer.sessions.findIndex((s, i) => (s.id || i) === active.id);
+      const newIndex = editingTimer.sessions.findIndex((s, i) => (s.id || i) === over.id);
+      if (oldIndex !== -1 && newIndex !== -1) {
+        setEditingTimer({
+          ...editingTimer,
+          sessions: arrayMove(editingTimer.sessions, oldIndex, newIndex)
+        });
+      }
+    }
+  };
 
   // Fetch timers
   const fetchTimers = useCallback(async () => {
@@ -453,6 +580,21 @@ export default function Dashboard() {
                     </svg>
                     Télécommande
                   </Link>
+                </div>
+
+                {/* QR Code section */}
+                <div className="timer-qr-section">
+                  <div className="qr-code-mini">
+                    <img
+                      src={generateQRCodeSVG(`${window.location.origin}/remote/${timer.code_4chiffres}`, 80)}
+                      alt="QR Code"
+                      title="Scanner pour ouvrir la télécommande"
+                    />
+                  </div>
+                  <div className="qr-info">
+                    <span className="qr-label">Scannez pour la télécommande</span>
+                    <span className="qr-code-text">Code: {timer.code_4chiffres}</span>
+                  </div>
                 </div>
               </motion.div>
             ))}
@@ -877,7 +1019,10 @@ export default function Dashboard() {
 
               <div className="sessions-section">
                 <div className="sessions-header">
-                  <h3>Sessions ({editingTimer.sessions.length})</h3>
+                  <div>
+                    <h3>Sessions ({editingTimer.sessions.length})</h3>
+                    <p className="sessions-hint">Glissez pour réorganiser</p>
+                  </div>
                   <button className="add-session-btn" onClick={addSession}>
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                       <line x1="12" y1="5" x2="12" y2="19"/>
@@ -888,58 +1033,31 @@ export default function Dashboard() {
                 </div>
 
                 <div className="sessions-list">
-                  {editingTimer.sessions.map((session, index) => (
-                    <div key={index} className="session-item">
-                      <div
-                        className="session-color-indicator"
-                        style={{ backgroundColor: session.couleur }}
-                      />
-                      <input
-                        type="text"
-                        className="session-name"
-                        value={session.nom_session}
-                        onChange={(e) => updateSession(index, 'nom_session', e.target.value)}
-                        placeholder="Nom de la session"
-                      />
-                      <div className="session-duration">
-                        <input
-                          type="text"
-                          value={formatDuration(session.duree_secondes)}
-                          onChange={(e) => updateSession(index, 'duree_secondes', parseDuration(e.target.value))}
-                          placeholder="5:00"
-                        />
-                      </div>
-                      <input
-                        type="color"
-                        className="session-color-picker"
-                        value={session.couleur}
-                        onChange={(e) => updateSession(index, 'couleur', e.target.value)}
-                        title="Choisir la couleur"
-                      />
-                      <button
-                        className="session-action duplicate"
-                        onClick={() => duplicateSession(index)}
-                        title="Dupliquer"
+                  {editingTimer.sessions.length > 0 ? (
+                    <DndContext
+                      sensors={sensors}
+                      collisionDetection={closestCenter}
+                      onDragEnd={handleDragEnd}
+                    >
+                      <SortableContext
+                        items={editingTimer.sessions.map((s, i) => s.id || i)}
+                        strategy={verticalListSortingStrategy}
                       >
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                          <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
-                          <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
-                        </svg>
-                      </button>
-                      <button
-                        className="session-action delete"
-                        onClick={() => removeSession(index)}
-                        title="Supprimer"
-                      >
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                          <line x1="18" y1="6" x2="6" y2="18"/>
-                          <line x1="6" y1="6" x2="18" y2="18"/>
-                        </svg>
-                      </button>
-                    </div>
-                  ))}
-
-                  {editingTimer.sessions.length === 0 && (
+                        {editingTimer.sessions.map((session, index) => (
+                          <SortableSessionItem
+                            key={session.id || index}
+                            session={session}
+                            index={index}
+                            onUpdate={updateSession}
+                            onDuplicate={duplicateSession}
+                            onRemove={removeSession}
+                            formatDuration={formatDuration}
+                            parseDuration={parseDuration}
+                          />
+                        ))}
+                      </SortableContext>
+                    </DndContext>
+                  ) : (
                     <div className="no-sessions">
                       Aucune session. Cliquez sur "Ajouter" pour créer votre première session.
                     </div>
