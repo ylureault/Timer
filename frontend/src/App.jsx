@@ -1,21 +1,39 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
-import LandingPage from './pages/LandingPage'
+import { AuthProvider } from './contexts/AuthContext'
+
+// V2 Pages
+import LandingPageV2 from './pages/LandingPageV2'
+import AuthPage from './pages/AuthPage'
+import Dashboard from './pages/Dashboard'
+import TimerDisplay from './pages/TimerDisplay'
+import RemoteControlV2 from './pages/RemoteControlV2'
+import AdminPanel from './pages/AdminPanel'
+
+// Legacy pages (keep for backward compatibility)
 import CreateSalon from './pages/CreateSalon'
 import SalonDisplay from './pages/SalonDisplay'
 import RemoteControl from './pages/RemoteControl'
-import AdminSalon from './pages/AdminSalon'
 
 function App() {
   return (
-    <Router>
-      <Routes>
-        <Route path="/" element={<LandingPage />} />
-        <Route path="/create" element={<CreateSalon />} />
-        <Route path="/salon/:code" element={<SalonDisplay />} />
-        <Route path="/remote/:code" element={<RemoteControl />} />
-        <Route path="/admin/:code" element={<AdminSalon />} />
-      </Routes>
-    </Router>
+    <AuthProvider>
+      <Router>
+        <Routes>
+          {/* V2 Routes */}
+          <Route path="/" element={<LandingPageV2 />} />
+          <Route path="/auth" element={<AuthPage />} />
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/admin" element={<AdminPanel />} />
+          <Route path="/display/:code" element={<TimerDisplay />} />
+          <Route path="/remote/:code" element={<RemoteControlV2 />} />
+
+          {/* Legacy routes (backward compatibility) */}
+          <Route path="/create" element={<CreateSalon />} />
+          <Route path="/salon/:code" element={<SalonDisplay />} />
+          <Route path="/old-remote/:code" element={<RemoteControl />} />
+        </Routes>
+      </Router>
+    </AuthProvider>
   )
 }
 
