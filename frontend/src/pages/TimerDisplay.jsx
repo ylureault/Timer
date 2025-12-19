@@ -6,6 +6,31 @@ import '../styles/TimerDisplay.css';
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 const WS_URL = import.meta.env.VITE_WS_URL || 'ws://localhost:3001';
 
+// Confetti particle component
+const Confetti = ({ color }) => {
+  const style = {
+    '--x': `${Math.random() * 100}vw`,
+    '--rotation': `${Math.random() * 360}deg`,
+    '--delay': `${Math.random() * 0.5}s`,
+    backgroundColor: color
+  };
+  return <div className="confetti" style={style} />;
+};
+
+// Floating particle
+const Particle = ({ index }) => {
+  const colors = ['#FF6B6B', '#4ECDC4', '#FFE66D', '#95E1D3', '#F38181'];
+  const style = {
+    '--size': `${10 + Math.random() * 20}px`,
+    '--x': `${Math.random() * 100}%`,
+    '--y': `${Math.random() * 100}%`,
+    '--duration': `${15 + Math.random() * 10}s`,
+    '--delay': `${Math.random() * 5}s`,
+    backgroundColor: colors[index % colors.length]
+  };
+  return <div className="floating-particle" style={style} />;
+};
+
 export default function TimerDisplay() {
   const { code } = useParams();
   const [state, setState] = useState(null);
@@ -13,24 +38,28 @@ export default function TimerDisplay() {
   const [error, setError] = useState(null);
   const [localTime, setLocalTime] = useState(0);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [showTransition, setShowTransition] = useState(false);
+  const [showCountdown, setShowCountdown] = useState(false);
+  const [showComplete, setShowComplete] = useState(false);
+  const [prevSessionIndex, setPrevSessionIndex] = useState(0);
   const wsRef = useRef(null);
   const timerRef = useRef(null);
   const containerRef = useRef(null);
+  const audioRef = useRef(null);
 
-  // Calculate progress for TimeTimer style (360° circle)
-  const calculateProgress = useCallback(() => {
-    if (!state?.current_session) return 0;
-    const total = state.current_session.duree_secondes;
-    const remaining = localTime;
-    return Math.max(0, Math.min(1, remaining / total));
-  }, [state, localTime]);
-
-  // Format time display
+  // Format time
   const formatTime = (seconds) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
+    return { mins, secs, display: `${mins}:${secs.toString().padStart(2, '0')}` };
   };
+
+  // Calculate progress (0 to 1, where 1 = full time remaining)
+  const calculateProgress = useCallback(() => {
+    if (!state?.current_session) return 1;
+    const total = state.current_session.duree_secondes;
+    return Math.max(0, Math.min(1, localTime / total));
+  }, [state, localTime]);
 
   // Connect WebSocket
   useEffect(() => {
@@ -38,7 +67,6 @@ export default function TimerDisplay() {
       wsRef.current = new WebSocket(`${WS_URL}?code=${code}`);
 
       wsRef.current.onopen = () => {
-        console.log('WebSocket connected');
         setError(null);
       };
 
@@ -46,6 +74,10 @@ export default function TimerDisplay() {
         try {
           const data = JSON.parse(event.data);
           if (data.type === 'state') {
+            // Detect session change for transition
+            if (state && data.session_en_cours !== state.session_en_cours) {
+              triggerTransition(data.current_session);
+            }
             setState(data);
             setLocalTime(data.temps_restant);
             setLoading(false);
@@ -56,38 +88,57 @@ export default function TimerDisplay() {
       };
 
       wsRef.current.onclose = () => {
-        console.log('WebSocket disconnected, reconnecting...');
         setTimeout(connect, 2000);
       };
 
       wsRef.current.onerror = () => {
-        setError('Connexion perdue, reconnexion...');
+        setError('Connexion perdue');
       };
     };
 
     connect();
-
-    return () => {
-      if (wsRef.current) {
-        wsRef.current.close();
-      }
-    };
+    return () => wsRef.current?.close();
   }, [code]);
 
-  // Local timer countdown
+  // Trigger session transition animation
+  const triggerTransition = (newSession) => {
+    setShowTransition(true);
+    setTimeout(() => setShowTransition(false), 2000);
+  };
+
+  // Local countdown
   useEffect(() => {
     if (state?.mode === 'play') {
       timerRef.current = setInterval(() => {
-        setLocalTime((prev) => Math.max(0, prev - 1));
+        setLocalTime((prev) => {
+          const next = Math.max(0, prev - 1);
+          // Trigger countdown effect for last 5 seconds
+          if (next <= 5 && next > 0 && !showCountdown) {
+            setShowCountdown(true);
+          }
+          if (next === 0) {
+            setShowCountdown(false);
+          }
+          return next;
+        });
       }, 1000);
     } else {
       clearInterval(timerRef.current);
+      setShowCountdown(false);
     }
-
     return () => clearInterval(timerRef.current);
   }, [state?.mode]);
 
-  // Fullscreen toggle
+  // Completion effect
+  useEffect(() => {
+    if (state?.mode === 'termine') {
+      setShowComplete(true);
+    } else {
+      setShowComplete(false);
+    }
+  }, [state?.mode]);
+
+  // Fullscreen
   const toggleFullscreen = () => {
     if (!document.fullscreenElement) {
       containerRef.current?.requestFullscreen();
@@ -99,27 +150,24 @@ export default function TimerDisplay() {
   };
 
   useEffect(() => {
-    const handleFullscreenChange = () => {
-      setIsFullscreen(!!document.fullscreenElement);
-    };
-    document.addEventListener('fullscreenchange', handleFullscreenChange);
-    return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
+    const handler = () => setIsFullscreen(!!document.fullscreenElement);
+    document.addEventListener('fullscreenchange', handler);
+    return () => document.removeEventListener('fullscreenchange', handler);
   }, []);
-
-  // Play end sound
-  useEffect(() => {
-    if (localTime === 0 && state?.mode === 'play') {
-      // Could add sound here
-    }
-  }, [localTime, state?.mode]);
 
   const progress = calculateProgress();
   const currentSession = state?.current_session;
-  const sessionColor = currentSession?.couleur || '#667eea';
+  const sessionColor = currentSession?.couleur || '#6C5CE7';
+  const time = formatTime(localTime);
+  const isLowTime = localTime <= 30 && localTime > 5;
+  const isCritical = localTime <= 5 && localTime > 0;
 
-  // SVG circle parameters
-  const size = 400;
-  const strokeWidth = 40;
+  // Dynamic background based on session
+  const bgGradient = `linear-gradient(135deg, ${sessionColor}15 0%, ${sessionColor}05 50%, transparent 100%)`;
+
+  // SVG parameters for circular timer
+  const size = 420;
+  const strokeWidth = 24;
   const radius = (size - strokeWidth) / 2;
   const circumference = 2 * Math.PI * radius;
   const strokeDashoffset = circumference * (1 - progress);
@@ -127,22 +175,25 @@ export default function TimerDisplay() {
   if (loading) {
     return (
       <div className="timer-display loading">
-        <div className="loader-ring">
-          <div></div>
-          <div></div>
-          <div></div>
-          <div></div>
+        <div className="loading-content">
+          <motion.div
+            className="loading-logo"
+            animate={{ rotate: 360 }}
+            transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <circle cx="12" cy="12" r="10"/>
+              <polyline points="12,6 12,12 16,14"/>
+            </svg>
+          </motion.div>
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.3 }}
+          >
+            Connexion au timer...
+          </motion.p>
         </div>
-        <p>Connexion au timer...</p>
-      </div>
-    );
-  }
-
-  if (error && !state) {
-    return (
-      <div className="timer-display error">
-        <h2>Timer non trouvé</h2>
-        <p>Le code "{code}" n'existe pas ou a été supprimé.</p>
       </div>
     );
   }
@@ -150,52 +201,85 @@ export default function TimerDisplay() {
   return (
     <div
       ref={containerRef}
-      className={`timer-display ${state?.mode === 'termine' ? 'completed' : ''}`}
+      className={`timer-display ${isLowTime ? 'low-time' : ''} ${isCritical ? 'critical' : ''}`}
       style={{ '--session-color': sessionColor }}
     >
-      {/* Background gradient based on session color */}
-      <div
-        className="timer-bg"
-        style={{
-          background: `linear-gradient(135deg, ${sessionColor}22 0%, ${sessionColor}11 100%)`
-        }}
-      />
+      {/* Animated background */}
+      <div className="timer-bg" style={{ background: bgGradient }}>
+        {[...Array(8)].map((_, i) => (
+          <Particle key={i} index={i} />
+        ))}
+      </div>
 
-      {/* Header with session name FIRST */}
+      {/* Pulse rings on low time */}
+      <AnimatePresence>
+        {(isLowTime || isCritical) && (
+          <motion.div
+            className="pulse-container"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
+            <div className="pulse-ring ring-1" style={{ borderColor: sessionColor }} />
+            <div className="pulse-ring ring-2" style={{ borderColor: sessionColor }} />
+            <div className="pulse-ring ring-3" style={{ borderColor: sessionColor }} />
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Header */}
       <header className="timer-header">
         <motion.div
-          className="session-name-header"
-          key={currentSession?.nom_session}
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
+          className="session-badge"
+          style={{ backgroundColor: sessionColor }}
+          initial={{ scale: 0, y: -20 }}
+          animate={{ scale: 1, y: 0 }}
+          transition={{ type: 'spring', stiffness: 300 }}
         >
-          <h1>{currentSession?.nom_session || 'Timer'}</h1>
-        </motion.div>
-        <div className="session-indicator">
           Session {(state?.session_en_cours || 0) + 1} / {state?.total_sessions || 1}
-        </div>
+        </motion.div>
+
+        <motion.h1
+          className="session-title"
+          key={currentSession?.nom_session}
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ type: 'spring', stiffness: 200 }}
+        >
+          {currentSession?.nom_session || 'Timer'}
+        </motion.h1>
       </header>
 
-      {/* Main timer circle - TimeTimer style */}
+      {/* Main timer */}
       <main className="timer-main">
         <motion.div
-          className="timer-circle-container"
-          initial={{ scale: 0.9, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
+          className="timer-circle-wrapper"
+          animate={isCritical ? { scale: [1, 1.02, 1] } : {}}
+          transition={{ duration: 0.5, repeat: isCritical ? Infinity : 0 }}
         >
-          {/* SVG Circle */}
+          {/* Glow effect */}
+          <div
+            className="timer-glow"
+            style={{
+              background: `radial-gradient(circle, ${sessionColor}40 0%, transparent 70%)`,
+              opacity: progress > 0.5 ? 0.8 : 0.3
+            }}
+          />
+
+          {/* SVG Timer */}
           <svg className="timer-svg" viewBox={`0 0 ${size} ${size}`}>
-            {/* Background circle */}
+            {/* Background track */}
             <circle
               cx={size / 2}
               cy={size / 2}
               r={radius}
               fill="none"
-              stroke="#e2e8f0"
+              stroke="rgba(255,255,255,0.1)"
               strokeWidth={strokeWidth}
             />
-            {/* Progress circle - fills from top, clockwise */}
-            <circle
+
+            {/* Progress arc */}
+            <motion.circle
               cx={size / 2}
               cy={size / 2}
               r={radius}
@@ -206,105 +290,198 @@ export default function TimerDisplay() {
               strokeDasharray={circumference}
               strokeDashoffset={strokeDashoffset}
               transform={`rotate(-90 ${size / 2} ${size / 2})`}
-              className="progress-circle"
+              initial={false}
+              animate={{ strokeDashoffset }}
+              transition={{ duration: 0.5, ease: 'easeOut' }}
+              style={{
+                filter: `drop-shadow(0 0 10px ${sessionColor}80)`
+              }}
             />
-            {/* Colored fill segment - like TimeTimer */}
-            <path
-              d={describeArc(size / 2, size / 2, radius - strokeWidth / 2, 0, 360 * progress)}
-              fill={`${sessionColor}33`}
-              className="fill-segment"
+
+            {/* Inner filled arc (TimeTimer style) */}
+            <motion.path
+              d={describeArc(size / 2, size / 2, radius - 60, 0, 360 * progress)}
+              fill={`${sessionColor}25`}
+              initial={false}
+              animate={{ d: describeArc(size / 2, size / 2, radius - 60, 0, 360 * progress) }}
+              transition={{ duration: 0.5 }}
             />
           </svg>
 
           {/* Center content */}
           <div className="timer-center">
-            <motion.div
-              className="timer-time"
-              key={localTime}
-              initial={{ scale: 1.05 }}
-              animate={{ scale: 1 }}
-            >
-              {formatTime(localTime)}
-            </motion.div>
+            <AnimatePresence mode="wait">
+              <motion.div
+                className="timer-digits"
+                key={time.display}
+                initial={{ scale: 0.8, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 1.2, opacity: 0 }}
+                transition={{ duration: 0.15 }}
+              >
+                <span className="digit-mins">{time.mins}</span>
+                <span className="digit-separator">:</span>
+                <span className="digit-secs">{time.secs.toString().padStart(2, '0')}</span>
+              </motion.div>
+            </AnimatePresence>
+
             <div className="timer-status">
-              {state?.mode === 'play' && 'En cours'}
-              {state?.mode === 'pause' && 'Pause'}
-              {state?.mode === 'termine' && 'Terminé'}
+              {state?.mode === 'play' && (
+                <motion.span
+                  className="status-playing"
+                  animate={{ opacity: [1, 0.5, 1] }}
+                  transition={{ duration: 1.5, repeat: Infinity }}
+                >
+                  ● En cours
+                </motion.span>
+              )}
+              {state?.mode === 'pause' && <span className="status-paused">❚❚ Pause</span>}
+              {state?.mode === 'termine' && <span className="status-done">✓ Terminé</span>}
             </div>
           </div>
         </motion.div>
 
-        {/* Message display */}
+        {/* Message */}
         <AnimatePresence>
           {state?.message_actuel && (
             <motion.div
               className="timer-message"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
+              initial={{ opacity: 0, y: 30, scale: 0.9 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -30, scale: 0.9 }}
+              style={{ backgroundColor: sessionColor }}
             >
+              <span className="message-icon">💬</span>
               {state.message_actuel}
             </motion.div>
           )}
         </AnimatePresence>
       </main>
 
-      {/* Sessions progress bar */}
-      <div className="sessions-progress">
+      {/* Session progress dots */}
+      <div className="sessions-track">
         {state?.sessions?.map((session, index) => (
-          <div
+          <motion.div
             key={index}
             className={`session-dot ${index === state.session_en_cours ? 'active' : ''} ${index < state.session_en_cours ? 'done' : ''}`}
-            style={{ backgroundColor: index <= state.session_en_cours ? session.couleur : '#e2e8f0' }}
-            title={session.nom_session}
-          />
+            style={{ '--dot-color': session.couleur }}
+            whileHover={{ scale: 1.2 }}
+            animate={index === state.session_en_cours ? { scale: [1, 1.15, 1] } : {}}
+            transition={{ duration: 1.5, repeat: index === state.session_en_cours ? Infinity : 0 }}
+          >
+            {index < state.session_en_cours && (
+              <svg viewBox="0 0 24 24" fill="currentColor">
+                <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+              </svg>
+            )}
+          </motion.div>
         ))}
       </div>
 
-      {/* Footer with branding and fullscreen */}
+      {/* Footer */}
       <footer className="timer-footer">
-        <div className="timer-code-display">
-          Code: <strong>{code}</strong>
+        <div className="footer-left">
+          <span className="join-code">Code: <strong>{code}</strong></span>
         </div>
-        <div className="insuffle-brand">
-          Propulsé par <a href="https://insuffle.be" target="_blank" rel="noopener noreferrer">Insuffle</a>
+        <div className="footer-center">
+          <a href="https://insuffle.be" target="_blank" rel="noopener noreferrer" className="insuffle-link">
+            <span>Propulsé par</span>
+            <strong>Insuffle</strong>
+          </a>
         </div>
-        <button className="fullscreen-btn" onClick={toggleFullscreen}>
-          {isFullscreen ? (
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3"/>
-            </svg>
-          ) : (
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/>
-            </svg>
-          )}
-        </button>
+        <div className="footer-right">
+          <button className="fullscreen-btn" onClick={toggleFullscreen}>
+            {isFullscreen ? (
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3"/>
+              </svg>
+            ) : (
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/>
+              </svg>
+            )}
+          </button>
+        </div>
       </footer>
 
-      {/* Completion animation */}
+      {/* Session transition overlay */}
       <AnimatePresence>
-        {state?.mode === 'termine' && (
+        {showTransition && currentSession && (
           <motion.div
-            className="completion-overlay"
+            className="transition-overlay"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
           >
             <motion.div
-              className="completion-content"
-              initial={{ scale: 0.5 }}
-              animate={{ scale: 1 }}
-              transition={{ type: 'spring', stiffness: 200 }}
+              className="transition-content"
+              initial={{ scale: 0, rotate: -180 }}
+              animate={{ scale: 1, rotate: 0 }}
+              exit={{ scale: 0, rotate: 180 }}
+              transition={{ type: 'spring', stiffness: 200, damping: 15 }}
+              style={{ backgroundColor: sessionColor }}
             >
-              <div className="completion-icon">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
-                  <polyline points="22 4 12 14.01 9 11.01"/>
-                </svg>
-              </div>
-              <h2>Session terminée !</h2>
-              <p>Toutes les sessions sont complétées</p>
+              <span className="transition-label">Prochaine session</span>
+              <h2>{currentSession.nom_session}</h2>
+              <span className="transition-duration">{formatTime(currentSession.duree_secondes).display}</span>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Countdown overlay (last 5 seconds) */}
+      <AnimatePresence>
+        {showCountdown && localTime > 0 && localTime <= 5 && (
+          <motion.div
+            className="countdown-overlay"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
+            <motion.div
+              className="countdown-number"
+              key={localTime}
+              initial={{ scale: 3, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.5, opacity: 0 }}
+              transition={{ type: 'spring', stiffness: 300 }}
+              style={{ color: sessionColor }}
+            >
+              {localTime}
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Completion overlay */}
+      <AnimatePresence>
+        {showComplete && (
+          <motion.div
+            className="complete-overlay"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
+            {/* Confetti */}
+            {[...Array(50)].map((_, i) => (
+              <Confetti key={i} color={['#FF6B6B', '#4ECDC4', '#FFE66D', '#95E1D3', '#6C5CE7'][i % 5]} />
+            ))}
+
+            <motion.div
+              className="complete-content"
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              transition={{ type: 'spring', stiffness: 200, delay: 0.2 }}
+            >
+              <motion.div
+                className="complete-icon"
+                animate={{ rotate: [0, 10, -10, 0] }}
+                transition={{ duration: 0.5, repeat: 3 }}
+              >
+                🎉
+              </motion.div>
+              <h2>Bravo !</h2>
+              <p>Toutes les sessions sont terminées</p>
             </motion.div>
           </motion.div>
         )}
@@ -313,14 +490,12 @@ export default function TimerDisplay() {
   );
 }
 
-// Helper function to describe an arc path for the fill segment
+// Arc path helper
 function describeArc(x, y, radius, startAngle, endAngle) {
-  if (endAngle <= 0) return '';
-
+  if (endAngle <= 0) return 'M ' + x + ' ' + y;
   const start = polarToCartesian(x, y, radius, endAngle - 90);
   const end = polarToCartesian(x, y, radius, startAngle - 90);
   const largeArcFlag = endAngle <= 180 ? '0' : '1';
-
   return [
     'M', x, y,
     'L', start.x, start.y,
@@ -329,10 +504,7 @@ function describeArc(x, y, radius, startAngle, endAngle) {
   ].join(' ');
 }
 
-function polarToCartesian(centerX, centerY, radius, angleInDegrees) {
-  const angleInRadians = (angleInDegrees * Math.PI) / 180.0;
-  return {
-    x: centerX + radius * Math.cos(angleInRadians),
-    y: centerY + radius * Math.sin(angleInRadians)
-  };
+function polarToCartesian(cx, cy, r, deg) {
+  const rad = (deg * Math.PI) / 180;
+  return { x: cx + r * Math.cos(rad), y: cy + r * Math.sin(rad) };
 }
