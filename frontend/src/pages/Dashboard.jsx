@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
+import { SESSION_TEMPLATES, exportSalonConfig, importSalonConfig } from '../utils/features';
 import '../styles/Dashboard.css';
 
 const API_URL = import.meta.env.VITE_API_URL ?? '';
@@ -13,6 +14,15 @@ const COLORS = [
   '#84cc16', '#22c55e', '#10b981', '#14b8a6', '#06b6d4',
   '#0ea5e9', '#3b82f6', '#6366f1'
 ];
+
+// Template icons
+const TEMPLATE_ICONS = {
+  daily: '📅',
+  designThinking: '💡',
+  presentation: '🎤',
+  formation: '📚',
+  pomodoro: '🍅'
+};
 
 export default function Dashboard() {
   const { user, logout, authFetch, isAuthenticated, loading: authLoading } = useAuth();
@@ -392,13 +402,47 @@ export default function Dashboard() {
             onClick={() => setShowCreateModal(false)}
           >
             <motion.div
-              className="modal"
+              className="modal modal-large"
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
               onClick={(e) => e.stopPropagation()}
             >
               <h2>Nouveau Timer</h2>
+
+              {/* Templates section */}
+              <div className="templates-section">
+                <h3>Commencer avec un modèle</h3>
+                <div className="templates-grid">
+                  {Object.entries(SESSION_TEMPLATES).map(([key, template]) => (
+                    <motion.button
+                      key={key}
+                      className={`template-card ${newTimer.name === template.name ? 'selected' : ''}`}
+                      onClick={() => setNewTimer({
+                        name: template.name,
+                        description: '',
+                        sessions: template.sessions.map(s => ({
+                          nom_session: s.nom_session,
+                          duree_secondes: s.duree_minutes * 60,
+                          couleur: s.couleur,
+                          type: s.type
+                        }))
+                      })}
+                      whileHover={{ scale: 1.02, y: -2 }}
+                      whileTap={{ scale: 0.98 }}
+                    >
+                      <span className="template-icon">{TEMPLATE_ICONS[key]}</span>
+                      <span className="template-name">{template.name}</span>
+                      <span className="template-sessions">{template.sessions.length} sessions</span>
+                    </motion.button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="divider">
+                <span>ou personnaliser</span>
+              </div>
+
               <div className="form-group">
                 <label>Nom du timer</label>
                 <input
@@ -414,15 +458,34 @@ export default function Dashboard() {
                   value={newTimer.description}
                   onChange={(e) => setNewTimer({ ...newTimer, description: e.target.value })}
                   placeholder="Description de votre timer..."
-                  rows={3}
+                  rows={2}
                 />
               </div>
+
+              {/* Sessions preview */}
+              {newTimer.sessions.length > 0 && (
+                <div className="sessions-preview">
+                  <h4>Sessions ({newTimer.sessions.length})</h4>
+                  <div className="sessions-preview-list">
+                    {newTimer.sessions.map((session, index) => (
+                      <div key={index} className="session-preview-item" style={{ borderLeftColor: session.couleur }}>
+                        <span className="session-preview-name">{session.nom_session}</span>
+                        <span className="session-preview-duration">{Math.floor(session.duree_secondes / 60)} min</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               <div className="modal-actions">
-                <button className="cancel" onClick={() => setShowCreateModal(false)}>
+                <button className="cancel" onClick={() => {
+                  setShowCreateModal(false);
+                  setNewTimer({ name: '', description: '', sessions: [] });
+                }}>
                   Annuler
                 </button>
                 <button className="confirm" onClick={createTimer}>
-                  Créer
+                  Créer le timer
                 </button>
               </div>
             </motion.div>
