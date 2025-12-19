@@ -33,7 +33,20 @@ export default function Dashboard() {
   const [editingTimer, setEditingTimer] = useState(null);
   const [newTimer, setNewTimer] = useState({ name: '', description: '', sessions: [] });
   const [error, setError] = useState(null);
+  const [successMessage, setSuccessMessage] = useState(null);
   const navigate = useNavigate();
+
+  // Testimonial form state
+  const [testimonialForm, setTestimonialForm] = useState({ content: '', rating: 5, company: '' });
+  const [showTestimonialForm, setShowTestimonialForm] = useState(false);
+
+  // Feedback form state
+  const [feedbackForm, setFeedbackForm] = useState({ content: '', type: 'feedback' });
+  const [showFeedbackForm, setShowFeedbackForm] = useState(false);
+
+  // Share form state
+  const [shareEmail, setShareEmail] = useState('');
+  const [showShareForm, setShowShareForm] = useState(false);
 
   // Fetch timers
   const fetchTimers = useCallback(async () => {
@@ -212,6 +225,71 @@ export default function Dashboard() {
     return parseInt(value) * 60;
   };
 
+  // Submit testimonial
+  const submitTestimonial = async () => {
+    if (testimonialForm.content.length < 10) {
+      setError('Le témoignage doit contenir au moins 10 caractères');
+      return;
+    }
+
+    try {
+      const res = await authFetch(`${API_URL}/api/testimonials`, {
+        method: 'POST',
+        body: JSON.stringify(testimonialForm)
+      });
+
+      const data = await res.json();
+      if (data.success) {
+        setShowTestimonialForm(false);
+        setTestimonialForm({ content: '', rating: 5, company: '' });
+        setSuccessMessage('Merci pour votre témoignage ! Il sera visible après approbation.');
+        setTimeout(() => setSuccessMessage(null), 5000);
+      } else {
+        setError(data.error);
+      }
+    } catch {
+      setError('Erreur lors de l\'envoi du témoignage');
+    }
+  };
+
+  // Submit feedback
+  const submitFeedback = async () => {
+    if (feedbackForm.content.length < 10) {
+      setError('Le message doit contenir au moins 10 caractères');
+      return;
+    }
+
+    try {
+      const res = await authFetch(`${API_URL}/api/feedback`, {
+        method: 'POST',
+        body: JSON.stringify(feedbackForm)
+      });
+
+      const data = await res.json();
+      if (data.success) {
+        setShowFeedbackForm(false);
+        setFeedbackForm({ content: '', type: 'feedback' });
+        setSuccessMessage('Merci pour votre retour !');
+        setTimeout(() => setSuccessMessage(null), 5000);
+      } else {
+        setError(data.error);
+      }
+    } catch {
+      setError('Erreur lors de l\'envoi');
+    }
+  };
+
+  // Share by email
+  const shareByEmail = () => {
+    const subject = encodeURIComponent('Découvre Insuffle Timer !');
+    const body = encodeURIComponent(`Salut !\n\nJe te recommande Insuffle Timer, un super outil pour gérer le temps de tes ateliers et réunions.\n\nC'est gratuit et super simple à utiliser : https://timer.insuffle.com\n\nÀ bientôt !`);
+    window.open(`mailto:${shareEmail}?subject=${subject}&body=${body}`);
+    setShowShareForm(false);
+    setShareEmail('');
+    setSuccessMessage('Invitation envoyée !');
+    setTimeout(() => setSuccessMessage(null), 3000);
+  };
+
   if (authLoading || loading) {
     return (
       <div className="dashboard-loading">
@@ -280,6 +358,21 @@ export default function Dashboard() {
             >
               {error}
               <button onClick={() => setError(null)}>×</button>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Success message */}
+        <AnimatePresence>
+          {successMessage && (
+            <motion.div
+              className="dashboard-success"
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0 }}
+            >
+              {successMessage}
+              <button onClick={() => setSuccessMessage(null)}>×</button>
             </motion.div>
           )}
         </AnimatePresence>
@@ -384,12 +477,245 @@ export default function Dashboard() {
             </motion.div>
           )}
         </div>
+
+        {/* Community Section */}
+        <section className="community-section">
+          <h2>Participez à la communauté</h2>
+          <p>Aidez-nous à améliorer Insuffle Timer et partagez-le !</p>
+
+          <div className="community-cards">
+            <motion.div
+              className="community-card testimonial-card"
+              whileHover={{ scale: 1.02 }}
+            >
+              <div className="card-icon">💬</div>
+              <h3>Témoignage</h3>
+              <p>Partagez votre expérience avec Insuffle Timer</p>
+              <button onClick={() => setShowTestimonialForm(true)}>
+                Laisser un témoignage
+              </button>
+            </motion.div>
+
+            <motion.div
+              className="community-card feedback-card"
+              whileHover={{ scale: 1.02 }}
+            >
+              <div className="card-icon">💡</div>
+              <h3>Suggestions</h3>
+              <p>Proposez des améliorations ou signalez des bugs</p>
+              <button onClick={() => setShowFeedbackForm(true)}>
+                Envoyer un feedback
+              </button>
+            </motion.div>
+
+            <motion.div
+              className="community-card share-card"
+              whileHover={{ scale: 1.02 }}
+            >
+              <div className="card-icon">🚀</div>
+              <h3>Partager</h3>
+              <p>Recommandez Insuffle Timer à vos collègues</p>
+              <button onClick={() => setShowShareForm(true)}>
+                Inviter quelqu'un
+              </button>
+            </motion.div>
+          </div>
+        </section>
       </main>
 
       {/* Insuffle branding */}
       <footer className="dashboard-footer">
         Propulsé par <a href="https://insuffle.com" target="_blank" rel="noopener noreferrer">Insuffle</a>
       </footer>
+
+      {/* Testimonial Modal */}
+      <AnimatePresence>
+        {showTestimonialForm && (
+          <motion.div
+            className="modal-overlay"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setShowTestimonialForm(false)}
+          >
+            <motion.div
+              className="modal"
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <h2>Laissez un témoignage</h2>
+              <p className="modal-subtitle">Votre avis nous aide à progresser !</p>
+
+              <div className="form-group">
+                <label>Votre témoignage</label>
+                <textarea
+                  value={testimonialForm.content}
+                  onChange={(e) => setTestimonialForm({ ...testimonialForm, content: e.target.value })}
+                  placeholder="Partagez votre expérience avec Insuffle Timer..."
+                  rows={4}
+                />
+              </div>
+
+              <div className="form-group">
+                <label>Note</label>
+                <div className="rating-input">
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <button
+                      key={star}
+                      type="button"
+                      className={`star-btn ${testimonialForm.rating >= star ? 'active' : ''}`}
+                      onClick={() => setTestimonialForm({ ...testimonialForm, rating: star })}
+                    >
+                      ★
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="form-group">
+                <label>Entreprise (optionnel)</label>
+                <input
+                  type="text"
+                  value={testimonialForm.company}
+                  onChange={(e) => setTestimonialForm({ ...testimonialForm, company: e.target.value })}
+                  placeholder="Votre entreprise ou organisation"
+                />
+              </div>
+
+              <div className="modal-actions">
+                <button className="cancel" onClick={() => setShowTestimonialForm(false)}>
+                  Annuler
+                </button>
+                <button className="confirm" onClick={submitTestimonial}>
+                  Envoyer
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Feedback Modal */}
+      <AnimatePresence>
+        {showFeedbackForm && (
+          <motion.div
+            className="modal-overlay"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setShowFeedbackForm(false)}
+          >
+            <motion.div
+              className="modal"
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <h2>Envoyez-nous un feedback</h2>
+              <p className="modal-subtitle">Bug, suggestion, amélioration... on veut tout savoir !</p>
+
+              <div className="form-group">
+                <label>Type de feedback</label>
+                <select
+                  value={feedbackForm.type}
+                  onChange={(e) => setFeedbackForm({ ...feedbackForm, type: e.target.value })}
+                >
+                  <option value="feedback">Suggestion d'amélioration</option>
+                  <option value="bug">Signalement de bug</option>
+                  <option value="feature">Demande de fonctionnalité</option>
+                  <option value="other">Autre</option>
+                </select>
+              </div>
+
+              <div className="form-group">
+                <label>Votre message</label>
+                <textarea
+                  value={feedbackForm.content}
+                  onChange={(e) => setFeedbackForm({ ...feedbackForm, content: e.target.value })}
+                  placeholder="Décrivez votre suggestion ou le problème rencontré..."
+                  rows={4}
+                />
+              </div>
+
+              <div className="modal-actions">
+                <button className="cancel" onClick={() => setShowFeedbackForm(false)}>
+                  Annuler
+                </button>
+                <button className="confirm" onClick={submitFeedback}>
+                  Envoyer
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Share Modal */}
+      <AnimatePresence>
+        {showShareForm && (
+          <motion.div
+            className="modal-overlay"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setShowShareForm(false)}
+          >
+            <motion.div
+              className="modal"
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <h2>Partagez Insuffle Timer</h2>
+              <p className="modal-subtitle">Invitez vos collègues à découvrir l'outil !</p>
+
+              <div className="form-group">
+                <label>Email de la personne à inviter</label>
+                <input
+                  type="email"
+                  value={shareEmail}
+                  onChange={(e) => setShareEmail(e.target.value)}
+                  placeholder="collegue@entreprise.com"
+                />
+              </div>
+
+              <div className="share-options">
+                <button className="share-option" onClick={shareByEmail}>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                    <polyline points="22,6 12,13 2,6"/>
+                  </svg>
+                  Envoyer par email
+                </button>
+                <button
+                  className="share-option"
+                  onClick={() => {
+                    navigator.clipboard.writeText('https://timer.insuffle.com');
+                    setSuccessMessage('Lien copié !');
+                    setTimeout(() => setSuccessMessage(null), 2000);
+                  }}
+                >
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+                  </svg>
+                  Copier le lien
+                </button>
+              </div>
+
+              <div className="modal-actions">
+                <button className="cancel" onClick={() => setShowShareForm(false)}>
+                  Fermer
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Create Modal */}
       <AnimatePresence>

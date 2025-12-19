@@ -1033,6 +1033,154 @@ app.get('/api/admin/users', authenticateToken, (req, res) => {
 });
 
 // ============================
+// TESTIMONIALS ENDPOINTS
+// ============================
+
+// Get approved testimonials (public)
+app.get('/api/testimonials', (req, res) => {
+  try {
+    const testimonials = db.prepare(`
+      SELECT id, author_name, company, content, rating, created_at
+      FROM testimonials
+      WHERE is_approved = 1
+      ORDER BY created_at DESC
+      LIMIT 20
+    `).all();
+
+    res.json({ success: true, testimonials });
+  } catch (error) {
+    console.error('Get testimonials error:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// Submit testimonial (authenticated users)
+app.post('/api/testimonials', authenticateToken, (req, res) => {
+  try {
+    const { content, rating, company } = req.body;
+
+    if (!content || content.length < 10) {
+      return res.status(400).json({ success: false, error: 'Le témoignage doit contenir au moins 10 caractères' });
+    }
+
+    // Get user info
+    const user = db.prepare('SELECT username, email FROM users WHERE id = ?').get(req.user.userId);
+
+    db.prepare(`
+      INSERT INTO testimonials (user_id, author_name, author_email, company, content, rating)
+      VALUES (?, ?, ?, ?, ?, ?)
+    `).run(req.user.userId, user.username, user.email, company || null, content, rating || 5);
+
+    res.json({ success: true, message: 'Témoignage soumis avec succès ! Il sera visible après approbation.' });
+  } catch (error) {
+    console.error('Submit testimonial error:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// ============================
+// FEEDBACK ENDPOINTS
+// ============================
+
+// Submit feedback (authenticated or anonymous)
+app.post('/api/feedback', optionalAuth, (req, res) => {
+  try {
+    const { content, type, email } = req.body;
+
+    if (!content || content.length < 10) {
+      return res.status(400).json({ success: false, error: 'Le message doit contenir au moins 10 caractères' });
+    }
+
+    const userId = req.user?.userId || null;
+
+    db.prepare(`
+      INSERT INTO feedback (user_id, type, content, email)
+      VALUES (?, ?, ?, ?)
+    `).run(userId, type || 'feedback', content, email || null);
+
+    res.json({ success: true, message: 'Merci pour votre retour !' });
+  } catch (error) {
+    console.error('Submit feedback error:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// Get all feedback (admin)
+app.get('/api/admin/feedback', authenticateToken, (req, res) => {
+  try {
+    const feedback = db.prepare(`
+      SELECT f.*, u.username, u.email as user_email
+      FROM feedback f
+      LEFT JOIN users u ON f.user_id = u.id
+      ORDER BY f.created_at DESC
+      LIMIT 100
+    `).all();
+
+    res.json({ success: true, feedback });
+  } catch (error) {
+    console.error('Get feedback error:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// Get all testimonials (admin)
+app.get('/api/admin/testimonials', authenticateToken, (req, res) => {
+  try {
+    const testimonials = db.prepare(`
+      SELECT t.*, u.username, u.email as user_email
+      FROM testimonials t
+      LEFT JOIN users u ON t.user_id = u.id
+      ORDER BY t.created_at DESC
+      LIMIT 100
+    `).all();
+
+    res.json({ success: true, testimonials });
+  } catch (error) {
+    console.error('Get admin testimonials error:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// Approve/reject testimonial (admin)
+app.put('/api/admin/testimonials/:id', authenticateToken, (req, res) => {
+  try {
+    const { is_approved } = req.body;
+
+    db.prepare('UPDATE testimonials SET is_approved = ? WHERE id = ?').run(is_approved ? 1 : 0, req.params.id);
+
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Update testimonial error:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// Delete testimonial (admin)
+app.delete('/api/admin/testimonials/:id', authenticateToken, (req, res) => {
+  try {
+    db.prepare('DELETE FROM testimonials WHERE id = ?').run(req.params.id);
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Delete testimonial error:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// Update feedback status (admin)
+app.put('/api/admin/feedback/:id', authenticateToken, (req, res) => {
+  try {
+    const { status } = req.body;
+
+    db.prepare('UPDATE feedback SET status = ? WHERE id = ?').run(status, req.params.id);
+
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Update feedback error:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// ============================
 // LEGACY ENDPOINTS (backward compatibility)
 // ============================
 

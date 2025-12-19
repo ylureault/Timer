@@ -4,6 +4,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
 import '../styles/LandingPageV2.css';
 
+const API_URL = import.meta.env.VITE_API_URL ?? '';
+
 // Animated background orbs
 const Orb = ({ delay, size, color, x, y }) => (
   <motion.div
@@ -29,29 +31,36 @@ const Orb = ({ delay, size, color, x, y }) => (
   />
 );
 
-// Floating icon component
-const FloatingIcon = ({ icon, delay, x, y }) => (
-  <motion.div
-    className="floating-icon"
-    style={{ left: x, top: y }}
-    animate={{
-      y: [0, -20, 0],
-      rotate: [0, 10, -10, 0]
-    }}
-    transition={{
-      duration: 4,
-      delay,
-      repeat: Infinity,
-      ease: 'easeInOut'
-    }}
-  >
-    {icon}
-  </motion.div>
-);
+// Features data
+const FEATURES = [
+  { icon: '⏱️', title: 'Timer circulaire', desc: 'Style TimeTimer avec temps visible en un coup d\'œil', color: '#6C5CE7', category: 'core' },
+  { icon: '📱', title: 'Télécommande mobile', desc: 'Contrôlez depuis votre smartphone en temps réel', color: '#00CEC9', category: 'core' },
+  { icon: '🎨', title: 'Sessions colorées', desc: 'Personnalisez couleurs et durées pour chaque session', color: '#FF6B6B', category: 'core' },
+  { icon: '⚡', title: 'Sync temps réel', desc: 'WebSocket pour synchronisation instantanée', color: '#FDCB6E', category: 'core' },
+  { icon: '📋', title: 'Templates prédéfinis', desc: 'Daily, Pomodoro, Design Thinking, Formation...', color: '#A29BFE', category: 'productivity' },
+  { icon: '👥', title: 'Multi-participants', desc: 'Code à 4 chiffres pour rejoindre facilement', color: '#74B9FF', category: 'collaboration' },
+  { icon: '🔐', title: 'Comptes sécurisés', desc: 'Créez un compte pour sauvegarder vos timers', color: '#55EFC4', category: 'security' },
+  { icon: '📊', title: 'Dashboard intuitif', desc: 'Gérez jusqu\'à 5 timers par compte', color: '#FD79A8', category: 'productivity' },
+  { icon: '🎬', title: 'Animations fluides', desc: 'Transitions et effets visuels spectaculaires', color: '#E17055', category: 'ux' },
+  { icon: '🔔', title: 'Alertes visuelles', desc: 'Compte à rebours et pulsations d\'alerte', color: '#00B894', category: 'ux' },
+  { icon: '📺', title: 'Mode plein écran', desc: 'Affichage optimisé pour vidéoprojecteur', color: '#6C5CE7', category: 'display' },
+  { icon: '💬', title: 'Messages en direct', desc: 'Envoyez des messages sur l\'écran principal', color: '#FDCB6E', category: 'collaboration' }
+];
+
+// Use cases
+const USE_CASES = [
+  { title: 'Ateliers collaboratifs', desc: 'Structurez vos sessions de brainstorming', icon: '💡' },
+  { title: 'Formations', desc: 'Gérez le temps de vos modules', icon: '📚' },
+  { title: 'Réunions d\'équipe', desc: 'Respectez l\'ordre du jour', icon: '👥' },
+  { title: 'Sprints Agile', desc: 'Daily meetings et rétrospectives', icon: '🏃' },
+  { title: 'Présentations', desc: 'Maîtrisez votre temps de parole', icon: '🎤' },
+  { title: 'Pomodoro', desc: 'Alternez focus et pauses', icon: '🍅' }
+];
 
 export default function LandingPageV2() {
   const [joinCode, setJoinCode] = useState('');
   const [isTyping, setIsTyping] = useState(false);
+  const [testimonials, setTestimonials] = useState([]);
   const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
 
@@ -64,6 +73,22 @@ export default function LandingPageV2() {
       setWordIndex((prev) => (prev + 1) % words.length);
     }, 2500);
     return () => clearInterval(interval);
+  }, []);
+
+  // Fetch testimonials
+  useEffect(() => {
+    const fetchTestimonials = async () => {
+      try {
+        const res = await fetch(`${API_URL}/api/testimonials`);
+        const data = await res.json();
+        if (data.success) {
+          setTestimonials(data.testimonials);
+        }
+      } catch (err) {
+        console.log('No testimonials yet');
+      }
+    };
+    fetchTestimonials();
   }, []);
 
   const handleJoin = (e) => {
@@ -81,17 +106,7 @@ export default function LandingPageV2() {
         <Orb delay={3} size="400px" color="#00CEC9" x="70%" y="60%" />
         <Orb delay={6} size="500px" color="#FF6B6B" x="80%" y="-10%" />
         <Orb delay={9} size="350px" color="#FDCB6E" x="10%" y="70%" />
-
-        {/* Grid pattern */}
         <div className="grid-pattern" />
-      </div>
-
-      {/* Floating decorative icons */}
-      <div className="floating-icons">
-        <FloatingIcon icon="⏱️" delay={0} x="5%" y="20%" />
-        <FloatingIcon icon="🎯" delay={1} x="90%" y="30%" />
-        <FloatingIcon icon="✨" delay={2} x="15%" y="70%" />
-        <FloatingIcon icon="🚀" delay={3} x="85%" y="75%" />
       </div>
 
       {/* Header */}
@@ -117,23 +132,22 @@ export default function LandingPageV2() {
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.5, delay: 0.2 }}
         >
+          <a href="#features" className="nav-btn ghost">Fonctionnalités</a>
+          <a href="#usecases" className="nav-btn ghost">Cas d'usage</a>
           {isAuthenticated ? (
             <Link to="/dashboard" className="nav-btn primary">
-              <span>Mon Dashboard</span>
+              <span>Dashboard</span>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M5 12h14M12 5l7 7-7 7"/>
               </svg>
             </Link>
           ) : (
-            <>
-              <Link to="/auth" className="nav-btn ghost">Connexion</Link>
-              <Link to="/auth" className="nav-btn primary">
-                <span>Créer un compte</span>
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M5 12h14M12 5l7 7-7 7"/>
-                </svg>
-              </Link>
-            </>
+            <Link to="/auth" className="nav-btn primary">
+              <span>Commencer</span>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M5 12h14M12 5l7 7-7 7"/>
+              </svg>
+            </Link>
           )}
         </motion.nav>
       </header>
@@ -153,7 +167,7 @@ export default function LandingPageV2() {
             transition={{ type: 'spring', stiffness: 300, delay: 0.5 }}
           >
             <span className="badge-dot" />
-            Nouveau : Comptes utilisateurs disponibles
+            100% Gratuit - Aucune carte requise
           </motion.div>
 
           <h1 className="hero-title">
@@ -176,9 +190,9 @@ export default function LandingPageV2() {
           </h1>
 
           <p className="hero-subtitle">
-            Créez des sessions chronométrées avec un affichage spectaculaire.
+            L'outil de gestion du temps préféré des facilitateurs.
             <br />
-            Partagez avec un simple code à 4 chiffres.
+            Créez des sessions chronométrées spectaculaires, partagez avec un code à 4 chiffres.
           </p>
 
           {/* Join form */}
@@ -200,6 +214,7 @@ export default function LandingPageV2() {
                 maxLength={4}
                 pattern="[0-9]*"
                 inputMode="numeric"
+                aria-label="Code de session à 4 chiffres"
               />
               <motion.button
                 type="submit"
@@ -237,7 +252,7 @@ export default function LandingPageV2() {
                 </div>
                 <div className="cta-text">
                   <strong>{isAuthenticated ? 'Gérer mes timers' : 'Créer un timer gratuitement'}</strong>
-                  <span>Jusqu'à 5 timers par compte</span>
+                  <span>Prêt en 30 secondes</span>
                 </div>
               </Link>
             </motion.div>
@@ -289,30 +304,54 @@ export default function LandingPageV2() {
         </motion.div>
       </main>
 
-      {/* Features */}
-      <section className="features">
-        <motion.h2
+      {/* Stats */}
+      <section className="stats-section">
+        <motion.div
+          className="stats-grid"
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
         >
-          Une expérience visuelle unique
-        </motion.h2>
+          <div className="stat-item">
+            <span className="stat-value">100%</span>
+            <span className="stat-label">Gratuit</span>
+          </div>
+          <div className="stat-item">
+            <span className="stat-value">5</span>
+            <span className="stat-label">Timers par compte</span>
+          </div>
+          <div className="stat-item">
+            <span className="stat-value">&lt;1s</span>
+            <span className="stat-label">Synchronisation</span>
+          </div>
+          <div className="stat-item">
+            <span className="stat-value">∞</span>
+            <span className="stat-label">Participants</span>
+          </div>
+        </motion.div>
+      </section>
+
+      {/* Features */}
+      <section className="features" id="features">
+        <motion.div
+          className="section-header"
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+        >
+          <h2>Fonctionnalités complètes</h2>
+          <p>Tout ce dont vous avez besoin pour gérer le temps de vos sessions</p>
+        </motion.div>
 
         <div className="features-grid">
-          {[
-            { icon: '⏱️', title: 'Timer circulaire', desc: 'Style TimeTimer avec temps visible en un coup d\'œil', color: '#6C5CE7' },
-            { icon: '📱', title: 'Télécommande', desc: 'Contrôlez depuis votre smartphone', color: '#00CEC9' },
-            { icon: '🎨', title: 'Personnalisable', desc: 'Couleurs et durées pour chaque session', color: '#FF6B6B' },
-            { icon: '⚡', title: 'Temps réel', desc: 'Synchronisation instantanée WebSocket', color: '#FDCB6E' }
-          ].map((feature, i) => (
+          {FEATURES.map((feature, i) => (
             <motion.div
               key={feature.title}
               className="feature-card"
               initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ delay: i * 0.1 }}
+              transition={{ delay: i * 0.05 }}
               whileHover={{ y: -5, scale: 1.02 }}
             >
               <div className="feature-icon" style={{ background: `${feature.color}20`, color: feature.color }}>
@@ -325,24 +364,139 @@ export default function LandingPageV2() {
         </div>
       </section>
 
+      {/* Use Cases */}
+      <section className="usecases" id="usecases">
+        <motion.div
+          className="section-header"
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+        >
+          <h2>Parfait pour tous vos cas d'usage</h2>
+          <p>Insuffle Timer s'adapte à tous les contextes professionnels</p>
+        </motion.div>
+
+        <div className="usecases-grid">
+          {USE_CASES.map((usecase, i) => (
+            <motion.div
+              key={usecase.title}
+              className="usecase-card"
+              initial={{ opacity: 0, x: i % 2 === 0 ? -20 : 20 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: i * 0.1 }}
+            >
+              <span className="usecase-icon">{usecase.icon}</span>
+              <div className="usecase-content">
+                <h3>{usecase.title}</h3>
+                <p>{usecase.desc}</p>
+              </div>
+            </motion.div>
+          ))}
+        </div>
+      </section>
+
+      {/* Testimonials */}
+      {testimonials.length > 0 && (
+        <section className="testimonials" id="testimonials">
+          <motion.div
+            className="section-header"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+          >
+            <h2>Ce que nos utilisateurs disent</h2>
+            <p>Découvrez les retours de la communauté</p>
+          </motion.div>
+
+          <div className="testimonials-grid">
+            {testimonials.slice(0, 6).map((testimonial, i) => (
+              <motion.div
+                key={testimonial.id}
+                className="testimonial-card"
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.1 }}
+              >
+                <div className="testimonial-stars">
+                  {'★'.repeat(testimonial.rating)}{'☆'.repeat(5 - testimonial.rating)}
+                </div>
+                <p className="testimonial-text">"{testimonial.content}"</p>
+                <div className="testimonial-author">
+                  <div className="author-avatar">
+                    {testimonial.author_name.charAt(0).toUpperCase()}
+                  </div>
+                  <div className="author-info">
+                    <strong>{testimonial.author_name}</strong>
+                    {testimonial.company && <span>{testimonial.company}</span>}
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* CTA Section */}
+      <section className="cta-section">
+        <motion.div
+          className="cta-content"
+          initial={{ opacity: 0, scale: 0.95 }}
+          whileInView={{ opacity: 1, scale: 1 }}
+          viewport={{ once: true }}
+        >
+          <h2>Prêt à transformer vos sessions ?</h2>
+          <p>Créez votre premier timer en moins de 30 secondes</p>
+          <Link to={isAuthenticated ? '/dashboard' : '/auth'} className="cta-button">
+            <span>{isAuthenticated ? 'Accéder au Dashboard' : 'Commencer gratuitement'}</span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M5 12h14M12 5l7 7-7 7"/>
+            </svg>
+          </Link>
+        </motion.div>
+      </section>
+
       {/* Footer */}
       <footer className="landing-footer">
         <div className="footer-content">
-          <div className="footer-brand">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <circle cx="12" cy="12" r="10"/>
-              <polyline points="12,6 12,12 16,14"/>
-            </svg>
-            <span>Insuffle Timer</span>
+          <div className="footer-main">
+            <div className="footer-brand">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <circle cx="12" cy="12" r="10"/>
+                <polyline points="12,6 12,12 16,14"/>
+              </svg>
+              <span>Insuffle Timer</span>
+            </div>
+            <p className="footer-desc">
+              L'outil de gestion du temps visuel pour les facilitateurs, formateurs et équipes agiles.
+            </p>
           </div>
-          <div className="footer-links">
-            <span>Propulsé par</span>
-            <a href="https://insuffle.com" target="_blank" rel="noopener noreferrer">
-              <strong>Insuffle</strong>
-            </a>
-            <span>•</span>
-            <span>Facilitation & Intelligence Collective</span>
+
+          <div className="footer-links-grid">
+            <div className="footer-col">
+              <h4>Produit</h4>
+              <a href="#features">Fonctionnalités</a>
+              <a href="#usecases">Cas d'usage</a>
+              <Link to="/auth">Créer un compte</Link>
+            </div>
+            <div className="footer-col">
+              <h4>Ressources</h4>
+              <a href="https://insuffle.com" target="_blank" rel="noopener noreferrer">Blog Insuffle</a>
+              <a href="https://insuffle.com/contact" target="_blank" rel="noopener noreferrer">Support</a>
+            </div>
+            <div className="footer-col">
+              <h4>Légal</h4>
+              <a href="#">Mentions légales</a>
+              <a href="#">Confidentialité</a>
+            </div>
           </div>
+        </div>
+
+        <div className="footer-bottom">
+          <span>© 2024 Insuffle Timer. Propulsé par</span>
+          <a href="https://insuffle.com" target="_blank" rel="noopener noreferrer">Insuffle</a>
+          <span>- Facilitation & Intelligence Collective</span>
         </div>
       </footer>
     </div>

@@ -87,12 +87,39 @@ db.exec(`
     FOREIGN KEY (timer_id) REFERENCES timers(id) ON DELETE CASCADE
   );
 
+  -- Testimonials from users
+  CREATE TABLE IF NOT EXISTS testimonials (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER,
+    author_name TEXT NOT NULL,
+    author_email TEXT,
+    company TEXT,
+    content TEXT NOT NULL,
+    rating INTEGER DEFAULT 5,
+    is_approved INTEGER DEFAULT 0,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
+  );
+
+  -- Feedback/suggestions from users
+  CREATE TABLE IF NOT EXISTS feedback (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER,
+    type TEXT DEFAULT 'feedback',
+    content TEXT NOT NULL,
+    email TEXT,
+    status TEXT DEFAULT 'new',
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
+  );
+
   CREATE INDEX IF NOT EXISTS idx_timers_user ON timers(user_id);
   CREATE INDEX IF NOT EXISTS idx_sessions_timer ON sessions(timer_id);
   CREATE INDEX IF NOT EXISTS idx_timer_states_timer ON timer_states(timer_id);
   CREATE INDEX IF NOT EXISTS idx_refresh_tokens_user ON refresh_tokens(user_id);
   CREATE INDEX IF NOT EXISTS idx_timers_code ON timers(code_4chiffres);
   CREATE INDEX IF NOT EXISTS idx_timers_url ON timers(url_unique);
+  CREATE INDEX IF NOT EXISTS idx_testimonials_approved ON testimonials(is_approved);
 `);
 
 export default db;
