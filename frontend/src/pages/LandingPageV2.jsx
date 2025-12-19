@@ -134,6 +134,7 @@ export default function LandingPageV2() {
         >
           <a href="#features" className="nav-btn ghost">Fonctionnalités</a>
           <a href="#usecases" className="nav-btn ghost">Cas d'usage</a>
+          <Link to="/marketplace" className="nav-btn ghost">Marketplace</Link>
           {isAuthenticated ? (
             <Link to="/dashboard" className="nav-btn primary">
               <span>Dashboard</span>

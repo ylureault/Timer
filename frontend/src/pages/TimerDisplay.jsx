@@ -4,6 +4,63 @@ import { motion, AnimatePresence } from 'framer-motion';
 import '../styles/TimerDisplay.css';
 
 const API_URL = import.meta.env.VITE_API_URL ?? '';
+
+// Visual themes configuration
+const VISUAL_THEMES = {
+  cinematic: {
+    id: 'cinematic',
+    background: 'linear-gradient(180deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)',
+    textColor: '#ffffff',
+    particleColors: ['#FF6B6B', '#4ECDC4', '#FFE66D', '#95E1D3', '#F38181']
+  },
+  neon: {
+    id: 'neon',
+    background: 'linear-gradient(135deg, #0a0a0a 0%, #1a0a2e 100%)',
+    textColor: '#00ffff',
+    particleColors: ['#00ffff', '#ff00ff', '#00ff00', '#ffff00', '#ff6600']
+  },
+  minimal: {
+    id: 'minimal',
+    background: 'linear-gradient(180deg, #f8fafc 0%, #e2e8f0 100%)',
+    textColor: '#1e293b',
+    particleColors: ['#6366f1', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6']
+  },
+  nature: {
+    id: 'nature',
+    background: 'linear-gradient(135deg, #134e4a 0%, #065f46 50%, #064e3b 100%)',
+    textColor: '#ecfdf5',
+    particleColors: ['#34d399', '#a7f3d0', '#6ee7b7', '#10b981', '#059669']
+  },
+  sunset: {
+    id: 'sunset',
+    background: 'linear-gradient(135deg, #1e1b4b 0%, #4c1d95 50%, #831843 100%)',
+    textColor: '#fef3c7',
+    particleColors: ['#f59e0b', '#ec4899', '#f472b6', '#fbbf24', '#fb7185']
+  },
+  ocean: {
+    id: 'ocean',
+    background: 'linear-gradient(180deg, #0c4a6e 0%, #075985 50%, #0369a1 100%)',
+    textColor: '#e0f2fe',
+    particleColors: ['#38bdf8', '#06b6d4', '#22d3ee', '#0ea5e9', '#0284c7']
+  },
+  fire: {
+    id: 'fire',
+    background: 'linear-gradient(180deg, #1a0a0a 0%, #450a0a 50%, #7f1d1d 100%)',
+    textColor: '#fef2f2',
+    particleColors: ['#ef4444', '#f97316', '#fbbf24', '#dc2626', '#ea580c']
+  },
+  corporate: {
+    id: 'corporate',
+    background: 'linear-gradient(180deg, #1e293b 0%, #334155 100%)',
+    textColor: '#f1f5f9',
+    particleColors: ['#3b82f6', '#8b5cf6', '#6366f1', '#2563eb', '#7c3aed']
+  }
+};
+
+const getActiveTheme = () => {
+  const savedTheme = localStorage.getItem('timer_visual_theme');
+  return VISUAL_THEMES[savedTheme] || VISUAL_THEMES.cinematic;
+};
 const getWsUrl = () => {
   if (import.meta.env.VITE_WS_URL) return import.meta.env.VITE_WS_URL;
   const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
@@ -22,8 +79,8 @@ const Confetti = ({ color }) => {
 };
 
 // Floating particle
-const Particle = ({ index }) => {
-  const colors = ['#FF6B6B', '#4ECDC4', '#FFE66D', '#95E1D3', '#F38181'];
+const Particle = ({ index, theme }) => {
+  const colors = theme?.particleColors || ['#FF6B6B', '#4ECDC4', '#FFE66D', '#95E1D3', '#F38181'];
   const style = {
     '--size': `${10 + Math.random() * 20}px`,
     '--x': `${Math.random() * 100}%`,
@@ -46,10 +103,20 @@ export default function TimerDisplay() {
   const [showCountdown, setShowCountdown] = useState(false);
   const [showComplete, setShowComplete] = useState(false);
   const [prevSessionIndex, setPrevSessionIndex] = useState(0);
+  const [activeTheme, setActiveTheme] = useState(getActiveTheme());
   const wsRef = useRef(null);
   const timerRef = useRef(null);
   const containerRef = useRef(null);
   const audioRef = useRef(null);
+
+  // Listen for theme changes
+  useEffect(() => {
+    const handleStorageChange = () => {
+      setActiveTheme(getActiveTheme());
+    };
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, []);
 
   // Format time
   const formatTime = (seconds) => {
@@ -166,8 +233,10 @@ export default function TimerDisplay() {
   const isLowTime = localTime <= 30 && localTime > 5;
   const isCritical = localTime <= 5 && localTime > 0;
 
-  // Dynamic background based on session
-  const bgGradient = `linear-gradient(135deg, ${sessionColor}15 0%, ${sessionColor}05 50%, transparent 100%)`;
+  // Dynamic background based on session and theme
+  const themeBg = activeTheme?.background || 'linear-gradient(180deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)';
+  const themeText = activeTheme?.textColor || '#ffffff';
+  const bgOverlay = `linear-gradient(135deg, ${sessionColor}15 0%, ${sessionColor}05 50%, transparent 100%)`;
 
   // SVG parameters for circular timer
   const size = 420;
@@ -205,13 +274,17 @@ export default function TimerDisplay() {
   return (
     <div
       ref={containerRef}
-      className={`timer-display ${isLowTime ? 'low-time' : ''} ${isCritical ? 'critical' : ''}`}
-      style={{ '--session-color': sessionColor }}
+      className={`timer-display ${isLowTime ? 'low-time' : ''} ${isCritical ? 'critical' : ''} theme-${activeTheme?.id || 'cinematic'}`}
+      style={{
+        '--session-color': sessionColor,
+        '--theme-text': themeText,
+        background: themeBg
+      }}
     >
       {/* Animated background */}
-      <div className="timer-bg" style={{ background: bgGradient }}>
+      <div className="timer-bg" style={{ background: bgOverlay }}>
         {[...Array(8)].map((_, i) => (
-          <Particle key={i} index={i} />
+          <Particle key={i} index={i} theme={activeTheme} />
         ))}
       </div>
 

@@ -1074,4 +1074,27 @@
     flex-direction: column;
     gap: 4px;
   }
+
+  .share-section {
+    padding: 40px 20px;
+  }
+
+  .share-content h3 {
+    font-size: 1.25rem;
+  }
+
+  .social-share-buttons {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .social-btn {
+    width: 100%;
+    justify-content: center;
+    padding: 14px 20px;
+  }
+
+  .section-header h2 {
+    font-size: 1.8rem;
+  }
 }

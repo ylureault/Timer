@@ -138,9 +138,13 @@ export default function RemoteControlV2() {
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
-  // Show action feedback
+  // Show action feedback with haptic
   const showFeedback = (text, type = 'success') => {
     setActionFeedback({ text, type });
+    // Haptic feedback on mobile
+    if (navigator.vibrate) {
+      navigator.vibrate(type === 'success' ? 50 : [50, 50, 50]);
+    }
     setTimeout(() => setActionFeedback(null), 1500);
   };
 
@@ -567,6 +571,16 @@ export default function RemoteControlV2() {
                     <line x1="10" y1="14" x2="21" y2="3"/>
                   </svg>
                 </a>
+              </div>
+
+              <div className="display-link">
+                <span>🛒 Personnalisation</span>
+                <Link to="/marketplace">
+                  Marketplace - Thèmes & Templates
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M9 18l6-6-6-6"/>
+                  </svg>
+                </Link>
               </div>
 
               <button className="close-settings" onClick={() => setShowSettings(false)}>

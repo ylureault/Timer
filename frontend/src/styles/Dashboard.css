@@ -930,6 +930,27 @@
 @media (max-width: 768px) {
   .dashboard-header {
     padding: 12px 16px;
+    gap: 12px;
+  }
+
+  .header-left .logo span {
+    display: none;
+  }
+
+  .header-right {
+    gap: 12px;
+  }
+
+  .user-info {
+    display: none;
+  }
+
+  .logout-btn span {
+    display: none;
+  }
+
+  .logout-btn {
+    padding: 10px;
   }
 
   .dashboard-main {
@@ -942,17 +963,59 @@
     align-items: stretch;
   }
 
+  .dashboard-title-row h1 {
+    font-size: 1.5rem;
+    text-align: center;
+  }
+
+  .create-btn {
+    justify-content: center;
+  }
+
   .timer-grid {
     grid-template-columns: 1fr;
+  }
+
+  .timer-card {
+    padding: 20px;
+  }
+
+  .timer-card-header h3 {
+    font-size: 1.1rem;
+  }
+
+  .timer-links {
+    grid-template-columns: 1fr;
+  }
+
+  .timer-qr-section {
+    flex-direction: column;
+    text-align: center;
+    padding: 16px;
+  }
+
+  .qr-info {
+    align-items: center;
   }
 
   .form-row {
     grid-template-columns: 1fr;
   }
 
+  .modal {
+    margin: 16px;
+    padding: 20px;
+    max-height: 90vh;
+  }
+
+  .modal h2 {
+    font-size: 1.25rem;
+  }
+
   .session-item {
     flex-wrap: wrap;
     gap: 8px;
+    padding: 10px;
   }
 
   .drag-handle {
@@ -961,12 +1024,15 @@
 
   .session-color-indicator {
     order: 1;
+    height: 28px;
   }
 
   .session-name {
     order: 2;
-    flex: 1 1 calc(100% - 120px);
+    flex: 1 1 calc(100% - 80px);
     min-width: 0;
+    padding: 8px 10px;
+    font-size: 0.85rem;
   }
 
   .session-duration {
