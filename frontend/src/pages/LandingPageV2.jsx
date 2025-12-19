@@ -533,7 +533,9 @@ export default function LandingPageV2() {
             </div>
             <div className="footer-col">
               <h4>Ressources</h4>
-              <a href="https://insuffle.com" target="_blank" rel="noopener noreferrer">Blog Insuffle</a>
+              <Link to="/marketplace">Marketplace</Link>
+              <Link to="/embed">Intégration</Link>
+              <Link to="/release-notes">Notes de version</Link>
               <a href="https://insuffle.com/contact" target="_blank" rel="noopener noreferrer">Support</a>
             </div>
             <div className="footer-col">

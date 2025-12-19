@@ -5,6 +5,63 @@ import '../styles/TimerDisplay.css';
 
 const API_URL = import.meta.env.VITE_API_URL ?? '';
 
+// Timer display formats
+export const TIMER_FORMATS = {
+  circle: {
+    id: 'circle',
+    name: 'Cercle classique',
+    icon: '⭕',
+    description: 'Style TimeTimer circulaire'
+  },
+  arc: {
+    id: 'arc',
+    name: 'Arc de cercle',
+    icon: '🌙',
+    description: 'Demi-cercle élégant'
+  },
+  bar: {
+    id: 'bar',
+    name: 'Barre de progression',
+    icon: '📊',
+    description: 'Style linéaire moderne'
+  },
+  digital: {
+    id: 'digital',
+    name: 'Digital',
+    icon: '🔢',
+    description: 'Affichage type réveil'
+  },
+  flip: {
+    id: 'flip',
+    name: 'Flip Clock',
+    icon: '🔄',
+    description: 'Style horloge à volets'
+  },
+  minimal: {
+    id: 'minimal',
+    name: 'Minimaliste',
+    icon: '◻️',
+    description: 'Texte épuré sans fioritures'
+  },
+  blocks: {
+    id: 'blocks',
+    name: 'Blocs',
+    icon: '▪️',
+    description: 'Segments lumineux'
+  },
+  wave: {
+    id: 'wave',
+    name: 'Vague',
+    icon: '🌊',
+    description: 'Animation fluide'
+  }
+};
+
+const getActiveFormat = () => {
+  const savedFormat = localStorage.getItem('timer_display_format');
+  return savedFormat || 'circle';
+};
+
 // Visual themes configuration
 const VISUAL_THEMES = {
   cinematic: {
@@ -78,6 +135,184 @@ const Confetti = ({ color }) => {
   return <div className="confetti" style={style} />;
 };
 
+// Timer Format Components
+const CircleTimer = ({ size, strokeWidth, radius, circumference, strokeDashoffset, sessionColor, progress, time, state }) => (
+  <div className="timer-circle-wrapper">
+    <div className="timer-glow" style={{
+      background: `radial-gradient(circle, ${sessionColor}40 0%, transparent 70%)`,
+      opacity: progress > 0.5 ? 0.8 : 0.3
+    }} />
+    <svg className="timer-svg" viewBox={`0 0 ${size} ${size}`}>
+      <circle cx={size / 2} cy={size / 2} r={radius} fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth={strokeWidth} />
+      <motion.circle
+        cx={size / 2} cy={size / 2} r={radius} fill="none" stroke={sessionColor}
+        strokeWidth={strokeWidth} strokeLinecap="round"
+        strokeDasharray={circumference} strokeDashoffset={strokeDashoffset}
+        transform={`rotate(-90 ${size / 2} ${size / 2})`}
+        style={{ filter: `drop-shadow(0 0 10px ${sessionColor}80)` }}
+      />
+      <motion.path
+        d={describeArc(size / 2, size / 2, radius - 60, 0, 360 * progress)}
+        fill={`${sessionColor}25`}
+      />
+    </svg>
+    <div className="timer-center">
+      <div className="timer-digits">
+        <span className="digit-mins">{time.mins}</span>
+        <span className="digit-separator">:</span>
+        <span className="digit-secs">{time.secs.toString().padStart(2, '0')}</span>
+      </div>
+      <div className="timer-status">
+        {state?.mode === 'play' && <motion.span className="status-playing" animate={{ opacity: [1, 0.5, 1] }} transition={{ duration: 1.5, repeat: Infinity }}>● En cours</motion.span>}
+        {state?.mode === 'pause' && <span className="status-paused">❚❚ Pause</span>}
+        {state?.mode === 'termine' && <span className="status-done">✓ Terminé</span>}
+      </div>
+    </div>
+  </div>
+);
+
+const ArcTimer = ({ progress, sessionColor, time, state }) => (
+  <div className="timer-arc-wrapper">
+    <svg viewBox="0 0 400 250" className="arc-svg">
+      <path d="M 50 200 A 150 150 0 0 1 350 200" fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth="20" strokeLinecap="round" />
+      <motion.path
+        d="M 50 200 A 150 150 0 0 1 350 200"
+        fill="none" stroke={sessionColor} strokeWidth="20" strokeLinecap="round"
+        strokeDasharray="471" strokeDashoffset={471 * (1 - progress)}
+        style={{ filter: `drop-shadow(0 0 15px ${sessionColor})` }}
+      />
+    </svg>
+    <div className="arc-center">
+      <div className="arc-time">{time.display}</div>
+      <div className="arc-status">{state?.mode === 'play' ? '▶ En cours' : state?.mode === 'pause' ? '❚❚ Pause' : '✓ Terminé'}</div>
+    </div>
+  </div>
+);
+
+const BarTimer = ({ progress, sessionColor, time, state, currentSession }) => (
+  <div className="timer-bar-wrapper">
+    <div className="bar-time">{time.display}</div>
+    <div className="bar-container">
+      <motion.div
+        className="bar-progress"
+        style={{ backgroundColor: sessionColor, boxShadow: `0 0 30px ${sessionColor}` }}
+        initial={false}
+        animate={{ width: `${progress * 100}%` }}
+        transition={{ duration: 0.5 }}
+      />
+      <div className="bar-markers">
+        {[...Array(10)].map((_, i) => <div key={i} className="bar-marker" style={{ left: `${i * 10}%` }} />)}
+      </div>
+    </div>
+    <div className="bar-info">
+      <span className="bar-session">{currentSession?.nom_session}</span>
+      <span className="bar-status">{state?.mode === 'play' ? '▶ En cours' : state?.mode === 'pause' ? '❚❚ Pause' : '✓'}</span>
+    </div>
+  </div>
+);
+
+const DigitalTimer = ({ time, sessionColor, state }) => (
+  <div className="timer-digital-wrapper">
+    <div className="digital-display" style={{ '--glow-color': sessionColor }}>
+      <div className="digital-segment">{String(time.mins).padStart(2, '0')}</div>
+      <div className="digital-colon">
+        <span></span>
+        <span></span>
+      </div>
+      <div className="digital-segment">{String(time.secs).padStart(2, '0')}</div>
+    </div>
+    <div className="digital-status" style={{ color: sessionColor }}>
+      {state?.mode === 'play' && '● RUN'}
+      {state?.mode === 'pause' && '❚❚ PAUSE'}
+      {state?.mode === 'termine' && '✓ END'}
+    </div>
+  </div>
+);
+
+const FlipTimer = ({ time, sessionColor }) => {
+  const FlipCard = ({ digit, label }) => (
+    <div className="flip-card" style={{ '--accent': sessionColor }}>
+      <div className="flip-top">{digit}</div>
+      <div className="flip-bottom">{digit}</div>
+      <div className="flip-label">{label}</div>
+    </div>
+  );
+  return (
+    <div className="timer-flip-wrapper">
+      <FlipCard digit={String(Math.floor(time.mins / 10))} label="" />
+      <FlipCard digit={String(time.mins % 10)} label="MIN" />
+      <div className="flip-separator">:</div>
+      <FlipCard digit={String(Math.floor(time.secs / 10))} label="" />
+      <FlipCard digit={String(time.secs % 10)} label="SEC" />
+    </div>
+  );
+};
+
+const MinimalTimer = ({ time, sessionColor, state, currentSession }) => (
+  <div className="timer-minimal-wrapper">
+    <motion.div className="minimal-time" style={{ color: sessionColor }}
+      animate={state?.mode === 'play' ? { scale: [1, 1.02, 1] } : {}}
+      transition={{ duration: 2, repeat: Infinity }}
+    >
+      {time.display}
+    </motion.div>
+    <div className="minimal-session">{currentSession?.nom_session}</div>
+    <div className="minimal-status">{state?.mode === 'play' ? 'En cours...' : state?.mode === 'pause' ? 'En pause' : 'Terminé'}</div>
+  </div>
+);
+
+const BlocksTimer = ({ progress, sessionColor, time, state }) => {
+  const totalBlocks = 60;
+  const activeBlocks = Math.ceil(progress * totalBlocks);
+  return (
+    <div className="timer-blocks-wrapper">
+      <div className="blocks-grid">
+        {[...Array(totalBlocks)].map((_, i) => (
+          <motion.div
+            key={i}
+            className={`block ${i < activeBlocks ? 'active' : ''}`}
+            style={{ backgroundColor: i < activeBlocks ? sessionColor : 'rgba(255,255,255,0.1)' }}
+            animate={i < activeBlocks ? { opacity: [0.7, 1, 0.7] } : {}}
+            transition={{ duration: 1, repeat: Infinity, delay: i * 0.02 }}
+          />
+        ))}
+      </div>
+      <div className="blocks-time">{time.display}</div>
+      <div className="blocks-status">{state?.mode === 'play' ? '▶' : state?.mode === 'pause' ? '❚❚' : '✓'}</div>
+    </div>
+  );
+};
+
+const WaveTimer = ({ progress, sessionColor, time, state }) => (
+  <div className="timer-wave-wrapper">
+    <div className="wave-container">
+      <svg viewBox="0 0 400 300" preserveAspectRatio="none" className="wave-svg">
+        <defs>
+          <linearGradient id="waveGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor={sessionColor} stopOpacity="0.8" />
+            <stop offset="100%" stopColor={sessionColor} stopOpacity="0.3" />
+          </linearGradient>
+        </defs>
+        <motion.path
+          fill="url(#waveGradient)"
+          animate={{
+            d: [
+              `M0,${300 - progress * 250} Q100,${300 - progress * 250 - 30} 200,${300 - progress * 250} T400,${300 - progress * 250} V300 H0 Z`,
+              `M0,${300 - progress * 250} Q100,${300 - progress * 250 + 30} 200,${300 - progress * 250} T400,${300 - progress * 250} V300 H0 Z`,
+              `M0,${300 - progress * 250} Q100,${300 - progress * 250 - 30} 200,${300 - progress * 250} T400,${300 - progress * 250} V300 H0 Z`
+            ]
+          }}
+          transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+        />
+      </svg>
+    </div>
+    <div className="wave-content">
+      <div className="wave-time" style={{ color: sessionColor }}>{time.display}</div>
+      <div className="wave-status">{state?.mode === 'play' ? 'En cours' : state?.mode === 'pause' ? 'Pause' : 'Terminé'}</div>
+    </div>
+  </div>
+);
+
 // Floating particle
 const Particle = ({ index, theme }) => {
   const colors = theme?.particleColors || ['#FF6B6B', '#4ECDC4', '#FFE66D', '#95E1D3', '#F38181'];
@@ -104,15 +339,21 @@ export default function TimerDisplay() {
   const [showComplete, setShowComplete] = useState(false);
   const [prevSessionIndex, setPrevSessionIndex] = useState(0);
   const [activeTheme, setActiveTheme] = useState(getActiveTheme());
+  const [activeFormat, setActiveFormat] = useState(getActiveFormat());
   const wsRef = useRef(null);
   const timerRef = useRef(null);
   const containerRef = useRef(null);
   const audioRef = useRef(null);
 
-  // Listen for theme changes
+  // Listen for theme and format changes
   useEffect(() => {
-    const handleStorageChange = () => {
-      setActiveTheme(getActiveTheme());
+    const handleStorageChange = (e) => {
+      if (!e || e.key === 'timer_visual_theme') {
+        setActiveTheme(getActiveTheme());
+      }
+      if (!e || e.key === 'timer_display_format') {
+        setActiveFormat(getActiveFormat());
+      }
     };
     window.addEventListener('storage', handleStorageChange);
     return () => window.removeEventListener('storage', handleStorageChange);
@@ -328,94 +569,40 @@ export default function TimerDisplay() {
       </header>
 
       {/* Main timer */}
-      <main className="timer-main">
+      <main className={`timer-main format-${activeFormat}`}>
         <motion.div
-          className="timer-circle-wrapper"
+          className="timer-format-container"
           animate={isCritical ? { scale: [1, 1.02, 1] } : {}}
           transition={{ duration: 0.5, repeat: isCritical ? Infinity : 0 }}
         >
-          {/* Glow effect */}
-          <div
-            className="timer-glow"
-            style={{
-              background: `radial-gradient(circle, ${sessionColor}40 0%, transparent 70%)`,
-              opacity: progress > 0.5 ? 0.8 : 0.3
-            }}
-          />
-
-          {/* SVG Timer */}
-          <svg className="timer-svg" viewBox={`0 0 ${size} ${size}`}>
-            {/* Background track */}
-            <circle
-              cx={size / 2}
-              cy={size / 2}
-              r={radius}
-              fill="none"
-              stroke="rgba(255,255,255,0.1)"
-              strokeWidth={strokeWidth}
+          {activeFormat === 'circle' && (
+            <CircleTimer
+              size={size} strokeWidth={strokeWidth} radius={radius}
+              circumference={circumference} strokeDashoffset={strokeDashoffset}
+              sessionColor={sessionColor} progress={progress} time={time} state={state}
             />
-
-            {/* Progress arc */}
-            <motion.circle
-              cx={size / 2}
-              cy={size / 2}
-              r={radius}
-              fill="none"
-              stroke={sessionColor}
-              strokeWidth={strokeWidth}
-              strokeLinecap="round"
-              strokeDasharray={circumference}
-              strokeDashoffset={strokeDashoffset}
-              transform={`rotate(-90 ${size / 2} ${size / 2})`}
-              initial={false}
-              animate={{ strokeDashoffset }}
-              transition={{ duration: 0.5, ease: 'easeOut' }}
-              style={{
-                filter: `drop-shadow(0 0 10px ${sessionColor}80)`
-              }}
-            />
-
-            {/* Inner filled arc (TimeTimer style) */}
-            <motion.path
-              d={describeArc(size / 2, size / 2, radius - 60, 0, 360 * progress)}
-              fill={`${sessionColor}25`}
-              initial={false}
-              animate={{ d: describeArc(size / 2, size / 2, radius - 60, 0, 360 * progress) }}
-              transition={{ duration: 0.5 }}
-            />
-          </svg>
-
-          {/* Center content */}
-          <div className="timer-center">
-            <AnimatePresence mode="wait">
-              <motion.div
-                className="timer-digits"
-                key={time.display}
-                initial={{ scale: 0.8, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                exit={{ scale: 1.2, opacity: 0 }}
-                transition={{ duration: 0.15 }}
-              >
-                <span className="digit-mins">{time.mins}</span>
-                <span className="digit-separator">:</span>
-                <span className="digit-secs">{time.secs.toString().padStart(2, '0')}</span>
-              </motion.div>
-            </AnimatePresence>
-
-            <div className="timer-status">
-              {state?.mode === 'play' && (
-                <motion.span
-                  className="status-playing"
-                  animate={{ opacity: [1, 0.5, 1] }}
-                  transition={{ duration: 1.5, repeat: Infinity }}
-                >
-                  ● En cours
-                </motion.span>
-              )}
-              {state?.mode === 'pause' && <span className="status-paused">❚❚ Pause</span>}
-              {state?.mode === 'termine' && <span className="status-done">✓ Terminé</span>}
-            </div>
-          </div>
+          )}
+          {activeFormat === 'arc' && (
+            <ArcTimer progress={progress} sessionColor={sessionColor} time={time} state={state} />
+          )}
+          {activeFormat === 'bar' && (
+            <BarTimer progress={progress} sessionColor={sessionColor} time={time} state={state} currentSession={currentSession} />
+          )}
+          {activeFormat === 'digital' && (
+            <DigitalTimer time={time} sessionColor={sessionColor} state={state} />
+          )}
+          {activeFormat === 'flip' && (
+            <FlipTimer time={time} sessionColor={sessionColor} />
+          )}
+          {activeFormat === 'minimal' && (
+            <MinimalTimer time={time} sessionColor={sessionColor} state={state} currentSession={currentSession} />
+          )}
+          {activeFormat === 'blocks' && (
+            <BlocksTimer progress={progress} sessionColor={sessionColor} time={time} state={state} />
+          )}
+          {activeFormat === 'wave' && (
+            <WaveTimer progress={progress} sessionColor={sessionColor} time={time} state={state} />
+          )}
         </motion.div>
 
         {/* Message */}
