@@ -345,7 +345,7 @@ export default function TimerDisplay() {
   const containerRef = useRef(null);
   const audioRef = useRef(null);
 
-  // Listen for theme and format changes
+  // Listen for theme and format changes (cross-tab and polling)
   useEffect(() => {
     const handleStorageChange = (e) => {
       if (!e || e.key === 'timer_visual_theme') {
@@ -355,9 +355,28 @@ export default function TimerDisplay() {
         setActiveFormat(getActiveFormat());
       }
     };
+
+    // Cross-tab storage event
     window.addEventListener('storage', handleStorageChange);
-    return () => window.removeEventListener('storage', handleStorageChange);
-  }, []);
+
+    // Poll localStorage every 500ms for same-tab changes (fallback)
+    const pollInterval = setInterval(() => {
+      const currentTheme = localStorage.getItem('timer_visual_theme') || 'cinematic';
+      const currentFormat = localStorage.getItem('timer_display_format') || 'circle';
+
+      if (VISUAL_THEMES[currentTheme] && activeTheme.id !== currentTheme) {
+        setActiveTheme(VISUAL_THEMES[currentTheme]);
+      }
+      if (currentFormat && activeFormat !== currentFormat) {
+        setActiveFormat(currentFormat);
+      }
+    }, 500);
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      clearInterval(pollInterval);
+    };
+  }, [activeTheme.id, activeFormat]);
 
   // Format time
   const formatTime = (seconds) => {
@@ -449,6 +468,26 @@ export default function TimerDisplay() {
       setShowComplete(false);
     }
   }, [state?.mode]);
+
+  // Update browser tab title with remaining time
+  useEffect(() => {
+    const time = formatTime(localTime);
+    const sessionName = currentSession?.nom_session || 'Timer';
+
+    if (state?.mode === 'play') {
+      document.title = `${time.display} - ${sessionName} | Insuffle Timer`;
+    } else if (state?.mode === 'pause') {
+      document.title = `⏸ ${time.display} - ${sessionName} | Insuffle Timer`;
+    } else if (state?.mode === 'termine') {
+      document.title = `✓ Terminé | Insuffle Timer`;
+    } else {
+      document.title = `Insuffle Timer - ${code}`;
+    }
+
+    return () => {
+      document.title = 'Insuffle Timer';
+    };
+  }, [localTime, state?.mode, currentSession?.nom_session, code]);
 
   // Fullscreen
   const toggleFullscreen = () => {

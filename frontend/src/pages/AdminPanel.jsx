@@ -34,6 +34,10 @@ export default function AdminPanel() {
     { id: 1, title: 'Comment optimiser vos réunions', slug: 'optimiser-reunions', status: 'published', date: '2024-01-15' },
     { id: 2, title: '10 techniques de productivité', slug: '10-techniques-productivite', status: 'draft', date: '2024-01-20' }
   ]);
+  const [feedbacks, setFeedbacks] = useState([]);
+  const [newBlogPost, setNewBlogPost] = useState({ title: '', slug: '', content: '', status: 'draft' });
+  const [showBlogEditor, setShowBlogEditor] = useState(false);
+  const [editingPost, setEditingPost] = useState(null);
   const navigate = useNavigate();
 
   // Password verification
@@ -77,16 +81,38 @@ export default function AdminPanel() {
     }
   }, [authFetch]);
 
+  const fetchFeedbacks = useCallback(async () => {
+    try {
+      const res = await authFetch(`${API_URL}/api/admin/feedbacks`);
+      const data = await res.json();
+      if (data.success) {
+        setFeedbacks(data.feedbacks);
+      }
+    } catch (err) {
+      // Fallback to localStorage feedbacks
+      const savedFeedbacks = localStorage.getItem('user_feedbacks');
+      if (savedFeedbacks) {
+        setFeedbacks(JSON.parse(savedFeedbacks));
+      }
+    }
+  }, [authFetch]);
+
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
       navigate('/auth');
     } else if (isAuthenticated && isAdminUnlocked) {
       fetchStats();
       fetchUsers();
+      fetchFeedbacks();
+      // Load blog posts from localStorage
+      const savedPosts = localStorage.getItem('admin_blog_posts');
+      if (savedPosts) {
+        setBlogPosts(JSON.parse(savedPosts));
+      }
     } else if (isAuthenticated && !isAdminUnlocked) {
       setLoading(false);
     }
-  }, [authLoading, isAuthenticated, isAdminUnlocked, navigate, fetchStats, fetchUsers]);
+  }, [authLoading, isAuthenticated, isAdminUnlocked, navigate, fetchStats, fetchUsers, fetchFeedbacks]);
 
   // Toggle testimonial visibility
   const toggleTestimonialVisibility = (id) => {
@@ -104,6 +130,73 @@ export default function AdminPanel() {
   const saveBrevoConfig = () => {
     localStorage.setItem('brevo_config', JSON.stringify(brevoConfig));
     alert('Configuration Brevo sauvegardée !');
+  };
+
+  // Blog functions
+  const saveBlogPost = () => {
+    if (!newBlogPost.title.trim()) return;
+
+    const slug = newBlogPost.slug || newBlogPost.title.toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-|-$/g, '');
+
+    const post = {
+      id: editingPost?.id || Date.now(),
+      ...newBlogPost,
+      slug,
+      date: editingPost?.date || new Date().toISOString().split('T')[0]
+    };
+
+    let updatedPosts;
+    if (editingPost) {
+      updatedPosts = blogPosts.map(p => p.id === editingPost.id ? post : p);
+    } else {
+      updatedPosts = [post, ...blogPosts];
+    }
+
+    setBlogPosts(updatedPosts);
+    localStorage.setItem('admin_blog_posts', JSON.stringify(updatedPosts));
+    localStorage.setItem('blog_posts', JSON.stringify(updatedPosts.filter(p => p.status === 'published')));
+
+    setNewBlogPost({ title: '', slug: '', content: '', status: 'draft' });
+    setShowBlogEditor(false);
+    setEditingPost(null);
+    alert(editingPost ? 'Article mis à jour !' : 'Article créé !');
+  };
+
+  const editBlogPost = (post) => {
+    setEditingPost(post);
+    setNewBlogPost({
+      title: post.title,
+      slug: post.slug,
+      content: post.content || '',
+      status: post.status
+    });
+    setShowBlogEditor(true);
+  };
+
+  const deleteBlogPost = (id) => {
+    if (!confirm('Supprimer cet article ?')) return;
+    const updatedPosts = blogPosts.filter(p => p.id !== id);
+    setBlogPosts(updatedPosts);
+    localStorage.setItem('admin_blog_posts', JSON.stringify(updatedPosts));
+    localStorage.setItem('blog_posts', JSON.stringify(updatedPosts.filter(p => p.status === 'published')));
+  };
+
+  const togglePostStatus = (id) => {
+    const updatedPosts = blogPosts.map(p =>
+      p.id === id ? { ...p, status: p.status === 'published' ? 'draft' : 'published' } : p
+    );
+    setBlogPosts(updatedPosts);
+    localStorage.setItem('admin_blog_posts', JSON.stringify(updatedPosts));
+    localStorage.setItem('blog_posts', JSON.stringify(updatedPosts.filter(p => p.status === 'published')));
+  };
+
+  // Delete feedback
+  const deleteFeedback = (id) => {
+    const updatedFeedbacks = feedbacks.filter(f => f.id !== id);
+    setFeedbacks(updatedFeedbacks);
+    localStorage.setItem('user_feedbacks', JSON.stringify(updatedFeedbacks));
   };
 
   if (authLoading || loading) {
@@ -181,6 +274,9 @@ export default function AdminPanel() {
         </button>
         <button className={`tab ${activeTab === 'blog' ? 'active' : ''}`} onClick={() => setActiveTab('blog')}>
           📝 Blog
+        </button>
+        <button className={`tab ${activeTab === 'feedback' ? 'active' : ''}`} onClick={() => setActiveTab('feedback')}>
+          📣 Feedbacks
         </button>
       </div>
 
@@ -440,8 +536,68 @@ export default function AdminPanel() {
           >
             <div className="section-header-admin">
               <h2>Articles de Blog</h2>
-              <button className="add-btn">+ Nouvel article</button>
+              <button className="add-btn" onClick={() => { setShowBlogEditor(true); setEditingPost(null); setNewBlogPost({ title: '', slug: '', content: '', status: 'draft' }); }}>
+                + Nouvel article
+              </button>
             </div>
+
+            {/* Blog Editor Modal */}
+            {showBlogEditor && (
+              <div className="modal-overlay" onClick={() => setShowBlogEditor(false)}>
+                <div className="blog-editor-modal" onClick={(e) => e.stopPropagation()}>
+                  <div className="modal-header">
+                    <h3>{editingPost ? 'Modifier l\'article' : 'Nouvel article'}</h3>
+                    <button className="close-btn" onClick={() => setShowBlogEditor(false)}>×</button>
+                  </div>
+                  <div className="modal-body">
+                    <div className="form-group">
+                      <label>Titre</label>
+                      <input
+                        type="text"
+                        value={newBlogPost.title}
+                        onChange={(e) => setNewBlogPost({ ...newBlogPost, title: e.target.value })}
+                        placeholder="Titre de l'article"
+                      />
+                    </div>
+                    <div className="form-group">
+                      <label>Slug (URL)</label>
+                      <input
+                        type="text"
+                        value={newBlogPost.slug}
+                        onChange={(e) => setNewBlogPost({ ...newBlogPost, slug: e.target.value })}
+                        placeholder="mon-article (généré automatiquement si vide)"
+                      />
+                    </div>
+                    <div className="form-group">
+                      <label>Contenu (Markdown)</label>
+                      <textarea
+                        value={newBlogPost.content}
+                        onChange={(e) => setNewBlogPost({ ...newBlogPost, content: e.target.value })}
+                        placeholder="# Titre&#10;&#10;Votre contenu ici..."
+                        rows={15}
+                      />
+                    </div>
+                    <div className="form-group">
+                      <label>Statut</label>
+                      <select
+                        value={newBlogPost.status}
+                        onChange={(e) => setNewBlogPost({ ...newBlogPost, status: e.target.value })}
+                      >
+                        <option value="draft">Brouillon</option>
+                        <option value="published">Publié</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div className="modal-footer">
+                    <button className="cancel-btn" onClick={() => setShowBlogEditor(false)}>Annuler</button>
+                    <button className="save-btn" onClick={saveBlogPost}>
+                      {editingPost ? 'Mettre à jour' : 'Créer l\'article'}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
             <div className="blog-list">
               {blogPosts.map((post) => (
                 <div key={post.id} className={`blog-item ${post.status}`}>
@@ -456,12 +612,66 @@ export default function AdminPanel() {
                     </div>
                   </div>
                   <div className="blog-actions">
-                    <button className="edit-btn">✏️ Modifier</button>
-                    <button className="preview-btn">👁️ Aperçu</button>
-                    <button className="delete-btn">🗑️</button>
+                    <button className="edit-btn" onClick={() => editBlogPost(post)}>✏️ Modifier</button>
+                    <button className="visibility-btn" onClick={() => togglePostStatus(post.id)}>
+                      {post.status === 'published' ? '📤 Dépublier' : '📥 Publier'}
+                    </button>
+                    <a href={`/blog/${post.slug}`} target="_blank" rel="noopener noreferrer" className="preview-btn">👁️ Voir</a>
+                    <button className="delete-btn" onClick={() => deleteBlogPost(post.id)}>🗑️</button>
                   </div>
                 </div>
               ))}
+              {blogPosts.length === 0 && (
+                <p className="no-data">Aucun article. Cliquez sur "Nouvel article" pour en créer un.</p>
+              )}
+            </div>
+          </motion.div>
+        )}
+
+        {/* Feedback Tab */}
+        {activeTab === 'feedback' && (
+          <motion.div
+            key="feedback"
+            className="feedback-section"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+          >
+            <div className="section-header-admin">
+              <h2>Feedbacks ({feedbacks.length})</h2>
+            </div>
+            <div className="feedback-list">
+              {feedbacks.map((feedback) => (
+                <div key={feedback.id} className="feedback-item">
+                  <div className="feedback-header">
+                    <div className="feedback-user">
+                      <span className="user-avatar">{(feedback.user_name || feedback.email || 'A').charAt(0).toUpperCase()}</span>
+                      <div className="user-info">
+                        <strong>{feedback.user_name || 'Anonyme'}</strong>
+                        <span>{feedback.email || 'Pas d\'email'}</span>
+                      </div>
+                    </div>
+                    <span className="feedback-date">
+                      {new Date(feedback.created_at || feedback.date).toLocaleDateString('fr-FR')}
+                    </span>
+                  </div>
+                  <div className="feedback-content">
+                    <span className={`feedback-type ${feedback.type || 'suggestion'}`}>
+                      {feedback.type === 'bug' ? '🐛 Bug' : feedback.type === 'feature' ? '💡 Feature' : '💬 Suggestion'}
+                    </span>
+                    <p>{feedback.message || feedback.content}</p>
+                  </div>
+                  <div className="feedback-actions">
+                    <button className="delete-btn" onClick={() => deleteFeedback(feedback.id)}>🗑️ Supprimer</button>
+                  </div>
+                </div>
+              ))}
+              {feedbacks.length === 0 && (
+                <div className="no-feedbacks">
+                  <p>Aucun feedback pour le moment</p>
+                  <span>Les feedbacks soumis par les utilisateurs apparaîtront ici</span>
+                </div>
+              )}
             </div>
           </motion.div>
         )}

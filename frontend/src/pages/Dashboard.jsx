@@ -148,6 +148,62 @@ export default function Dashboard() {
   const [feedbackForm, setFeedbackForm] = useState({ content: '', type: 'feedback' });
   const [showFeedbackForm, setShowFeedbackForm] = useState(false);
 
+  // Display & Remote preferences
+  const [displayTheme, setDisplayTheme] = useState(() => localStorage.getItem('timer_visual_theme') || 'cinematic');
+  const [displayFormat, setDisplayFormat] = useState(() => localStorage.getItem('timer_display_format') || 'circle');
+  const [remotePrefs, setRemotePrefs] = useState(() => {
+    const saved = localStorage.getItem('remote_preferences');
+    return saved ? JSON.parse(saved) : {
+      showTimeAdjust: true,
+      showMessage: true,
+      showSessionsList: true,
+      quickEdit: true
+    };
+  });
+
+  // Available themes
+  const VISUAL_THEMES = [
+    { id: 'cinematic', name: 'Cinématique', color: '#1a1a2e' },
+    { id: 'neon', name: 'Néon', color: '#0a0a0a' },
+    { id: 'minimal', name: 'Minimaliste', color: '#f8fafc' },
+    { id: 'nature', name: 'Nature', color: '#134e4a' },
+    { id: 'sunset', name: 'Coucher de soleil', color: '#1e1b4b' },
+    { id: 'ocean', name: 'Océan', color: '#0c4a6e' },
+    { id: 'fire', name: 'Feu', color: '#1a0a0a' },
+    { id: 'corporate', name: 'Corporate', color: '#1e293b' }
+  ];
+
+  // Available formats
+  const TIMER_FORMATS = [
+    { id: 'circle', name: 'Cercle', icon: '⭕' },
+    { id: 'arc', name: 'Arc', icon: '🌙' },
+    { id: 'bar', name: 'Barre', icon: '📊' },
+    { id: 'digital', name: 'Digital', icon: '🔢' },
+    { id: 'flip', name: 'Flip Clock', icon: '🔄' },
+    { id: 'minimal', name: 'Minimal', icon: '◻️' },
+    { id: 'blocks', name: 'Blocs', icon: '▪️' },
+    { id: 'wave', name: 'Vague', icon: '🌊' }
+  ];
+
+  // Update display theme
+  const updateDisplayTheme = (themeId) => {
+    setDisplayTheme(themeId);
+    localStorage.setItem('timer_visual_theme', themeId);
+  };
+
+  // Update display format
+  const updateDisplayFormat = (formatId) => {
+    setDisplayFormat(formatId);
+    localStorage.setItem('timer_display_format', formatId);
+  };
+
+  // Update remote preference
+  const updateRemotePref = (key, value) => {
+    const updated = { ...remotePrefs, [key]: value };
+    setRemotePrefs(updated);
+    localStorage.setItem('remote_preferences', JSON.stringify(updated));
+  };
+
   // Share form state
   const [shareEmail, setShareEmail] = useState('');
   const [showShareForm, setShowShareForm] = useState(false);
@@ -619,6 +675,95 @@ export default function Dashboard() {
             </motion.div>
           )}
         </div>
+
+        {/* Display & Remote Settings */}
+        <section className="display-settings-section">
+          <h2>Paramètres d'affichage</h2>
+          <p>Configurez l'apparence de vos timers et télécommandes</p>
+
+          <div className="settings-grid">
+            {/* Theme Selection */}
+            <div className="settings-card">
+              <h3>🎨 Thème visuel</h3>
+              <p>Thème appliqué à l'écran d'affichage</p>
+              <div className="theme-options">
+                {VISUAL_THEMES.map((theme) => (
+                  <button
+                    key={theme.id}
+                    className={`theme-option ${displayTheme === theme.id ? 'active' : ''}`}
+                    onClick={() => updateDisplayTheme(theme.id)}
+                    style={{ '--theme-color': theme.color }}
+                  >
+                    <span className="theme-preview" style={{ backgroundColor: theme.color }}></span>
+                    <span className="theme-name">{theme.name}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Format Selection */}
+            <div className="settings-card">
+              <h3>📐 Format du timer</h3>
+              <p>Style d'affichage du timer</p>
+              <div className="format-options">
+                {TIMER_FORMATS.map((format) => (
+                  <button
+                    key={format.id}
+                    className={`format-option ${displayFormat === format.id ? 'active' : ''}`}
+                    onClick={() => updateDisplayFormat(format.id)}
+                  >
+                    <span className="format-icon">{format.icon}</span>
+                    <span className="format-name">{format.name}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Remote Preferences */}
+            <div className="settings-card remote-prefs">
+              <h3>📱 Préférences télécommande</h3>
+              <p>Personnalisez votre télécommande</p>
+              <div className="prefs-list">
+                <label className="pref-item">
+                  <span>Ajustement du temps</span>
+                  <input
+                    type="checkbox"
+                    checked={remotePrefs.showTimeAdjust}
+                    onChange={(e) => updateRemotePref('showTimeAdjust', e.target.checked)}
+                  />
+                  <span className="toggle"></span>
+                </label>
+                <label className="pref-item">
+                  <span>Zone de message</span>
+                  <input
+                    type="checkbox"
+                    checked={remotePrefs.showMessage}
+                    onChange={(e) => updateRemotePref('showMessage', e.target.checked)}
+                  />
+                  <span className="toggle"></span>
+                </label>
+                <label className="pref-item">
+                  <span>Liste des sessions</span>
+                  <input
+                    type="checkbox"
+                    checked={remotePrefs.showSessionsList}
+                    onChange={(e) => updateRemotePref('showSessionsList', e.target.checked)}
+                  />
+                  <span className="toggle"></span>
+                </label>
+                <label className="pref-item">
+                  <span>Édition rapide</span>
+                  <input
+                    type="checkbox"
+                    checked={remotePrefs.quickEdit}
+                    onChange={(e) => updateRemotePref('quickEdit', e.target.checked)}
+                  />
+                  <span className="toggle"></span>
+                </label>
+              </div>
+            </div>
+          </div>
+        </section>
 
         {/* Community Section */}
         <section className="community-section">

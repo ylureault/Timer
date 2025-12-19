@@ -134,6 +134,7 @@ export default function LandingPageV2() {
         >
           <a href="#features" className="nav-btn ghost">Fonctionnalités</a>
           <a href="#usecases" className="nav-btn ghost">Cas d'usage</a>
+          <Link to="/blog" className="nav-btn ghost">Blog</Link>
           <Link to="/marketplace" className="nav-btn ghost">Marketplace</Link>
           {isAuthenticated ? (
             <Link to="/dashboard" className="nav-btn primary">
@@ -533,6 +534,7 @@ export default function LandingPageV2() {
             </div>
             <div className="footer-col">
               <h4>Ressources</h4>
+              <Link to="/blog">Blog</Link>
               <Link to="/marketplace">Marketplace</Link>
               <Link to="/embed">Intégration</Link>
               <Link to="/release-notes">Notes de version</Link>

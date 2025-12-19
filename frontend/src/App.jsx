@@ -11,6 +11,8 @@ import AdminPanel from './pages/AdminPanel'
 import Marketplace from './pages/Marketplace'
 import Embed from './pages/Embed'
 import ReleaseNotes from './pages/ReleaseNotes'
+import Quiz from './pages/Quiz'
+import Blog from './pages/Blog'
 
 // Legacy pages (keep for backward compatibility)
 import CreateSalon from './pages/CreateSalon'
@@ -30,6 +32,10 @@ function App() {
           <Route path="/marketplace" element={<Marketplace />} />
           <Route path="/embed" element={<Embed />} />
           <Route path="/release-notes" element={<ReleaseNotes />} />
+          <Route path="/quiz" element={<Quiz />} />
+          <Route path="/quiz/:code" element={<Quiz />} />
+          <Route path="/blog" element={<Blog />} />
+          <Route path="/blog/:slug" element={<Blog />} />
           <Route path="/display/:code" element={<TimerDisplay />} />
           <Route path="/remote/:code" element={<RemoteControlV2 />} />
 

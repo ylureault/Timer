@@ -1297,3 +1297,224 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* Display Settings Section */
+.display-settings-section {
+  margin-top: 60px;
+  padding-top: 40px;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.display-settings-section h2 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin: 0 0 8px 0;
+  text-align: center;
+}
+
+.display-settings-section > p {
+  color: rgba(255, 255, 255, 0.5);
+  text-align: center;
+  margin: 0 0 32px 0;
+}
+
+.settings-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 24px;
+}
+
+.settings-card {
+  padding: 24px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 20px;
+}
+
+.settings-card h3 {
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin: 0 0 4px 0;
+}
+
+.settings-card > p {
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.5);
+  margin: 0 0 20px 0;
+}
+
+/* Theme options */
+.theme-options {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+}
+
+.theme-option {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 6px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 2px solid transparent;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.theme-option:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.theme-option.active {
+  border-color: #6C5CE7;
+  background: rgba(108, 92, 231, 0.1);
+}
+
+.theme-option .theme-preview {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  border: 2px solid rgba(255, 255, 255, 0.1);
+}
+
+.theme-option .theme-name {
+  font-size: 0.7rem;
+  color: rgba(255, 255, 255, 0.7);
+  text-align: center;
+}
+
+/* Format options */
+.format-options {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+}
+
+.format-option {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 12px 8px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 2px solid transparent;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.format-option:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.format-option.active {
+  border-color: #6C5CE7;
+  background: rgba(108, 92, 231, 0.1);
+}
+
+.format-option .format-icon {
+  font-size: 1.5rem;
+}
+
+.format-option .format-name {
+  font-size: 0.7rem;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+/* Remote Preferences */
+.settings-card.remote-prefs {
+  grid-column: span 1;
+}
+
+.prefs-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.pref-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.pref-item:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.pref-item > span:first-child {
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.pref-item input[type="checkbox"] {
+  display: none;
+}
+
+.pref-item .toggle {
+  width: 44px;
+  height: 24px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  position: relative;
+  transition: all 0.3s;
+}
+
+.pref-item .toggle::after {
+  content: '';
+  position: absolute;
+  left: 2px;
+  top: 2px;
+  width: 20px;
+  height: 20px;
+  background: white;
+  border-radius: 50%;
+  transition: transform 0.3s;
+}
+
+.pref-item input:checked + .toggle {
+  background: #6C5CE7;
+}
+
+.pref-item input:checked + .toggle::after {
+  transform: translateX(20px);
+}
+
+/* Settings responsive */
+@media (max-width: 768px) {
+  .settings-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .theme-options,
+  .format-options {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+  }
+
+  .theme-option,
+  .format-option {
+    padding: 8px 4px;
+  }
+
+  .theme-option .theme-preview {
+    width: 32px;
+    height: 32px;
+  }
+
+  .format-option .format-icon {
+    font-size: 1.3rem;
+  }
+
+  .theme-option .theme-name,
+  .format-option .format-name {
+    font-size: 0.6rem;
+  }
+}

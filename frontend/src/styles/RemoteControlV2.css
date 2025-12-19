@@ -1274,19 +1274,589 @@
   margin-bottom: 12px;
 }
 
-/* Responsive for modals */
+/* ========================================
+   MOBILE-FIRST RESPONSIVE DESIGN
+   ======================================== */
+
+/* Base mobile styles (max-width: 480px) */
 @media (max-width: 480px) {
+  .remote-v2 {
+    padding-bottom: env(safe-area-inset-bottom, 0);
+  }
+
+  .remote-header {
+    padding: 10px 12px;
+    position: sticky;
+    top: 0;
+  }
+
+  .back-btn,
+  .settings-btn {
+    width: 40px;
+    height: 40px;
+  }
+
+  .header-info {
+    flex: 1;
+    overflow: hidden;
+    padding: 0 8px;
+  }
+
+  .timer-name {
+    font-size: 0.95rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 180px;
+  }
+
+  .timer-code {
+    font-size: 0.75rem;
+  }
+
+  /* Timer Card */
+  .timer-card {
+    margin: 12px 12px 16px;
+    padding: 20px 16px;
+    border-radius: 20px;
+  }
+
+  .timer-card-header {
+    margin-bottom: 16px;
+  }
+
+  .timer-card-header .session-name {
+    font-size: 1.3rem;
+  }
+
+  .timer-card-header .session-counter {
+    font-size: 0.8rem;
+  }
+
+  .timer-circle-container {
+    width: 140px;
+    height: 140px;
+  }
+
+  .timer-big {
+    font-size: 2.2rem;
+  }
+
+  .timer-status {
+    font-size: 0.65rem;
+    margin-top: 4px;
+  }
+
+  /* Main controls */
+  .main-controls {
+    padding: 12px;
+    gap: 12px;
+  }
+
+  .control-btn.primary {
+    width: 72px;
+    height: 72px;
+  }
+
+  .control-btn.primary svg {
+    width: 32px;
+    height: 32px;
+  }
+
+  .control-btn.secondary {
+    width: 52px;
+    height: 52px;
+  }
+
+  .control-btn.secondary svg {
+    width: 22px;
+    height: 22px;
+  }
+
+  /* Time adjustment */
+  .time-adjust {
+    padding: 0 12px 16px;
+    gap: 8px;
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .time-adjust button {
+    padding: 12px 8px;
+    font-size: 0.85rem;
+    border-radius: 12px;
+  }
+
+  /* Sessions list */
+  .sessions-list {
+    padding: 0 12px;
+    max-height: 200px;
+    overflow: hidden;
+  }
+
+  .sessions-header {
+    margin-bottom: 10px;
+  }
+
+  .sessions-header h3 {
+    font-size: 0.9rem;
+  }
+
+  .sessions-scroll {
+    max-height: 160px;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 8px;
+    gap: 6px;
+  }
+
+  .session-item {
+    gap: 6px;
+  }
+
+  .session-main {
+    padding: 10px 12px;
+    border-radius: 12px;
+    gap: 10px;
+  }
+
+  .session-color {
+    width: 4px;
+    height: 36px;
+  }
+
+  .session-info .session-name {
+    font-size: 0.9rem;
+  }
+
+  .session-info .session-duration {
+    font-size: 0.75rem;
+  }
+
+  .session-current-badge {
+    padding: 4px 8px;
+    font-size: 0.65rem;
+  }
+
+  .session-quick-actions {
+    gap: 2px;
+  }
+
+  .quick-action {
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+  }
+
+  .quick-action svg {
+    width: 14px;
+    height: 14px;
+  }
+
+  /* Message section */
+  .message-section {
+    margin: 0 12px 12px;
+    padding: 14px 12px;
+    border-radius: 14px;
+  }
+
+  .message-section h3 {
+    font-size: 0.85rem;
+    margin-bottom: 10px;
+  }
+
+  .message-input-row {
+    gap: 8px;
+  }
+
+  .message-input-row input {
+    padding: 12px 14px;
+    font-size: 0.9rem;
+    border-radius: 10px;
+  }
+
+  .send-btn {
+    width: 46px;
+    height: 46px;
+    border-radius: 10px;
+  }
+
+  .send-btn svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  .current-message {
+    margin-top: 10px;
+    padding: 10px 12px;
+    font-size: 0.8rem;
+    border-radius: 10px;
+  }
+
+  /* Theme/Format buttons */
+  .theme-selector-btn,
+  .format-selector-btn {
+    margin: 0 12px 10px;
+    padding: 12px 16px;
+    font-size: 0.9rem;
+    border-radius: 12px;
+  }
+
+  .theme-preview-mini {
+    width: 20px;
+    height: 20px;
+    border-radius: 5px;
+  }
+
+  .format-icon-mini {
+    font-size: 1rem;
+  }
+
+  /* Reset button */
+  .reset-btn {
+    margin: 0 12px 16px;
+    padding: 14px;
+    font-size: 0.9rem;
+    border-radius: 12px;
+  }
+
+  .reset-btn svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  /* Settings panel */
+  .settings-panel {
+    padding: 14px 16px 24px;
+    border-radius: 20px 20px 0 0;
+    max-height: 80vh;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .settings-handle {
+    width: 36px;
+    height: 4px;
+    margin: 0 auto 16px;
+  }
+
+  .settings-panel h3 {
+    font-size: 1.1rem;
+    margin-bottom: 16px;
+  }
+
+  .setting-item {
+    padding: 12px 0;
+  }
+
+  .setting-item > span:first-child {
+    font-size: 0.95rem;
+  }
+
+  .setting-item .setting-desc {
+    font-size: 0.8rem;
+  }
+
+  .toggle {
+    width: 48px;
+    height: 26px;
+  }
+
+  .toggle::after {
+    width: 20px;
+    height: 20px;
+  }
+
+  .setting-item input:checked + .toggle::after {
+    transform: translateX(22px);
+  }
+
+  .display-link {
+    padding: 12px 0;
+  }
+
+  .display-link span {
+    font-size: 0.9rem;
+    margin-bottom: 8px;
+  }
+
+  .display-link a {
+    padding: 10px 14px;
+    font-size: 0.9rem;
+  }
+
+  .close-settings {
+    margin-top: 16px;
+    padding: 14px;
+    font-size: 0.95rem;
+  }
+
+  /* Theme/Format modal */
+  .theme-modal {
+    width: 94%;
+    max-width: 360px;
+    padding: 20px;
+    border-radius: 20px;
+    max-height: 80vh;
+    overflow-y: auto;
+  }
+
+  .modal-header {
+    margin-bottom: 16px;
+  }
+
+  .modal-header h3 {
+    font-size: 1.1rem;
+  }
+
+  .close-btn {
+    width: 32px;
+    height: 32px;
+    font-size: 1.3rem;
+  }
+
   .themes-grid {
     grid-template-columns: repeat(4, 1fr);
     gap: 8px;
   }
 
+  .theme-option {
+    padding: 6px;
+    border-radius: 10px;
+  }
+
   .theme-option .theme-preview {
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+  }
+
+  .format-preview {
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+  }
+
+  .format-preview .format-icon {
+    font-size: 1.3rem;
+  }
+
+  .format-preview .check {
+    width: 14px;
+    height: 14px;
+    font-size: 0.5rem;
+  }
+
+  .theme-option .theme-name {
+    font-size: 0.6rem;
+  }
+
+  /* Session editor modal */
+  .session-editor-modal {
+    padding: 20px 16px 32px;
+    padding-bottom: max(32px, env(safe-area-inset-bottom, 0));
+    border-radius: 20px 20px 0 0;
+    max-height: 90vh;
+  }
+
+  .session-editor-modal .modal-header {
+    margin-bottom: 16px;
+  }
+
+  .session-editor-modal .modal-header h3 {
+    font-size: 1.1rem;
+  }
+
+  .editor-form {
+    gap: 16px;
+  }
+
+  .form-group {
+    gap: 6px;
+  }
+
+  .form-group label {
+    font-size: 0.85rem;
+  }
+
+  .form-group input[type="text"],
+  .form-group input[type="number"] {
+    padding: 12px 14px;
+    font-size: 0.95rem;
+    border-radius: 10px;
+  }
+
+  .duration-input {
+    gap: 10px;
+  }
+
+  .duration-input button {
+    width: 42px;
+    height: 42px;
+    font-size: 1.3rem;
+    border-radius: 10px;
+  }
+
+  .duration-input input {
+    font-size: 1.3rem;
+  }
+
+  .type-selector {
+    gap: 10px;
+  }
+
+  .type-selector button {
+    padding: 12px;
+    font-size: 0.9rem;
+    border-radius: 10px;
+  }
+
+  .color-picker {
+    gap: 8px;
+  }
+
+  .color-option {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+  }
+
+  .modal-actions {
+    gap: 10px;
+    margin-top: 20px;
+  }
+
+  .btn-cancel,
+  .btn-confirm {
+    padding: 14px;
+    font-size: 0.95rem;
+    border-radius: 12px;
+  }
+
+  /* Footer */
+  .remote-footer {
+    padding: 16px 12px;
+    font-size: 0.8rem;
+  }
+
+  /* Action feedback */
+  .action-feedback {
+    top: 60px;
+    padding: 10px 20px;
+    font-size: 0.85rem;
+  }
+}
+
+/* Small mobile (max-width: 360px) */
+@media (max-width: 360px) {
+  .timer-big {
+    font-size: 2rem;
+  }
+
+  .timer-circle-container {
+    width: 120px;
+    height: 120px;
+  }
+
+  .control-btn.primary {
+    width: 64px;
+    height: 64px;
+  }
+
+  .control-btn.primary svg {
+    width: 28px;
+    height: 28px;
+  }
+
+  .control-btn.secondary {
+    width: 46px;
+    height: 46px;
+  }
+
+  .control-btn.secondary svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  .sessions-scroll {
+    max-height: 140px;
+  }
+
+  .session-main {
+    padding: 8px 10px;
+  }
+
+  .timer-card {
+    margin: 10px;
+    padding: 16px 12px;
+  }
+
+  .timer-card-header .session-name {
+    font-size: 1.1rem;
+  }
+}
+
+/* Very small screens (max-width: 320px) */
+@media (max-width: 320px) {
+  .timer-circle-container {
+    width: 100px;
+    height: 100px;
+  }
+
+  .timer-big {
+    font-size: 1.6rem;
+  }
+
+  .control-btn.primary {
+    width: 56px;
+    height: 56px;
+  }
+
+  .control-btn.secondary {
     width: 40px;
     height: 40px;
   }
 
-  .theme-option .theme-name {
-    font-size: 0.65rem;
+  .time-adjust {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* Landscape mode */
+@media (max-height: 500px) and (orientation: landscape) {
+  .timer-card {
+    margin: 8px 12px;
+    padding: 12px;
+  }
+
+  .timer-circle-container {
+    width: 100px;
+    height: 100px;
+  }
+
+  .timer-big {
+    font-size: 1.5rem;
+  }
+
+  .main-controls {
+    padding: 8px;
+  }
+
+  .control-btn.primary {
+    width: 56px;
+    height: 56px;
+  }
+
+  .control-btn.secondary {
+    width: 40px;
+    height: 40px;
+  }
+
+  .sessions-list {
+    max-height: 100px;
+  }
+
+  .message-section {
+    padding: 10px;
+    margin: 0 12px 8px;
   }
 }
