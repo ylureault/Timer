@@ -544,7 +544,7 @@ export default function TimerDisplay() {
   // Update browser tab title with remaining time
   useEffect(() => {
     const time = formatTime(localTime);
-    const sessionName = currentSession?.nom_session || 'Timer';
+    const sessionName = state?.current_session?.nom_session || 'Timer';
 
     if (state?.mode === 'play') {
       document.title = `${time.display} - ${sessionName} | Insuffle Timer`;
@@ -559,7 +559,7 @@ export default function TimerDisplay() {
     return () => {
       document.title = 'Insuffle Timer';
     };
-  }, [localTime, state?.mode, currentSession?.nom_session, code]);
+  }, [localTime, state?.mode, state?.current_session?.nom_session, code]);
 
   // Fullscreen
   const toggleFullscreen = () => {
