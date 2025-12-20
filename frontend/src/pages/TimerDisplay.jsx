@@ -1,10 +1,15 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { generateQRCodeSVG } from '../utils/features';
 import '../styles/TimerDisplay.css';
 
 const API_URL = import.meta.env.VITE_API_URL ?? '';
+
+// QR Code generator (inline to avoid circular dependencies)
+const getQRCodeUrl = (text, size = 200) => {
+  const encoded = encodeURIComponent(text);
+  return `https://api.qrserver.com/v1/create-qr-code/?size=${size}x${size}&data=${encoded}`;
+};
 
 // Timer display formats
 export const TIMER_FORMATS = {
@@ -809,7 +814,7 @@ export default function TimerDisplay() {
               <h3>Scannez pour suivre sur mobile</h3>
               <div className="qr-code-container">
                 <img
-                  src={generateQRCodeSVG(`${window.location.origin}/display/${code}`, 250)}
+                  src={getQRCodeUrl(`${window.location.origin}/display/${code}`, 250)}
                   alt="QR Code pour rejoindre le timer"
                 />
               </div>
