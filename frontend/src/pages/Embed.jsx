@@ -220,10 +220,13 @@ function MyComponent() {
                 type="text"
                 value={timerCode}
                 onChange={(e) => {
-                  // Format as XXX-XXX
-                  const value = e.target.value.replace(/[^0-9-]/g, '').toUpperCase()
+                  // Auto-format as XXX-XXX
+                  let value = e.target.value.replace(/[^0-9]/g, '');
+                  if (value.length > 3) {
+                    value = value.slice(0, 3) + '-' + value.slice(3, 6);
+                  }
                   if (value.length <= 7) {
-                    setTimerCode(value)
+                    setTimerCode(value);
                   }
                 }}
                 placeholder="XXX-XXX"

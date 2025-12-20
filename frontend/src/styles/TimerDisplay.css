@@ -1124,3 +1124,144 @@
     margin-top: 0;
   }
 }
+
+/* =====================
+   QR CODE FEATURE
+   ===================== */
+
+.qr-btn {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  padding: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-left: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.qr-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: scale(1.05);
+}
+
+.qr-btn svg {
+  width: 20px;
+  height: 20px;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.qr-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(10px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+}
+
+.qr-modal {
+  background: linear-gradient(180deg, #1a1a2e, #16213e);
+  border-radius: 24px;
+  padding: 40px;
+  text-align: center;
+  position: relative;
+  max-width: 400px;
+  width: 100%;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.5);
+}
+
+.qr-close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  color: white;
+  font-size: 1.5rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.qr-close:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: scale(1.1);
+}
+
+.qr-modal h3 {
+  color: white;
+  font-size: 1.3rem;
+  margin-bottom: 24px;
+  font-weight: 600;
+}
+
+.qr-code-container {
+  background: white;
+  border-radius: 16px;
+  padding: 20px;
+  display: inline-block;
+  margin-bottom: 20px;
+}
+
+.qr-code-container img {
+  display: block;
+  width: 250px;
+  height: 250px;
+}
+
+.qr-code-text {
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 1.2rem;
+  margin-bottom: 8px;
+}
+
+.qr-code-text strong {
+  color: var(--session-color, #6C5CE7);
+  font-family: monospace;
+  font-size: 1.4rem;
+}
+
+.qr-url {
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 0.85rem;
+  font-family: monospace;
+  word-break: break-all;
+}
+
+/* Mobile responsive QR */
+@media (max-width: 480px) {
+  .qr-modal {
+    padding: 24px;
+    margin: 16px;
+  }
+
+  .qr-modal h3 {
+    font-size: 1.1rem;
+  }
+
+  .qr-code-container {
+    padding: 16px;
+  }
+
+  .qr-code-container img {
+    width: 200px;
+    height: 200px;
+  }
+
+  .qr-btn svg {
+    width: 18px;
+    height: 18px;
+  }
+}

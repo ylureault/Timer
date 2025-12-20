@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+import { generateQRCodeSVG } from '../utils/features';
 import '../styles/TimerDisplay.css';
 
 const API_URL = import.meta.env.VITE_API_URL ?? '';
@@ -405,6 +406,7 @@ export default function TimerDisplay() {
   const [prevSessionIndex, setPrevSessionIndex] = useState(0);
   const [activeTheme, setActiveTheme] = useState(getActiveTheme());
   const [activeFormat, setActiveFormat] = useState(getActiveFormat());
+  const [showQRCode, setShowQRCode] = useState(false);
   const wsRef = useRef(null);
   const timerRef = useRef(null);
   const containerRef = useRef(null);
@@ -753,6 +755,17 @@ export default function TimerDisplay() {
       <footer className="timer-footer">
         <div className="footer-left">
           <span className="join-code">Code: <strong>{code}</strong></span>
+          <button className="qr-btn" onClick={() => setShowQRCode(true)} title="Afficher le QR Code">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <rect x="3" y="3" width="7" height="7"/>
+              <rect x="14" y="3" width="7" height="7"/>
+              <rect x="3" y="14" width="7" height="7"/>
+              <rect x="14" y="14" width="3" height="3"/>
+              <rect x="18" y="14" width="3" height="3"/>
+              <rect x="14" y="18" width="3" height="3"/>
+              <rect x="18" y="18" width="3" height="3"/>
+            </svg>
+          </button>
         </div>
         <div className="footer-center">
           <a href="https://insuffle.com" target="_blank" rel="noopener noreferrer" className="insuffle-link">
@@ -774,6 +787,38 @@ export default function TimerDisplay() {
           </button>
         </div>
       </footer>
+
+      {/* QR Code Modal */}
+      <AnimatePresence>
+        {showQRCode && (
+          <motion.div
+            className="qr-modal-overlay"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setShowQRCode(false)}
+          >
+            <motion.div
+              className="qr-modal"
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.8, opacity: 0 }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <button className="qr-close" onClick={() => setShowQRCode(false)}>×</button>
+              <h3>Scannez pour suivre sur mobile</h3>
+              <div className="qr-code-container">
+                <img
+                  src={generateQRCodeSVG(`${window.location.origin}/display/${code}`, 250)}
+                  alt="QR Code pour rejoindre le timer"
+                />
+              </div>
+              <p className="qr-code-text">Code: <strong>{code}</strong></p>
+              <p className="qr-url">{window.location.origin}/display/{code}</p>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Session transition overlay */}
       <AnimatePresence>

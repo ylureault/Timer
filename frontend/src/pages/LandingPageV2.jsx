@@ -210,10 +210,13 @@ export default function LandingPageV2() {
                 type="text"
                 value={joinCode}
                 onChange={(e) => {
-                  // Allow digits and hyphen for XXX-XXX format
-                  const value = e.target.value.replace(/[^0-9-]/g, '')
+                  // Auto-format as XXX-XXX
+                  let value = e.target.value.replace(/[^0-9]/g, '');
+                  if (value.length > 3) {
+                    value = value.slice(0, 3) + '-' + value.slice(3, 6);
+                  }
                   if (value.length <= 7) {
-                    setJoinCode(value)
+                    setJoinCode(value);
                   }
                 }}
                 onFocus={() => setIsTyping(true)}
@@ -553,7 +556,7 @@ export default function LandingPageV2() {
         </div>
 
         <div className="footer-bottom">
-          <span>© 2024 Insuffle Timer. Propulsé par</span>
+          <span>© 2025 Insuffle Timer. Propulsé par</span>
           <a href="https://insuffle.com" target="_blank" rel="noopener noreferrer">Insuffle</a>
           <span>- Facilitation & Intelligence Collective</span>
         </div>
