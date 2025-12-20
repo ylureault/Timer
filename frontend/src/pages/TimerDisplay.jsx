@@ -54,6 +54,12 @@ export const TIMER_FORMATS = {
     name: 'Vague',
     icon: '🌊',
     description: 'Animation fluide'
+  },
+  gauge: {
+    id: 'gauge',
+    name: 'Jauge plein écran',
+    icon: '📈',
+    description: 'Fond coloré vert→rouge'
   }
 };
 
@@ -312,6 +318,65 @@ const WaveTimer = ({ progress, sessionColor, time, state }) => (
     </div>
   </div>
 );
+
+// Gauge Timer - Full screen color gauge that goes from green to red
+const GaugeTimer = ({ progress, time, state, currentSession }) => {
+  // Calculate color based on progress (1=full time remaining=green, 0=no time=red)
+  const getGaugeColor = (p) => {
+    // progress: 1 = start (green), 0 = end (red)
+    if (p >= 0.6) {
+      // Green to Yellow (60% to 100%)
+      const ratio = (p - 0.6) / 0.4;
+      return `rgb(${Math.round(255 * (1 - ratio))}, ${Math.round(200 + 55 * ratio)}, 50)`;
+    } else if (p >= 0.3) {
+      // Yellow to Orange (30% to 60%)
+      const ratio = (p - 0.3) / 0.3;
+      return `rgb(255, ${Math.round(100 + 100 * ratio)}, 50)`;
+    } else {
+      // Orange to Red (0% to 30%)
+      const ratio = p / 0.3;
+      return `rgb(255, ${Math.round(50 + 50 * ratio)}, ${Math.round(50 * ratio)})`;
+    }
+  };
+
+  const gaugeColor = getGaugeColor(progress);
+  const fillHeight = (1 - progress) * 100; // Inverse: fills from bottom as time passes
+
+  return (
+    <div className="timer-gauge-wrapper">
+      {/* Gauge background fill that rises as time passes */}
+      <motion.div
+        className="gauge-fill"
+        style={{ backgroundColor: gaugeColor }}
+        initial={false}
+        animate={{ height: `${fillHeight}%` }}
+        transition={{ duration: 0.5, ease: 'easeOut' }}
+      />
+
+      {/* Timer content overlay */}
+      <div className="gauge-content">
+        <div className="gauge-session-name">{currentSession?.nom_session}</div>
+        <motion.div
+          className="gauge-time"
+          animate={progress < 0.15 ? { scale: [1, 1.05, 1] } : {}}
+          transition={{ duration: 0.5, repeat: progress < 0.15 ? Infinity : 0 }}
+        >
+          {time.display}
+        </motion.div>
+        <div className="gauge-status">
+          {state?.mode === 'play' && (
+            <motion.span animate={{ opacity: [1, 0.5, 1] }} transition={{ duration: 1.5, repeat: Infinity }}>
+              ● EN COURS
+            </motion.span>
+          )}
+          {state?.mode === 'pause' && <span>❚❚ PAUSE</span>}
+          {state?.mode === 'termine' && <span>✓ TERMINÉ</span>}
+        </div>
+        <div className="gauge-progress-text">{Math.round(progress * 100)}% restant</div>
+      </div>
+    </div>
+  );
+};
 
 // Floating particle
 const Particle = ({ index, theme }) => {
@@ -641,6 +706,9 @@ export default function TimerDisplay() {
           )}
           {activeFormat === 'wave' && (
             <WaveTimer progress={progress} sessionColor={sessionColor} time={time} state={state} />
+          )}
+          {activeFormat === 'gauge' && (
+            <GaugeTimer progress={progress} time={time} state={state} currentSession={currentSession} />
           )}
         </motion.div>
 

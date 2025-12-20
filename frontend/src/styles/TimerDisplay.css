@@ -958,4 +958,169 @@
   .timer-wave-wrapper {
     height: 300px;
   }
+
+  .gauge-time {
+    font-size: 8rem;
+  }
+}
+
+/* =====================
+   GAUGE TIMER FORMAT
+   ===================== */
+
+.timer-gauge-wrapper {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  background: #1a1a2e;
+}
+
+.gauge-fill {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  width: 100%;
+  transition: background-color 0.3s ease;
+  z-index: 1;
+}
+
+.gauge-content {
+  position: relative;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 40px;
+  width: 100%;
+  max-width: 90vw;
+}
+
+.gauge-session-name {
+  font-size: clamp(1.5rem, 4vw, 2.5rem);
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.95);
+  margin-bottom: 20px;
+  text-transform: uppercase;
+  letter-spacing: 4px;
+  text-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+}
+
+.gauge-time {
+  font-size: clamp(6rem, 20vw, 16rem);
+  font-weight: 800;
+  color: #ffffff;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.05em;
+  text-shadow: 0 8px 40px rgba(0, 0, 0, 0.4);
+  line-height: 1;
+}
+
+.gauge-status {
+  font-size: clamp(1.2rem, 3vw, 2rem);
+  color: rgba(255, 255, 255, 0.9);
+  font-weight: 600;
+  margin-top: 20px;
+  text-transform: uppercase;
+  letter-spacing: 6px;
+}
+
+.gauge-progress-text {
+  font-size: clamp(1rem, 2vw, 1.5rem);
+  color: rgba(255, 255, 255, 0.7);
+  margin-top: 15px;
+  font-weight: 500;
+}
+
+/* Gauge format hides other UI elements */
+.format-gauge .timer-header,
+.format-gauge .timer-bg,
+.format-gauge .sessions-track,
+.format-gauge .timer-footer {
+  display: none;
+}
+
+.format-gauge .timer-main {
+  position: fixed;
+  inset: 0;
+  padding: 0;
+}
+
+/* Mobile responsive for gauge */
+@media (max-width: 768px) {
+  .gauge-content {
+    padding: 20px;
+  }
+
+  .gauge-session-name {
+    font-size: 1.2rem;
+    letter-spacing: 2px;
+    margin-bottom: 15px;
+  }
+
+  .gauge-time {
+    font-size: 5rem;
+  }
+
+  .gauge-status {
+    font-size: 1rem;
+    letter-spacing: 3px;
+    margin-top: 15px;
+  }
+
+  .gauge-progress-text {
+    font-size: 0.9rem;
+    margin-top: 10px;
+  }
+}
+
+@media (max-width: 480px) {
+  .gauge-time {
+    font-size: 4rem;
+  }
+
+  .gauge-session-name {
+    font-size: 1rem;
+  }
+
+  .gauge-status {
+    font-size: 0.9rem;
+    letter-spacing: 2px;
+  }
+}
+
+/* Landscape mode for gauge */
+@media (max-height: 500px) and (orientation: landscape) {
+  .gauge-content {
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 20px;
+    padding: 10px 40px;
+  }
+
+  .gauge-session-name {
+    width: 100%;
+    margin-bottom: 0;
+    font-size: 1rem;
+  }
+
+  .gauge-time {
+    font-size: 4rem;
+  }
+
+  .gauge-status,
+  .gauge-progress-text {
+    font-size: 0.9rem;
+    margin-top: 0;
+  }
 }

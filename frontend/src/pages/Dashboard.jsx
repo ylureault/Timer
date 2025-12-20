@@ -182,7 +182,8 @@ export default function Dashboard() {
     { id: 'flip', name: 'Flip Clock', icon: '🔄' },
     { id: 'minimal', name: 'Minimal', icon: '◻️' },
     { id: 'blocks', name: 'Blocs', icon: '▪️' },
-    { id: 'wave', name: 'Vague', icon: '🌊' }
+    { id: 'wave', name: 'Vague', icon: '🌊' },
+    { id: 'gauge', name: 'Jauge', icon: '📈' }
   ];
 
   // Update display theme
