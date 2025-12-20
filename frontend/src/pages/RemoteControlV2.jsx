@@ -170,6 +170,8 @@ export default function RemoteControlV2() {
   const [currentTheme, setCurrentTheme] = useState(() =>
     localStorage.getItem('timer_visual_theme') || 'cinematic'
   );
+  const [themeLocked, setThemeLocked] = useState(false);
+  const [formatLocked, setFormatLocked] = useState(false);
   const [newSession, setNewSession] = useState({
     nom_session: '',
     duree_minutes: 5,
@@ -234,11 +236,11 @@ export default function RemoteControlV2() {
             setState(data);
             setLocalTime(data.temps_restant);
             setLoading(false);
-            // Sync theme/format from server
-            if (data.visual_theme) {
+            // Sync theme/format from server (only if not locked by local change)
+            if (data.visual_theme && !themeLocked) {
               setCurrentTheme(data.visual_theme);
             }
-            if (data.display_format) {
+            if (data.display_format && !formatLocked) {
               setCurrentFormat(data.display_format);
             }
           }
@@ -307,22 +309,28 @@ export default function RemoteControlV2() {
 
   // Theme selection - sync via server API
   const handleThemeSelect = async (themeId) => {
+    setThemeLocked(true);
     setCurrentTheme(themeId);
     localStorage.setItem('timer_visual_theme', themeId);
     showFeedback(`🎨 Thème ${VISUAL_THEMES.find(t => t.id === themeId)?.name}`);
     setShowThemeSelector(false);
     // Sync to server for all clients
     await apiCall('/visual-theme', 'POST', { visual_theme: themeId });
+    // Unlock after server confirms
+    setTimeout(() => setThemeLocked(false), 2000);
   };
 
   // Format selection - sync via server API
   const handleFormatSelect = async (formatId) => {
+    setFormatLocked(true);
     setCurrentFormat(formatId);
     localStorage.setItem('timer_display_format', formatId);
     showFeedback(`📐 Format ${TIMER_FORMATS.find(f => f.id === formatId)?.name}`);
     setShowFormatSelector(false);
     // Sync to server for all clients
     await apiCall('/display-format', 'POST', { display_format: formatId });
+    // Unlock after server confirms
+    setTimeout(() => setFormatLocked(false), 2000);
   };
 
   // Session management
