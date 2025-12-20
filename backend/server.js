@@ -1421,8 +1421,60 @@ if (existsSync(frontendDistPath)) {
   });
 }
 
+// Auto-advance check for timers with auto_mode enabled
+function checkAutoAdvance() {
+  try {
+    // Find all timers in play mode with auto_mode enabled
+    const runningTimers = db.prepare(`
+      SELECT ts.*, t.code_4chiffres as code, t.url_unique
+      FROM timer_states ts
+      JOIN timers t ON t.id = ts.timer_id
+      WHERE ts.mode = 'play' AND ts.auto_mode = 1
+    `).all();
+
+    const now = Date.now();
+
+    for (const timerState of runningTimers) {
+      const elapsed = Math.floor((now - timerState.timestamp_dernier_update) / 1000);
+      const actualRemaining = Math.max(0, timerState.temps_restant - elapsed);
+
+      // Time has run out, advance to next session
+      if (actualRemaining <= 0) {
+        const sessions = db.prepare('SELECT * FROM sessions WHERE timer_id = ? ORDER BY ordre').all(timerState.timer_id);
+
+        if (timerState.session_en_cours + 1 < sessions.length) {
+          // Move to next session
+          const nextSession = sessions[timerState.session_en_cours + 1];
+          db.prepare(`
+            UPDATE timer_states
+            SET session_en_cours = ?, temps_restant = ?, timestamp_dernier_update = ?
+            WHERE timer_id = ?
+          `).run(timerState.session_en_cours + 1, nextSession.duree_secondes, now, timerState.timer_id);
+
+          console.log(`Auto-advance: Timer ${timerState.code} → Session ${timerState.session_en_cours + 2}`);
+          broadcastTimerUpdate(timerState.code);
+        } else {
+          // All sessions complete
+          db.prepare(`
+            UPDATE timer_states SET mode = 'termine', temps_restant = 0 WHERE timer_id = ?
+          `).run(timerState.timer_id);
+
+          console.log(`Auto-advance: Timer ${timerState.code} → Complete`);
+          broadcastTimerUpdate(timerState.code);
+        }
+      }
+    }
+  } catch (error) {
+    console.error('Auto-advance check error:', error);
+  }
+}
+
+// Run auto-advance check every second
+setInterval(checkAutoAdvance, 1000);
+
 // Start server
 server.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 Insuffle Timer API V2 running on http://0.0.0.0:${PORT}`);
   console.log(`🔌 WebSocket server running on ws://0.0.0.0:${WS_PORT}`);
+  console.log(`⏱️ Auto-advance check running every second`);
 });

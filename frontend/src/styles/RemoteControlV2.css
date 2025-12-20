@@ -48,22 +48,27 @@
 /* Action Feedback Toast */
 .action-feedback {
   position: fixed;
-  top: 80px;
+  top: 70px;
   left: 50%;
   transform: translateX(-50%);
-  padding: 12px 24px;
-  background: rgba(108, 92, 231, 0.95);
+  padding: 10px 20px;
+  background: rgba(30, 30, 50, 0.95);
   color: white;
-  border-radius: 50px;
-  font-weight: 600;
-  font-size: 0.95rem;
+  border-radius: 12px;
+  font-weight: 500;
+  font-size: 0.9rem;
   z-index: 1000;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-  backdrop-filter: blur(10px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(15px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  white-space: nowrap;
+  max-width: calc(100% - 40px);
+  text-align: center;
 }
 
 .action-feedback.error {
-  background: rgba(239, 68, 68, 0.95);
+  background: rgba(180, 50, 50, 0.95);
+  border-color: rgba(239, 68, 68, 0.3);
 }
 
 /* Header */
@@ -1001,16 +1006,30 @@
 /* Theme modal */
 .theme-modal {
   position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 90%;
-  max-width: 400px;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  width: 100%;
+  max-width: 100%;
   background: linear-gradient(180deg, #1a1a2e 0%, #16213e 100%);
   border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 24px;
+  border-radius: 24px 24px 0 0;
   padding: 24px;
+  padding-top: 12px;
+  padding-bottom: max(24px, env(safe-area-inset-bottom));
   z-index: 210;
+  max-height: 85vh;
+  overflow-y: auto;
+}
+
+.theme-modal::before {
+  content: '';
+  display: block;
+  width: 40px;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 2px;
+  margin: 0 auto 16px;
 }
 
 .modal-header {
@@ -1049,7 +1068,8 @@
 .themes-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 12px;
+  gap: 16px;
+  padding: 8px 0;
 }
 
 .theme-option {
@@ -1083,6 +1103,22 @@
   justify-content: center;
   color: white;
   font-weight: bold;
+  position: relative;
+}
+
+.theme-option .theme-preview .check {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  width: 18px;
+  height: 18px;
+  background: #6C5CE7;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.65rem;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
 }
 
 .theme-option .theme-name {
@@ -1100,13 +1136,24 @@
   background: linear-gradient(180deg, #1a1a2e 0%, #16213e 100%);
   border-radius: 28px 28px 0 0;
   padding: 24px;
-  padding-bottom: 40px;
+  padding-top: 12px;
+  padding-bottom: max(40px, env(safe-area-inset-bottom));
   z-index: 210;
   max-height: 85vh;
   overflow-y: auto;
   overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior: contain;
+}
+
+.session-editor-modal::before {
+  content: '';
+  display: block;
+  width: 40px;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 2px;
+  margin: 0 auto 16px;
 }
 
 .editor-form {
@@ -1592,10 +1639,11 @@
 
   /* Theme/Format modal */
   .theme-modal {
-    width: 94%;
-    max-width: 360px;
+    width: 100%;
+    max-width: 100%;
     padding: 20px;
-    border-radius: 20px;
+    padding-bottom: max(20px, env(safe-area-inset-bottom));
+    border-radius: 20px 20px 0 0;
     max-height: 80vh;
     overflow-y: auto;
   }
@@ -1608,15 +1656,15 @@
     font-size: 1.1rem;
   }
 
+  .themes-grid {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+  }
+
   .close-btn {
     width: 32px;
     height: 32px;
     font-size: 1.3rem;
-  }
-
-  .themes-grid {
-    grid-template-columns: repeat(4, 1fr);
-    gap: 8px;
   }
 
   .theme-option {

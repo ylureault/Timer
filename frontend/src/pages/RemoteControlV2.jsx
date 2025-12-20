@@ -711,9 +711,10 @@ export default function RemoteControlV2() {
             <motion.div className="settings-backdrop" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setShowThemeSelector(false)} />
             <motion.div
               className="theme-modal"
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.9 }}
+              initial={{ opacity: 0, y: 100 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 100 }}
+              transition={{ type: 'spring', damping: 25, stiffness: 300 }}
             >
               <div className="modal-header">
                 <h3>🎨 Choisir un thème</h3>
@@ -725,7 +726,6 @@ export default function RemoteControlV2() {
                     key={theme.id}
                     className={`theme-option ${currentTheme === theme.id ? 'active' : ''}`}
                     onClick={() => handleThemeSelect(theme.id)}
-                    whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                   >
                     <div className="theme-preview" style={{ background: theme.preview }}>
@@ -747,9 +747,10 @@ export default function RemoteControlV2() {
             <motion.div className="settings-backdrop" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setShowFormatSelector(false)} />
             <motion.div
               className="theme-modal"
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.9 }}
+              initial={{ opacity: 0, y: 100 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 100 }}
+              transition={{ type: 'spring', damping: 25, stiffness: 300 }}
             >
               <div className="modal-header">
                 <h3>📐 Format d'affichage</h3>
@@ -761,7 +762,6 @@ export default function RemoteControlV2() {
                     key={format.id}
                     className={`theme-option ${currentFormat === format.id ? 'active' : ''}`}
                     onClick={() => handleFormatSelect(format.id)}
-                    whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                   >
                     <div className="format-preview">
