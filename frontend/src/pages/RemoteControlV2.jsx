@@ -170,8 +170,6 @@ export default function RemoteControlV2() {
   const [currentTheme, setCurrentTheme] = useState(() =>
     localStorage.getItem('timer_visual_theme') || 'cinematic'
   );
-  const themeLockedRef = useRef(false);
-  const formatLockedRef = useRef(false);
   const [newSession, setNewSession] = useState({
     nom_session: '',
     duree_minutes: 5,
@@ -236,13 +234,9 @@ export default function RemoteControlV2() {
             setState(data);
             setLocalTime(data.temps_restant);
             setLoading(false);
-            // Sync theme/format from server (only if not locked by local change)
-            if (data.visual_theme && !themeLockedRef.current) {
-              setCurrentTheme(data.visual_theme);
-            }
-            if (data.display_format && !formatLockedRef.current) {
-              setCurrentFormat(data.display_format);
-            }
+            // Note: theme/format are NOT synced from server here
+            // Remote control is the SOURCE of theme/format changes
+            // Only TimerDisplay receives theme/format from server
           }
         } catch (err) {
           console.error('Parse error:', err);
@@ -309,28 +303,22 @@ export default function RemoteControlV2() {
 
   // Theme selection - sync via server API
   const handleThemeSelect = async (themeId) => {
-    themeLockedRef.current = true;
     setCurrentTheme(themeId);
     localStorage.setItem('timer_visual_theme', themeId);
     showFeedback(`🎨 Thème ${VISUAL_THEMES.find(t => t.id === themeId)?.name}`);
     setShowThemeSelector(false);
-    // Sync to server for all clients
-    await apiCall('/visual-theme', 'POST', { visual_theme: themeId });
-    // Unlock after server confirms
-    setTimeout(() => { themeLockedRef.current = false; }, 2000);
+    // Sync to server for TimerDisplay clients
+    apiCall('/visual-theme', 'POST', { visual_theme: themeId });
   };
 
   // Format selection - sync via server API
   const handleFormatSelect = async (formatId) => {
-    formatLockedRef.current = true;
     setCurrentFormat(formatId);
     localStorage.setItem('timer_display_format', formatId);
     showFeedback(`📐 Format ${TIMER_FORMATS.find(f => f.id === formatId)?.name}`);
     setShowFormatSelector(false);
-    // Sync to server for all clients
-    await apiCall('/display-format', 'POST', { display_format: formatId });
-    // Unlock after server confirms
-    setTimeout(() => { formatLockedRef.current = false; }, 2000);
+    // Sync to server for TimerDisplay clients
+    apiCall('/display-format', 'POST', { display_format: formatId });
   };
 
   // Session management
