@@ -122,4 +122,13 @@ db.exec(`
   CREATE INDEX IF NOT EXISTS idx_testimonials_approved ON testimonials(is_approved);
 `);
 
+// Add visual_theme and display_format columns if they don't exist
+try {
+  db.exec(`ALTER TABLE timer_states ADD COLUMN visual_theme TEXT DEFAULT 'cinematic'`);
+} catch (e) { /* Column already exists */ }
+
+try {
+  db.exec(`ALTER TABLE timer_states ADD COLUMN display_format TEXT DEFAULT 'circle'`);
+} catch (e) { /* Column already exists */ }
+
 export default db;

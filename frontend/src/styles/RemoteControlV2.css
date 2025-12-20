@@ -1329,6 +1329,7 @@
 @media (max-width: 480px) {
   .remote-v2 {
     padding-bottom: env(safe-area-inset-bottom, 0);
+    overflow-x: hidden;
   }
 
   .remote-header {
@@ -1341,57 +1342,70 @@
   .settings-btn {
     width: 40px;
     height: 40px;
+    flex-shrink: 0;
   }
 
   .header-info {
     flex: 1;
     overflow: hidden;
     padding: 0 8px;
+    min-width: 0;
   }
 
   .timer-name {
-    font-size: 0.95rem;
+    font-size: 0.9rem;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    max-width: 180px;
+    display: block;
   }
 
   .timer-code {
-    font-size: 0.75rem;
+    font-size: 0.7rem;
   }
 
-  /* Timer Card */
+  /* Timer Card - Simplified for mobile */
   .timer-card {
-    margin: 12px 12px 16px;
+    margin: 12px;
     padding: 20px 16px;
     border-radius: 20px;
   }
 
   .timer-card-header {
-    margin-bottom: 16px;
+    margin-bottom: 12px;
   }
 
   .timer-card-header .session-name {
-    font-size: 1.3rem;
+    font-size: 1.2rem;
   }
 
   .timer-card-header .session-counter {
-    font-size: 0.8rem;
+    font-size: 0.75rem;
   }
 
+  /* Hide circle, show time directly */
   .timer-circle-container {
-    width: 140px;
-    height: 140px;
+    width: auto;
+    height: auto;
+    margin: 0;
+  }
+
+  .circular-progress {
+    display: none;
+  }
+
+  .timer-value-overlay {
+    position: relative;
+    inset: auto;
   }
 
   .timer-big {
-    font-size: 2.2rem;
+    font-size: 3.5rem;
   }
 
   .timer-status {
-    font-size: 0.65rem;
-    margin-top: 4px;
+    font-size: 0.7rem;
+    margin-top: 8px;
   }
 
   /* Main controls */
@@ -1401,43 +1415,44 @@
   }
 
   .control-btn.primary {
-    width: 72px;
-    height: 72px;
+    width: 68px;
+    height: 68px;
   }
 
   .control-btn.primary svg {
-    width: 32px;
-    height: 32px;
+    width: 28px;
+    height: 28px;
   }
 
   .control-btn.secondary {
-    width: 52px;
-    height: 52px;
+    width: 48px;
+    height: 48px;
   }
 
   .control-btn.secondary svg {
-    width: 22px;
-    height: 22px;
+    width: 20px;
+    height: 20px;
   }
 
   /* Time adjustment */
   .time-adjust {
-    padding: 0 12px 16px;
+    padding: 0 12px 12px;
     gap: 8px;
     grid-template-columns: repeat(2, 1fr);
   }
 
   .time-adjust button {
-    padding: 12px 8px;
-    font-size: 0.85rem;
-    border-radius: 12px;
+    padding: 10px 8px;
+    font-size: 0.8rem;
+    border-radius: 10px;
   }
 
   /* Sessions list */
   .sessions-list {
-    padding: 0 12px;
-    max-height: 200px;
-    overflow: hidden;
+    margin: 0 12px;
+    padding: 12px;
+    max-height: none;
+    overflow: visible;
   }
 
   .sessions-header {
@@ -1445,7 +1460,7 @@
   }
 
   .sessions-header h3 {
-    font-size: 0.9rem;
+    font-size: 0.85rem;
   }
 
   .sessions-scroll {

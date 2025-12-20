@@ -903,6 +903,52 @@ app.post('/api/timer/:code/auto-mode', (req, res) => {
   }
 });
 
+// Update visual theme (synced to all clients)
+app.post('/api/timer/:code/visual-theme', (req, res) => {
+  try {
+    const { code } = req.params;
+    const { visual_theme } = req.body;
+
+    const timer = db.prepare('SELECT id FROM timers WHERE code_4chiffres = ? OR url_unique = ?').get(code, code);
+    if (!timer) {
+      return res.status(404).json({ success: false, error: 'Timer non trouvé' });
+    }
+
+    db.prepare(`
+      UPDATE timer_states SET visual_theme = ? WHERE timer_id = ?
+    `).run(visual_theme || 'cinematic', timer.id);
+
+    broadcastTimerUpdate(code);
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Visual theme error:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// Update display format (synced to all clients)
+app.post('/api/timer/:code/display-format', (req, res) => {
+  try {
+    const { code } = req.params;
+    const { display_format } = req.body;
+
+    const timer = db.prepare('SELECT id FROM timers WHERE code_4chiffres = ? OR url_unique = ?').get(code, code);
+    if (!timer) {
+      return res.status(404).json({ success: false, error: 'Timer non trouvé' });
+    }
+
+    db.prepare(`
+      UPDATE timer_states SET display_format = ? WHERE timer_id = ?
+    `).run(display_format || 'circle', timer.id);
+
+    broadcastTimerUpdate(code);
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Display format error:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
 // Add session from remote control
 app.post('/api/timer/:code/session', (req, res) => {
   try {
@@ -1393,6 +1439,8 @@ function sendTimerState(ws, code) {
       total_sessions: sessions.length,
       message_actuel: timerState.message_actuel,
       theme_actif: timerState.theme_actif || 'kahoot',
+      visual_theme: timerState.visual_theme || 'cinematic',
+      display_format: timerState.display_format || 'circle',
       auto_mode: timerState.auto_mode === 1,
       timer: { code: timer.code_4chiffres, name: timer.name }
     };

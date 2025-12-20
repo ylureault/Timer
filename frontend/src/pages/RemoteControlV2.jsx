@@ -234,6 +234,13 @@ export default function RemoteControlV2() {
             setState(data);
             setLocalTime(data.temps_restant);
             setLoading(false);
+            // Sync theme/format from server
+            if (data.visual_theme) {
+              setCurrentTheme(data.visual_theme);
+            }
+            if (data.display_format) {
+              setCurrentFormat(data.display_format);
+            }
           }
         } catch (err) {
           console.error('Parse error:', err);
@@ -298,30 +305,24 @@ export default function RemoteControlV2() {
     showFeedback('Message effacé');
   };
 
-  // Theme selection
-  const handleThemeSelect = (themeId) => {
+  // Theme selection - sync via server API
+  const handleThemeSelect = async (themeId) => {
     setCurrentTheme(themeId);
     localStorage.setItem('timer_visual_theme', themeId);
     showFeedback(`🎨 Thème ${VISUAL_THEMES.find(t => t.id === themeId)?.name}`);
-    // Broadcast to other tabs
-    window.dispatchEvent(new StorageEvent('storage', {
-      key: 'timer_visual_theme',
-      newValue: themeId
-    }));
     setShowThemeSelector(false);
+    // Sync to server for all clients
+    await apiCall('/visual-theme', 'POST', { visual_theme: themeId });
   };
 
-  // Format selection
-  const handleFormatSelect = (formatId) => {
+  // Format selection - sync via server API
+  const handleFormatSelect = async (formatId) => {
     setCurrentFormat(formatId);
     localStorage.setItem('timer_display_format', formatId);
     showFeedback(`📐 Format ${TIMER_FORMATS.find(f => f.id === formatId)?.name}`);
-    // Broadcast to other tabs
-    window.dispatchEvent(new StorageEvent('storage', {
-      key: 'timer_display_format',
-      newValue: formatId
-    }));
     setShowFormatSelector(false);
+    // Sync to server for all clients
+    await apiCall('/display-format', 'POST', { display_format: formatId });
   };
 
   // Session management

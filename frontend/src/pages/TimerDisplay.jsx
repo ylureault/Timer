@@ -484,6 +484,14 @@ export default function TimerDisplay() {
             setState(data);
             setLocalTime(data.temps_restant);
             setLoading(false);
+
+            // Sync visual theme and display format from server
+            if (data.visual_theme && VISUAL_THEMES[data.visual_theme]) {
+              setActiveTheme(VISUAL_THEMES[data.visual_theme]);
+            }
+            if (data.display_format) {
+              setActiveFormat(data.display_format);
+            }
           }
         } catch (err) {
           console.error('Parse error:', err);
