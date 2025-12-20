@@ -99,16 +99,21 @@
 }
 
 .session-badge {
-  display: inline-block;
-  padding: 10px 24px;
-  border-radius: 50px;
-  color: white;
-  font-weight: 700;
-  font-size: 0.95rem;
-  letter-spacing: 1px;
-  text-transform: uppercase;
-  margin-bottom: 16px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 20px;
+  border-radius: 12px;
+  color: rgba(255, 255, 255, 0.95);
+  font-weight: 600;
+  font-size: 0.85rem;
+  letter-spacing: 0.5px;
+  margin-bottom: 12px;
+  background: rgba(255, 255, 255, 0.15) !important;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
 }
 
 .session-title {
@@ -474,8 +479,9 @@
   }
 
   .session-badge {
-    font-size: 0.8rem;
-    padding: 8px 16px;
+    font-size: 0.75rem;
+    padding: 6px 14px;
+    border-radius: 10px;
   }
 
   .session-title {
