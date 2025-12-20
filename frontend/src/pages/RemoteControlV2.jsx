@@ -170,8 +170,8 @@ export default function RemoteControlV2() {
   const [currentTheme, setCurrentTheme] = useState(() =>
     localStorage.getItem('timer_visual_theme') || 'cinematic'
   );
-  const [themeLocked, setThemeLocked] = useState(false);
-  const [formatLocked, setFormatLocked] = useState(false);
+  const themeLockedRef = useRef(false);
+  const formatLockedRef = useRef(false);
   const [newSession, setNewSession] = useState({
     nom_session: '',
     duree_minutes: 5,
@@ -237,10 +237,10 @@ export default function RemoteControlV2() {
             setLocalTime(data.temps_restant);
             setLoading(false);
             // Sync theme/format from server (only if not locked by local change)
-            if (data.visual_theme && !themeLocked) {
+            if (data.visual_theme && !themeLockedRef.current) {
               setCurrentTheme(data.visual_theme);
             }
-            if (data.display_format && !formatLocked) {
+            if (data.display_format && !formatLockedRef.current) {
               setCurrentFormat(data.display_format);
             }
           }
@@ -309,7 +309,7 @@ export default function RemoteControlV2() {
 
   // Theme selection - sync via server API
   const handleThemeSelect = async (themeId) => {
-    setThemeLocked(true);
+    themeLockedRef.current = true;
     setCurrentTheme(themeId);
     localStorage.setItem('timer_visual_theme', themeId);
     showFeedback(`🎨 Thème ${VISUAL_THEMES.find(t => t.id === themeId)?.name}`);
@@ -317,12 +317,12 @@ export default function RemoteControlV2() {
     // Sync to server for all clients
     await apiCall('/visual-theme', 'POST', { visual_theme: themeId });
     // Unlock after server confirms
-    setTimeout(() => setThemeLocked(false), 2000);
+    setTimeout(() => { themeLockedRef.current = false; }, 2000);
   };
 
   // Format selection - sync via server API
   const handleFormatSelect = async (formatId) => {
-    setFormatLocked(true);
+    formatLockedRef.current = true;
     setCurrentFormat(formatId);
     localStorage.setItem('timer_display_format', formatId);
     showFeedback(`📐 Format ${TIMER_FORMATS.find(f => f.id === formatId)?.name}`);
@@ -330,7 +330,7 @@ export default function RemoteControlV2() {
     // Sync to server for all clients
     await apiCall('/display-format', 'POST', { display_format: formatId });
     // Unlock after server confirms
-    setTimeout(() => setFormatLocked(false), 2000);
+    setTimeout(() => { formatLockedRef.current = false; }, 2000);
   };
 
   // Session management
