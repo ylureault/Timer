@@ -38,7 +38,7 @@ const FEATURES = [
   { icon: '🎨', title: 'Sessions colorées', desc: 'Personnalisez couleurs et durées pour chaque session', color: '#FF6B6B', category: 'core' },
   { icon: '⚡', title: 'Sync temps réel', desc: 'WebSocket pour synchronisation instantanée', color: '#FDCB6E', category: 'core' },
   { icon: '📋', title: 'Templates prédéfinis', desc: 'Daily, Pomodoro, Design Thinking, Formation...', color: '#A29BFE', category: 'productivity' },
-  { icon: '👥', title: 'Multi-participants', desc: 'Code à 4 chiffres pour rejoindre facilement', color: '#74B9FF', category: 'collaboration' },
+  { icon: '👥', title: 'Multi-participants', desc: 'Code sécurisé XXX-XXX pour rejoindre facilement', color: '#74B9FF', category: 'collaboration' },
   { icon: '🔐', title: 'Comptes sécurisés', desc: 'Créez un compte pour sauvegarder vos timers', color: '#55EFC4', category: 'security' },
   { icon: '📊', title: 'Dashboard intuitif', desc: 'Gérez jusqu\'à 5 timers par compte', color: '#FD79A8', category: 'productivity' },
   { icon: '🎬', title: 'Animations fluides', desc: 'Transitions et effets visuels spectaculaires', color: '#E17055', category: 'ux' },
@@ -194,7 +194,7 @@ export default function LandingPageV2() {
           <p className="hero-subtitle">
             L'outil de gestion du temps préféré des facilitateurs.
             <br />
-            Créez des sessions chronométrées spectaculaires, partagez avec un code à 4 chiffres.
+            Créez des sessions chronométrées spectaculaires, partagez avec un code sécurisé.
           </p>
 
           {/* Join form */}
@@ -209,20 +209,24 @@ export default function LandingPageV2() {
               <input
                 type="text"
                 value={joinCode}
-                onChange={(e) => setJoinCode(e.target.value.replace(/\D/g, ''))}
+                onChange={(e) => {
+                  // Allow digits and hyphen for XXX-XXX format
+                  const value = e.target.value.replace(/[^0-9-]/g, '')
+                  if (value.length <= 7) {
+                    setJoinCode(value)
+                  }
+                }}
                 onFocus={() => setIsTyping(true)}
                 onBlur={() => setIsTyping(false)}
-                placeholder="Code à 4 chiffres"
-                maxLength={4}
-                pattern="[0-9]*"
-                inputMode="numeric"
-                aria-label="Code de session à 4 chiffres"
+                placeholder="Code XXX-XXX"
+                maxLength={7}
+                aria-label="Code de session format XXX-XXX"
               />
               <motion.button
                 type="submit"
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                disabled={joinCode.length < 4}
+                disabled={joinCode.length < 7}
               >
                 <span>Rejoindre</span>
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">

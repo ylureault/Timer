@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { useState, useEffect } from 'react'
+import { Link, useParams } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import '../styles/Embed.css'
 
@@ -64,11 +64,19 @@ const USE_CASES = [
 ]
 
 export default function Embed() {
+  const { code: urlCode } = useParams()
   const [activeTab, setActiveTab] = useState('iframe')
-  const [timerCode, setTimerCode] = useState('XXXX')
+  const [timerCode, setTimerCode] = useState(urlCode || 'XXX-XXX')
   const [embedSize, setEmbedSize] = useState('medium')
   const [showRemote, setShowRemote] = useState(false)
   const [copied, setCopied] = useState(false)
+
+  // Update timerCode when URL parameter changes
+  useEffect(() => {
+    if (urlCode) {
+      setTimerCode(urlCode)
+    }
+  }, [urlCode])
 
   const sizes = {
     small: { width: 400, height: 300 },
@@ -211,11 +219,17 @@ function MyComponent() {
               <input
                 type="text"
                 value={timerCode}
-                onChange={(e) => setTimerCode(e.target.value.toUpperCase())}
-                placeholder="XXXX"
-                maxLength={4}
+                onChange={(e) => {
+                  // Format as XXX-XXX
+                  const value = e.target.value.replace(/[^0-9-]/g, '').toUpperCase()
+                  if (value.length <= 7) {
+                    setTimerCode(value)
+                  }
+                }}
+                placeholder="XXX-XXX"
+                maxLength={7}
               />
-              <span className="hint">Le code à 4 chiffres de votre timer</span>
+              <span className="hint">Le code à 6 caractères de votre timer (format: XXX-XXX)</span>
             </div>
 
             <div className="config-group">

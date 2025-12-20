@@ -903,6 +903,126 @@ app.post('/api/timer/:code/auto-mode', (req, res) => {
   }
 });
 
+// Add session from remote control
+app.post('/api/timer/:code/session', (req, res) => {
+  try {
+    const { code } = req.params;
+    const { nom_session, duree_secondes, couleur, type } = req.body;
+
+    const timer = db.prepare('SELECT id FROM timers WHERE code_4chiffres = ? OR url_unique = ?').get(code, code);
+    if (!timer) {
+      return res.status(404).json({ success: false, error: 'Timer non trouvé' });
+    }
+
+    // Get current max order
+    const maxOrder = db.prepare('SELECT MAX(ordre) as max FROM sessions WHERE timer_id = ?').get(timer.id);
+    const newOrder = (maxOrder?.max ?? -1) + 1;
+
+    db.prepare(`
+      INSERT INTO sessions (timer_id, ordre, nom_session, duree_secondes, couleur, type, icon)
+      VALUES (?, ?, ?, ?, ?, ?, ?)
+    `).run(timer.id, newOrder, nom_session || 'Nouvelle session', duree_secondes || 300, couleur || '#6C5CE7', type || 'session', 'timer');
+
+    broadcastTimerUpdate(code);
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Add session error:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// Update session from remote control
+app.put('/api/timer/:code/session/:index', (req, res) => {
+  try {
+    const { code, index } = req.params;
+    const { nom_session, duree_secondes, couleur, type } = req.body;
+
+    const timer = db.prepare('SELECT id FROM timers WHERE code_4chiffres = ? OR url_unique = ?').get(code, code);
+    if (!timer) {
+      return res.status(404).json({ success: false, error: 'Timer non trouvé' });
+    }
+
+    const sessions = db.prepare('SELECT * FROM sessions WHERE timer_id = ? ORDER BY ordre').all(timer.id);
+    const sessionIndex = parseInt(index);
+
+    if (sessionIndex < 0 || sessionIndex >= sessions.length) {
+      return res.status(400).json({ success: false, error: 'Index de session invalide' });
+    }
+
+    const sessionToUpdate = sessions[sessionIndex];
+
+    db.prepare(`
+      UPDATE sessions
+      SET nom_session = ?, duree_secondes = ?, couleur = ?, type = ?
+      WHERE id = ?
+    `).run(nom_session || sessionToUpdate.nom_session, duree_secondes || sessionToUpdate.duree_secondes, couleur || sessionToUpdate.couleur, type || sessionToUpdate.type, sessionToUpdate.id);
+
+    // Update timer state if current session was updated
+    const timerState = db.prepare('SELECT * FROM timer_states WHERE timer_id = ?').get(timer.id);
+    if (timerState && timerState.session_en_cours === sessionIndex && timerState.mode === 'pause') {
+      db.prepare('UPDATE timer_states SET temps_restant = ? WHERE timer_id = ?').run(duree_secondes || sessionToUpdate.duree_secondes, timer.id);
+    }
+
+    broadcastTimerUpdate(code);
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Update session error:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// Delete session from remote control
+app.delete('/api/timer/:code/session/:index', (req, res) => {
+  try {
+    const { code, index } = req.params;
+
+    const timer = db.prepare('SELECT id FROM timers WHERE code_4chiffres = ? OR url_unique = ?').get(code, code);
+    if (!timer) {
+      return res.status(404).json({ success: false, error: 'Timer non trouvé' });
+    }
+
+    const sessions = db.prepare('SELECT * FROM sessions WHERE timer_id = ? ORDER BY ordre').all(timer.id);
+    const sessionIndex = parseInt(index);
+
+    if (sessionIndex < 0 || sessionIndex >= sessions.length) {
+      return res.status(400).json({ success: false, error: 'Index de session invalide' });
+    }
+
+    if (sessions.length <= 1) {
+      return res.status(400).json({ success: false, error: 'Impossible de supprimer la dernière session' });
+    }
+
+    const sessionToDelete = sessions[sessionIndex];
+    db.prepare('DELETE FROM sessions WHERE id = ?').run(sessionToDelete.id);
+
+    // Reorder remaining sessions
+    const remainingSessions = db.prepare('SELECT * FROM sessions WHERE timer_id = ? ORDER BY ordre').all(timer.id);
+    remainingSessions.forEach((session, i) => {
+      db.prepare('UPDATE sessions SET ordre = ? WHERE id = ?').run(i, session.id);
+    });
+
+    // Adjust timer state if needed
+    const timerState = db.prepare('SELECT * FROM timer_states WHERE timer_id = ?').get(timer.id);
+    if (timerState) {
+      let newSessionIndex = timerState.session_en_cours;
+      if (sessionIndex <= timerState.session_en_cours) {
+        newSessionIndex = Math.max(0, timerState.session_en_cours - 1);
+      }
+      if (newSessionIndex >= remainingSessions.length) {
+        newSessionIndex = remainingSessions.length - 1;
+      }
+      const newCurrentSession = remainingSessions[newSessionIndex];
+      db.prepare('UPDATE timer_states SET session_en_cours = ?, temps_restant = ? WHERE timer_id = ?').run(newSessionIndex, newCurrentSession?.duree_secondes || 0, timer.id);
+    }
+
+    broadcastTimerUpdate(code);
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Delete session error:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
 // Get timer state (for polling fallback)
 app.get('/api/timer/:code/state', (req, res) => {
   try {

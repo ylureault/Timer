@@ -31,6 +31,7 @@ function App() {
           <Route path="/admin" element={<AdminPanel />} />
           <Route path="/marketplace" element={<Marketplace />} />
           <Route path="/embed" element={<Embed />} />
+          <Route path="/embed/:code" element={<Embed />} />
           <Route path="/release-notes" element={<ReleaseNotes />} />
           <Route path="/quiz" element={<Quiz />} />
           <Route path="/quiz/:code" element={<Quiz />} />
