@@ -305,20 +305,28 @@ export default function RemoteControlV2() {
   const handleThemeSelect = async (themeId) => {
     setCurrentTheme(themeId);
     localStorage.setItem('timer_visual_theme', themeId);
-    showFeedback(`🎨 Thème ${VISUAL_THEMES.find(t => t.id === themeId)?.name}`);
     setShowThemeSelector(false);
     // Sync to server for TimerDisplay clients
-    apiCall('/visual-theme', 'POST', { visual_theme: themeId });
+    const result = await apiCall('/visual-theme', 'POST', { visual_theme: themeId });
+    if (result.success) {
+      showFeedback(`🎨 Thème ${VISUAL_THEMES.find(t => t.id === themeId)?.name}`);
+    } else {
+      showFeedback('Erreur: thème non sauvegardé', 'error');
+    }
   };
 
   // Format selection - sync via server API
   const handleFormatSelect = async (formatId) => {
     setCurrentFormat(formatId);
     localStorage.setItem('timer_display_format', formatId);
-    showFeedback(`📐 Format ${TIMER_FORMATS.find(f => f.id === formatId)?.name}`);
     setShowFormatSelector(false);
     // Sync to server for TimerDisplay clients
-    apiCall('/display-format', 'POST', { display_format: formatId });
+    const result = await apiCall('/display-format', 'POST', { display_format: formatId });
+    if (result.success) {
+      showFeedback(`📐 Format ${TIMER_FORMATS.find(f => f.id === formatId)?.name}`);
+    } else {
+      showFeedback('Erreur: format non sauvegardé', 'error');
+    }
   };
 
   // Session management
