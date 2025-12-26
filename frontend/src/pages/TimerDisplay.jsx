@@ -80,6 +80,13 @@ const getDefaultFormat = () => 'circle';
 
 // Visual themes configuration
 const VISUAL_THEMES = {
+  light: {
+    id: 'light',
+    background: '#ffffff',
+    textColor: '#1a1a2e',
+    particleColors: ['#6C5CE7', '#00CEC9', '#FF6B6B', '#FDCB6E', '#00B894'],
+    isLight: true
+  },
   cinematic: {
     id: 'cinematic',
     background: 'linear-gradient(180deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)',
@@ -96,7 +103,8 @@ const VISUAL_THEMES = {
     id: 'minimal',
     background: 'linear-gradient(180deg, #f8fafc 0%, #e2e8f0 100%)',
     textColor: '#1e293b',
-    particleColors: ['#6366f1', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6']
+    particleColors: ['#6366f1', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'],
+    isLight: true
   },
   nature: {
     id: 'nature',

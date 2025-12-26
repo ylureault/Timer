@@ -26,6 +26,7 @@ const TIMER_FORMATS = [
 
 // Visual themes
 const VISUAL_THEMES = [
+  { id: 'light', name: 'Light', preview: '#ffffff' },
   { id: 'cinematic', name: 'Cinématique', preview: 'linear-gradient(180deg, #1a1a2e, #0f3460)' },
   { id: 'neon', name: 'Néon', preview: 'linear-gradient(135deg, #0a0a0a, #1a0a2e)' },
   { id: 'minimal', name: 'Minimaliste', preview: 'linear-gradient(180deg, #f8fafc, #e2e8f0)' },
