@@ -9,6 +9,10 @@ import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import { existsSync } from 'fs';
 import db from './database.js';
+import { initEmailService, sendTestEmail, sendNewsletter, sendWelcomeEmail } from './emailService.js';
+
+// Initialize email service
+initEmailService();
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -1350,6 +1354,175 @@ app.put('/api/admin/feedback/:id', authenticateToken, (req, res) => {
     res.json({ success: true });
   } catch (error) {
     console.error('Update feedback error:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// ============================
+// NEWSLETTER ENDPOINTS
+// ============================
+
+// Subscribe to newsletter (public)
+app.post('/api/newsletter/subscribe', async (req, res) => {
+  try {
+    const { email, name } = req.body;
+
+    if (!email) {
+      return res.status(400).json({ success: false, error: 'Email requis' });
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return res.status(400).json({ success: false, error: 'Email invalide' });
+    }
+
+    // Check if already subscribed
+    const existing = db.prepare('SELECT * FROM newsletter_subscribers WHERE email = ?').get(email.toLowerCase());
+    if (existing) {
+      if (existing.is_active) {
+        return res.json({ success: true, message: 'Vous êtes déjà inscrit à la newsletter !' });
+      } else {
+        // Reactivate subscription
+        db.prepare('UPDATE newsletter_subscribers SET is_active = 1, unsubscribed_at = NULL WHERE id = ?').run(existing.id);
+        return res.json({ success: true, message: 'Votre inscription a été réactivée !' });
+      }
+    }
+
+    // Create unsubscribe token
+    const unsubscribeToken = uuidv4();
+
+    // Insert new subscriber
+    db.prepare(`
+      INSERT INTO newsletter_subscribers (email, name, unsubscribe_token)
+      VALUES (?, ?, ?)
+    `).run(email.toLowerCase(), name || null, unsubscribeToken);
+
+    // Send welcome email
+    await sendWelcomeEmail(email.toLowerCase(), name, unsubscribeToken);
+
+    res.json({ success: true, message: 'Inscription réussie ! Vérifiez votre boîte mail.' });
+  } catch (error) {
+    console.error('Newsletter subscribe error:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// Unsubscribe from newsletter
+app.get('/api/newsletter/unsubscribe/:token', (req, res) => {
+  try {
+    const { token } = req.params;
+
+    const subscriber = db.prepare('SELECT * FROM newsletter_subscribers WHERE unsubscribe_token = ?').get(token);
+    if (!subscriber) {
+      return res.status(404).json({ success: false, error: 'Lien invalide' });
+    }
+
+    db.prepare(`
+      UPDATE newsletter_subscribers
+      SET is_active = 0, unsubscribed_at = CURRENT_TIMESTAMP
+      WHERE id = ?
+    `).run(subscriber.id);
+
+    res.json({ success: true, message: 'Vous avez été désinscrit de la newsletter.' });
+  } catch (error) {
+    console.error('Newsletter unsubscribe error:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// Get newsletter subscribers (admin)
+app.get('/api/admin/newsletter/subscribers', authenticateToken, (req, res) => {
+  try {
+    const subscribers = db.prepare(`
+      SELECT id, email, name, is_active, subscribed_at, unsubscribed_at
+      FROM newsletter_subscribers
+      ORDER BY subscribed_at DESC
+    `).all();
+
+    const activeCount = subscribers.filter(s => s.is_active).length;
+
+    res.json({ success: true, subscribers, activeCount, totalCount: subscribers.length });
+  } catch (error) {
+    console.error('Get subscribers error:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// Send newsletter (admin)
+app.post('/api/admin/newsletter/send', authenticateToken, async (req, res) => {
+  try {
+    const { subject, content } = req.body;
+
+    if (!subject || !content) {
+      return res.status(400).json({ success: false, error: 'Sujet et contenu requis' });
+    }
+
+    // Get active subscribers
+    const subscribers = db.prepare(`
+      SELECT email, name, unsubscribe_token
+      FROM newsletter_subscribers
+      WHERE is_active = 1
+    `).all();
+
+    if (subscribers.length === 0) {
+      return res.status(400).json({ success: false, error: 'Aucun abonné actif' });
+    }
+
+    // Send newsletter
+    const result = await sendNewsletter({ subject, content, subscribers });
+
+    // Log campaign
+    db.prepare(`
+      INSERT INTO newsletter_campaigns (subject, content, sent_count)
+      VALUES (?, ?, ?)
+    `).run(subject, content, result.sent);
+
+    res.json({
+      success: true,
+      message: `Newsletter envoyée à ${result.sent} abonnés`,
+      sent: result.sent,
+      errors: result.errors
+    });
+  } catch (error) {
+    console.error('Send newsletter error:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// Get newsletter campaigns history (admin)
+app.get('/api/admin/newsletter/campaigns', authenticateToken, (req, res) => {
+  try {
+    const campaigns = db.prepare(`
+      SELECT * FROM newsletter_campaigns
+      ORDER BY sent_at DESC
+      LIMIT 50
+    `).all();
+
+    res.json({ success: true, campaigns });
+  } catch (error) {
+    console.error('Get campaigns error:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// Send test email (admin)
+app.post('/api/admin/test-email', authenticateToken, async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({ success: false, error: 'Email requis' });
+    }
+
+    const result = await sendTestEmail(email);
+
+    if (result.success) {
+      res.json({ success: true, message: `Email de test envoyé à ${email}` });
+    } else {
+      res.status(500).json({ success: false, error: result.error });
+    }
+  } catch (error) {
+    console.error('Test email error:', error);
     res.status(500).json({ success: false, error: error.message });
   }
 });

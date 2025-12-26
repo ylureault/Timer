@@ -113,6 +113,26 @@ db.exec(`
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
   );
 
+  -- Newsletter subscribers
+  CREATE TABLE IF NOT EXISTS newsletter_subscribers (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    email TEXT UNIQUE NOT NULL,
+    name TEXT,
+    is_active INTEGER DEFAULT 1,
+    unsubscribe_token TEXT UNIQUE,
+    subscribed_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    unsubscribed_at DATETIME
+  );
+
+  -- Newsletter campaigns sent
+  CREATE TABLE IF NOT EXISTS newsletter_campaigns (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    subject TEXT NOT NULL,
+    content TEXT NOT NULL,
+    sent_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    sent_count INTEGER DEFAULT 0
+  );
+
   CREATE INDEX IF NOT EXISTS idx_timers_user ON timers(user_id);
   CREATE INDEX IF NOT EXISTS idx_sessions_timer ON sessions(timer_id);
   CREATE INDEX IF NOT EXISTS idx_timer_states_timer ON timer_states(timer_id);
