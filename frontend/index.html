@@ -39,7 +39,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="Insuffle Timer" />
 
-    <!-- Structured Data -->
+    <!-- Structured Data - WebApplication -->
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
@@ -49,6 +49,8 @@
       "url": "https://timer.insuffle.com",
       "applicationCategory": "ProductivityApplication",
       "operatingSystem": "All",
+      "browserRequirements": "Requires JavaScript. Requires HTML5.",
+      "softwareVersion": "2.0",
       "offers": {
         "@type": "Offer",
         "price": "0",
@@ -57,12 +59,14 @@
       "author": {
         "@type": "Organization",
         "name": "Insuffle",
-        "url": "https://insuffle.com"
+        "url": "https://insuffle.com",
+        "logo": "https://timer.insuffle.com/timer-icon.svg"
       },
       "aggregateRating": {
         "@type": "AggregateRating",
         "ratingValue": "4.8",
-        "ratingCount": "120"
+        "ratingCount": "150",
+        "bestRating": "5"
       },
       "featureList": [
         "Timer circulaire style TimeTimer",
@@ -71,9 +75,73 @@
         "Télécommande mobile",
         "Mode plein écran",
         "Sessions colorées personnalisables",
-        "Code à 4 chiffres pour rejoindre",
+        "Code sécurisé XXX-XXX pour rejoindre",
         "Messages en direct",
-        "Export/Import de configurations"
+        "9 formats d'affichage différents",
+        "8 thèmes visuels",
+        "Mode automatique"
+      ],
+      "screenshot": "https://timer.insuffle.com/og-image.png"
+    }
+    </script>
+
+    <!-- Structured Data - Organization -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      "name": "Insuffle",
+      "url": "https://insuffle.com",
+      "logo": "https://timer.insuffle.com/timer-icon.svg",
+      "sameAs": [
+        "https://www.linkedin.com/company/insuffle"
+      ],
+      "contactPoint": {
+        "@type": "ContactPoint",
+        "contactType": "customer support",
+        "url": "https://insuffle.com/contact"
+      }
+    }
+    </script>
+
+    <!-- Structured Data - FAQ -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "Insuffle Timer est-il gratuit ?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Oui, Insuffle Timer est 100% gratuit. Vous pouvez créer jusqu'à 5 timers par compte sans aucun frais."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Comment rejoindre un timer existant ?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Entrez simplement le code à 6 chiffres (format XXX-XXX) sur la page d'accueil pour rejoindre instantanément un timer."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Puis-je utiliser Insuffle Timer sur mobile ?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Oui, Insuffle Timer est entièrement responsive. Vous pouvez contrôler le timer depuis votre smartphone et afficher sur un grand écran."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Combien de participants peuvent rejoindre un timer ?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Il n'y a pas de limite au nombre de participants. Tout le monde peut suivre le timer en temps réel grâce à la synchronisation WebSocket."
+          }
+        }
       ]
     }
     </script>
