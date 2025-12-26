@@ -69,10 +69,8 @@ export const TIMER_FORMATS = {
   }
 };
 
-const getActiveFormat = () => {
-  const savedFormat = localStorage.getItem('timer_display_format');
-  return savedFormat || 'circle';
-};
+// Default format - will be updated from server via WebSocket
+const getDefaultFormat = () => 'circle';
 
 // Visual themes configuration
 const VISUAL_THEMES = {
@@ -126,10 +124,8 @@ const VISUAL_THEMES = {
   }
 };
 
-const getActiveTheme = () => {
-  const savedTheme = localStorage.getItem('timer_visual_theme');
-  return VISUAL_THEMES[savedTheme] || VISUAL_THEMES.cinematic;
-};
+// Default theme - will be updated from server via WebSocket
+const getDefaultTheme = () => VISUAL_THEMES.cinematic;
 const getWsUrl = () => {
   if (import.meta.env.VITE_WS_URL) return import.meta.env.VITE_WS_URL;
   const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
@@ -409,8 +405,8 @@ export default function TimerDisplay() {
   const [showCountdown, setShowCountdown] = useState(false);
   const [showComplete, setShowComplete] = useState(false);
   const [prevSessionIndex, setPrevSessionIndex] = useState(0);
-  const [activeTheme, setActiveTheme] = useState(getActiveTheme());
-  const [activeFormat, setActiveFormat] = useState(getActiveFormat());
+  const [activeTheme, setActiveTheme] = useState(getDefaultTheme());
+  const [activeFormat, setActiveFormat] = useState(getDefaultFormat());
   const [showQRCode, setShowQRCode] = useState(false);
   const wsRef = useRef(null);
   const timerRef = useRef(null);

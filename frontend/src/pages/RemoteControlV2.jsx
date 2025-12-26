@@ -159,17 +159,14 @@ export default function RemoteControlV2() {
   const [showThemeSelector, setShowThemeSelector] = useState(false);
   const [showFormatSelector, setShowFormatSelector] = useState(false);
   const [editingSession, setEditingSession] = useState(null);
-  const [currentFormat, setCurrentFormat] = useState(() =>
-    localStorage.getItem('timer_display_format') || 'circle'
-  );
+  const [currentFormat, setCurrentFormat] = useState('circle');
   const [actionFeedback, setActionFeedback] = useState(null);
   const [preferences, setPreferences] = useState(() => {
     const saved = localStorage.getItem('remote_preferences');
     return saved ? JSON.parse(saved) : DEFAULT_PREFERENCES;
   });
-  const [currentTheme, setCurrentTheme] = useState(() =>
-    localStorage.getItem('timer_visual_theme') || 'cinematic'
-  );
+  const [currentTheme, setCurrentTheme] = useState('cinematic');
+  const initialSyncDoneRef = useRef(false);
   const [newSession, setNewSession] = useState({
     nom_session: '',
     duree_minutes: 5,
@@ -234,9 +231,18 @@ export default function RemoteControlV2() {
             setState(data);
             setLocalTime(data.temps_restant);
             setLoading(false);
-            // Note: theme/format are NOT synced from server here
-            // Remote control is the SOURCE of theme/format changes
-            // Only TimerDisplay receives theme/format from server
+
+            // On first sync, load theme/format from server
+            // After that, remote control is authoritative for changes
+            if (!initialSyncDoneRef.current) {
+              if (data.visual_theme) {
+                setCurrentTheme(data.visual_theme);
+              }
+              if (data.display_format) {
+                setCurrentFormat(data.display_format);
+              }
+              initialSyncDoneRef.current = true;
+            }
           }
         } catch (err) {
           console.error('Parse error:', err);
@@ -303,28 +309,40 @@ export default function RemoteControlV2() {
 
   // Theme selection - sync via server API
   const handleThemeSelect = async (themeId) => {
-    setCurrentTheme(themeId);
-    localStorage.setItem('timer_visual_theme', themeId);
+    // Close modal immediately for responsiveness
     setShowThemeSelector(false);
-    // Sync to server for TimerDisplay clients
+
+    // Optimistic update
+    const previousTheme = currentTheme;
+    setCurrentTheme(themeId);
+
+    // Sync to server - server broadcasts to all clients including TimerDisplay
     const result = await apiCall('/visual-theme', 'POST', { visual_theme: themeId });
     if (result.success) {
       showFeedback(`🎨 Thème ${VISUAL_THEMES.find(t => t.id === themeId)?.name}`);
     } else {
+      // Rollback on error
+      setCurrentTheme(previousTheme);
       showFeedback('Erreur: thème non sauvegardé', 'error');
     }
   };
 
   // Format selection - sync via server API
   const handleFormatSelect = async (formatId) => {
-    setCurrentFormat(formatId);
-    localStorage.setItem('timer_display_format', formatId);
+    // Close modal immediately for responsiveness
     setShowFormatSelector(false);
-    // Sync to server for TimerDisplay clients
+
+    // Optimistic update
+    const previousFormat = currentFormat;
+    setCurrentFormat(formatId);
+
+    // Sync to server - server broadcasts to all clients including TimerDisplay
     const result = await apiCall('/display-format', 'POST', { display_format: formatId });
     if (result.success) {
       showFeedback(`📐 Format ${TIMER_FORMATS.find(f => f.id === formatId)?.name}`);
     } else {
+      // Rollback on error
+      setCurrentFormat(previousFormat);
       showFeedback('Erreur: format non sauvegardé', 'error');
     }
   };
