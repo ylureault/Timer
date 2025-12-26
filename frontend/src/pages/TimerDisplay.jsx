@@ -13,6 +13,12 @@ const getQRCodeUrl = (text, size = 200) => {
 
 // Timer display formats
 export const TIMER_FORMATS = {
+  timetimer: {
+    id: 'timetimer',
+    name: 'Time Timer',
+    icon: '🔴',
+    description: 'Style Time Timer classique'
+  },
   circle: {
     id: 'circle',
     name: 'Cercle classique',
@@ -380,6 +386,133 @@ const GaugeTimer = ({ progress, time, state, currentSession }) => {
   );
 };
 
+// Time Timer - Classic red disk style like the physical Time Timer
+const TimeTimerDisplay = ({ progress, time, state, currentSession, sessionColor }) => {
+  // Calculate the angle for the red disk (progress 1 = full disk, 0 = no disk)
+  const angle = progress * 360;
+
+  // Create the pie slice path for the red area
+  const createPieSlice = (percentage) => {
+    if (percentage <= 0) return '';
+    if (percentage >= 1) return 'M 200 200 m -150 0 a 150 150 0 1 0 300 0 a 150 150 0 1 0 -300 0';
+
+    const angleRad = (percentage * 360 - 90) * (Math.PI / 180);
+    const startAngleRad = -90 * (Math.PI / 180);
+
+    const x1 = 200 + 150 * Math.cos(startAngleRad);
+    const y1 = 200 + 150 * Math.sin(startAngleRad);
+    const x2 = 200 + 150 * Math.cos(angleRad);
+    const y2 = 200 + 150 * Math.sin(angleRad);
+
+    const largeArc = percentage > 0.5 ? 1 : 0;
+
+    return `M 200 200 L ${x1} ${y1} A 150 150 0 ${largeArc} 1 ${x2} ${y2} Z`;
+  };
+
+  // Generate tick marks and numbers
+  const ticks = [];
+  const numbers = [];
+  for (let i = 0; i < 60; i++) {
+    const angle = (i * 6 - 90) * (Math.PI / 180);
+    const isMainTick = i % 5 === 0;
+    const innerR = isMainTick ? 135 : 145;
+    const outerR = 155;
+
+    const x1 = 200 + innerR * Math.cos(angle);
+    const y1 = 200 + innerR * Math.sin(angle);
+    const x2 = 200 + outerR * Math.cos(angle);
+    const y2 = 200 + outerR * Math.sin(angle);
+
+    ticks.push(
+      <line
+        key={`tick-${i}`}
+        x1={x1}
+        y1={y1}
+        x2={x2}
+        y2={y2}
+        stroke="#333"
+        strokeWidth={isMainTick ? 2 : 1}
+      />
+    );
+
+    if (isMainTick) {
+      const numR = 170;
+      const numX = 200 + numR * Math.cos(angle);
+      const numY = 200 + numR * Math.sin(angle);
+      const displayNum = i === 0 ? '0' : i.toString();
+      numbers.push(
+        <text
+          key={`num-${i}`}
+          x={numX}
+          y={numY}
+          textAnchor="middle"
+          dominantBaseline="middle"
+          fill="#333"
+          fontSize="16"
+          fontWeight="bold"
+          fontFamily="Arial, sans-serif"
+        >
+          {displayNum}
+        </text>
+      );
+    }
+  }
+
+  return (
+    <div className="timetimer-wrapper">
+      <div className="timetimer-frame">
+        <svg viewBox="0 0 400 400" className="timetimer-svg">
+          {/* White background circle */}
+          <circle cx="200" cy="200" r="180" fill="white" />
+
+          {/* Red pie slice showing remaining time */}
+          <motion.path
+            d={createPieSlice(progress)}
+            fill={sessionColor || "#E53935"}
+            initial={false}
+            animate={{ d: createPieSlice(progress) }}
+            transition={{ duration: 0.3, ease: 'linear' }}
+          />
+
+          {/* Inner white circle to create the donut effect - optional, remove for solid */}
+          {/* <circle cx="200" cy="200" r="50" fill="white" /> */}
+
+          {/* Tick marks */}
+          {ticks}
+
+          {/* Numbers around the edge */}
+          {numbers}
+
+          {/* Center dot */}
+          <circle cx="200" cy="200" r="12" fill="#333" />
+
+          {/* Minute hand indicator */}
+          <line
+            x1="200"
+            y1="200"
+            x2="200"
+            y2="70"
+            stroke="#333"
+            strokeWidth="3"
+            strokeLinecap="round"
+          />
+        </svg>
+
+        {/* Session name below */}
+        <div className="timetimer-info">
+          <div className="timetimer-session">{currentSession?.nom_session}</div>
+          <div className="timetimer-time">{time.display}</div>
+          <div className="timetimer-status">
+            {state?.mode === 'play' && <span className="status-play">En cours</span>}
+            {state?.mode === 'pause' && <span className="status-pause">Pause</span>}
+            {state?.mode === 'termine' && <span className="status-done">Terminé</span>}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 // Floating particle
 const Particle = ({ index, theme }) => {
   const colors = theme?.particleColors || ['#FF6B6B', '#4ECDC4', '#FFE66D', '#95E1D3', '#F38181'];
@@ -660,6 +793,12 @@ export default function TimerDisplay() {
           animate={isCritical ? { scale: [1, 1.02, 1] } : {}}
           transition={{ duration: 0.5, repeat: isCritical ? Infinity : 0 }}
         >
+          {activeFormat === 'timetimer' && (
+            <TimeTimerDisplay
+              progress={progress} time={time} state={state}
+              currentSession={currentSession} sessionColor={sessionColor}
+            />
+          )}
           {activeFormat === 'circle' && (
             <CircleTimer
               size={size} strokeWidth={strokeWidth} radius={radius}

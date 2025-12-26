@@ -1271,3 +1271,138 @@
     height: 18px;
   }
 }
+
+/* ================================================
+   TIME TIMER - Classic Red Disk Style
+   ================================================ */
+
+.timetimer-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  padding: 20px;
+}
+
+.timetimer-frame {
+  background: #2a2a2a;
+  border-radius: 24px;
+  padding: 20px;
+  box-shadow:
+    0 20px 60px rgba(0, 0, 0, 0.5),
+    inset 0 2px 0 rgba(255, 255, 255, 0.1),
+    inset 0 -2px 0 rgba(0, 0, 0, 0.3);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+}
+
+.timetimer-svg {
+  width: 100%;
+  max-width: 400px;
+  height: auto;
+  filter: drop-shadow(0 4px 20px rgba(0, 0, 0, 0.3));
+}
+
+/* White face with subtle shadow */
+.timetimer-svg circle:first-of-type {
+  filter: drop-shadow(0 2px 10px rgba(0, 0, 0, 0.1));
+}
+
+.timetimer-info {
+  text-align: center;
+  color: white;
+}
+
+.timetimer-session {
+  font-size: 1.4rem;
+  font-weight: 700;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+}
+
+.timetimer-time {
+  font-size: 3rem;
+  font-weight: 800;
+  font-family: 'SF Mono', 'Monaco', 'Consolas', monospace;
+  margin-bottom: 8px;
+  background: linear-gradient(135deg, #fff 0%, #ccc 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.timetimer-status {
+  font-size: 1rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 3px;
+}
+
+.timetimer-status .status-play {
+  color: #4CAF50;
+}
+
+.timetimer-status .status-pause {
+  color: #FF9800;
+}
+
+.timetimer-status .status-done {
+  color: #9E9E9E;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .timetimer-frame {
+    padding: 16px;
+    border-radius: 20px;
+  }
+
+  .timetimer-svg {
+    max-width: 300px;
+  }
+
+  .timetimer-session {
+    font-size: 1.1rem;
+  }
+
+  .timetimer-time {
+    font-size: 2.2rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .timetimer-frame {
+    padding: 12px;
+    border-radius: 16px;
+  }
+
+  .timetimer-svg {
+    max-width: 250px;
+  }
+
+  .timetimer-session {
+    font-size: 0.9rem;
+  }
+
+  .timetimer-time {
+    font-size: 1.8rem;
+  }
+
+  .timetimer-status {
+    font-size: 0.8rem;
+  }
+}
+
+/* Special theme overrides for Time Timer format */
+.format-timetimer .timer-bg {
+  display: none;
+}
+
+.format-timetimer.timer-display {
+  background: linear-gradient(180deg, #1a1a2e 0%, #0f0f1a 100%);
+}
