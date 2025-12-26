@@ -13,6 +13,9 @@ const getWsUrl = () => {
 // Timer display formats
 const TIMER_FORMATS = [
   { id: 'timetimer', name: 'Time Timer', icon: '🔴' },
+  { id: 'moderntimer', name: 'Modern', icon: '⏱️' },
+  { id: 'delorean', name: 'DeLorean', icon: '🚗' },
+  { id: 'ledboard', name: 'LED Board', icon: '🔴' },
   { id: 'circle', name: 'Cercle', icon: '⭕' },
   { id: 'arc', name: 'Arc', icon: '🌙' },
   { id: 'bar', name: 'Barre', icon: '📊' },

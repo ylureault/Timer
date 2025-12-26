@@ -19,6 +19,24 @@ export const TIMER_FORMATS = {
     icon: '🔴',
     description: 'Style Time Timer classique'
   },
+  moderntimer: {
+    id: 'moderntimer',
+    name: 'Modern Timer',
+    icon: '⏱️',
+    description: 'Timer moderne avec segments'
+  },
+  delorean: {
+    id: 'delorean',
+    name: 'DeLorean',
+    icon: '🚗',
+    description: 'Style Retour vers le Futur'
+  },
+  ledboard: {
+    id: 'ledboard',
+    name: 'LED Board',
+    icon: '🔴',
+    description: 'Panneau LED scoreboard'
+  },
   circle: {
     id: 'circle',
     name: 'Cercle classique',
@@ -396,8 +414,23 @@ const GaugeTimer = ({ progress, time, state, currentSession }) => {
 
 // Time Timer - Classic red disk style like the physical Time Timer
 const TimeTimerDisplay = ({ progress, time, state, currentSession, sessionColor }) => {
-  // Calculate the angle for the red disk (progress 1 = full disk, 0 = no disk)
-  const angle = progress * 360;
+  // Get total duration in minutes for the dial scale
+  const totalDurationMinutes = Math.ceil((currentSession?.duree_secondes || 60) / 60);
+
+  // Determine dial max value (round up to nice numbers)
+  const getDialMax = (minutes) => {
+    if (minutes <= 5) return 5;
+    if (minutes <= 10) return 10;
+    if (minutes <= 15) return 15;
+    if (minutes <= 20) return 20;
+    if (minutes <= 30) return 30;
+    if (minutes <= 45) return 45;
+    if (minutes <= 60) return 60;
+    if (minutes <= 90) return 90;
+    return Math.ceil(minutes / 30) * 30;
+  };
+
+  const dialMax = getDialMax(totalDurationMinutes);
 
   // Create the pie slice path for the red area
   const createPieSlice = (percentage) => {
@@ -417,12 +450,18 @@ const TimeTimerDisplay = ({ progress, time, state, currentSession, sessionColor 
     return `M 200 200 L ${x1} ${y1} A 150 150 0 ${largeArc} 1 ${x2} ${y2} Z`;
   };
 
-  // Generate tick marks and numbers
+  // Generate tick marks and numbers based on dial max
   const ticks = [];
   const numbers = [];
-  for (let i = 0; i < 60; i++) {
-    const angle = (i * 6 - 90) * (Math.PI / 180);
-    const isMainTick = i % 5 === 0;
+  const tickCount = dialMax <= 15 ? dialMax : (dialMax <= 30 ? dialMax : dialMax);
+  const tickInterval = 360 / tickCount;
+  const numberInterval = dialMax <= 10 ? 1 : (dialMax <= 30 ? 5 : 15);
+
+  for (let i = 0; i <= tickCount; i++) {
+    if (i === tickCount) continue; // Skip last to avoid overlap with 0
+    const angle = (i * tickInterval - 90) * (Math.PI / 180);
+    const minuteValue = (i / tickCount) * dialMax;
+    const isMainTick = minuteValue % numberInterval === 0;
     const innerR = isMainTick ? 135 : 145;
     const outerR = 155;
 
@@ -447,7 +486,7 @@ const TimeTimerDisplay = ({ progress, time, state, currentSession, sessionColor 
       const numR = 170;
       const numX = 200 + numR * Math.cos(angle);
       const numY = 200 + numR * Math.sin(angle);
-      const displayNum = i === 0 ? '0' : i.toString();
+      const displayNum = Math.round(minuteValue).toString();
       numbers.push(
         <text
           key={`num-${i}`}
@@ -482,9 +521,6 @@ const TimeTimerDisplay = ({ progress, time, state, currentSession, sessionColor 
             transition={{ duration: 0.3, ease: 'linear' }}
           />
 
-          {/* Inner white circle to create the donut effect - optional, remove for solid */}
-          {/* <circle cx="200" cy="200" r="50" fill="white" /> */}
-
           {/* Tick marks */}
           {ticks}
 
@@ -514,6 +550,290 @@ const TimeTimerDisplay = ({ progress, time, state, currentSession, sessionColor 
             {state?.mode === 'play' && <span className="status-play">En cours</span>}
             {state?.mode === 'pause' && <span className="status-pause">Pause</span>}
             {state?.mode === 'termine' && <span className="status-done">Terminé</span>}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Modern Timer - White case with segmented radial display and digital center
+const ModernTimerDisplay = ({ progress, time, state, currentSession, sessionColor }) => {
+  const totalSegments = 60;
+  const elapsedSegments = Math.round((1 - progress) * totalSegments);
+
+  // Create segments around the circle
+  const segments = [];
+  for (let i = 0; i < totalSegments; i++) {
+    const startAngle = (i * 6 - 90) * (Math.PI / 180);
+    const endAngle = ((i + 1) * 6 - 91) * (Math.PI / 180);
+    const innerR = 120;
+    const outerR = 155;
+
+    const x1 = 200 + innerR * Math.cos(startAngle);
+    const y1 = 200 + innerR * Math.sin(startAngle);
+    const x2 = 200 + outerR * Math.cos(startAngle);
+    const y2 = 200 + outerR * Math.sin(startAngle);
+    const x3 = 200 + outerR * Math.cos(endAngle);
+    const y3 = 200 + outerR * Math.sin(endAngle);
+    const x4 = 200 + innerR * Math.cos(endAngle);
+    const y4 = 200 + innerR * Math.sin(endAngle);
+
+    const isElapsed = i < elapsedSegments;
+
+    segments.push(
+      <path
+        key={`seg-${i}`}
+        d={`M ${x1} ${y1} L ${x2} ${y2} L ${x3} ${y3} L ${x4} ${y4} Z`}
+        fill={isElapsed ? (sessionColor || '#FF6B35') : '#E5E5E5'}
+        stroke="white"
+        strokeWidth="1"
+      />
+    );
+  }
+
+  return (
+    <div className="moderntimer-wrapper">
+      <div className="moderntimer-case">
+        <svg viewBox="0 0 400 400" className="moderntimer-svg">
+          {/* White background */}
+          <circle cx="200" cy="200" r="180" fill="#FAFAFA" />
+
+          {/* Segments */}
+          {segments}
+
+          {/* Inner circle for display */}
+          <circle cx="200" cy="200" r="110" fill="white" />
+
+          {/* Small ticks around inner circle */}
+          {[0, 15, 30, 45].map((min) => {
+            const angle = (min * 6 - 90) * (Math.PI / 180);
+            return (
+              <line
+                key={`mtick-${min}`}
+                x1={200 + 95 * Math.cos(angle)}
+                y1={200 + 95 * Math.sin(angle)}
+                x2={200 + 105 * Math.cos(angle)}
+                y2={200 + 105 * Math.sin(angle)}
+                stroke="#999"
+                strokeWidth="2"
+              />
+            );
+          })}
+        </svg>
+
+        {/* Digital display in center */}
+        <div className="moderntimer-center">
+          <motion.div
+            className="moderntimer-time"
+            animate={progress < 0.1 ? { scale: [1, 1.05, 1] } : {}}
+            transition={{ duration: 0.5, repeat: progress < 0.1 ? Infinity : 0 }}
+          >
+            {time.display}
+          </motion.div>
+          <div className="moderntimer-session">{currentSession?.nom_session}</div>
+          <div className="moderntimer-status">
+            {state?.mode === 'play' && <span className="playing">EN COURS</span>}
+            {state?.mode === 'pause' && <span className="paused">PAUSE</span>}
+            {state?.mode === 'termine' && <span className="done">TERMINÉ</span>}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// DeLorean Timer - Back to the Future LED style
+const DeLoreanDisplay = ({ time, state, currentSession, sessionColor }) => {
+  // Seven-segment digit component
+  const SevenSegmentDigit = ({ digit, color = '#FF3333' }) => {
+    const segments = {
+      '0': [1,1,1,1,1,1,0],
+      '1': [0,1,1,0,0,0,0],
+      '2': [1,1,0,1,1,0,1],
+      '3': [1,1,1,1,0,0,1],
+      '4': [0,1,1,0,0,1,1],
+      '5': [1,0,1,1,0,1,1],
+      '6': [1,0,1,1,1,1,1],
+      '7': [1,1,1,0,0,0,0],
+      '8': [1,1,1,1,1,1,1],
+      '9': [1,1,1,1,0,1,1]
+    };
+
+    const active = segments[digit] || segments['0'];
+    const segmentPaths = [
+      'M 10 5 L 50 5 L 45 15 L 15 15 Z',     // top (a)
+      'M 55 10 L 55 45 L 48 50 L 48 20 Z',   // top-right (b)
+      'M 55 55 L 55 90 L 48 85 L 48 60 Z',   // bottom-right (c)
+      'M 10 95 L 50 95 L 45 85 L 15 85 Z',   // bottom (d)
+      'M 5 55 L 5 90 L 12 85 L 12 60 Z',     // bottom-left (e)
+      'M 5 10 L 5 45 L 12 50 L 12 20 Z',     // top-left (f)
+      'M 10 50 L 50 50 L 48 55 L 48 45 L 12 45 L 12 55 Z' // middle (g)
+    ];
+
+    return (
+      <svg viewBox="0 0 60 100" className="seven-segment">
+        {segmentPaths.map((path, i) => (
+          <path
+            key={i}
+            d={path}
+            fill={active[i] ? color : 'rgba(100,30,30,0.3)'}
+            style={{ filter: active[i] ? `drop-shadow(0 0 8px ${color})` : 'none' }}
+          />
+        ))}
+      </svg>
+    );
+  };
+
+  const mins = String(time.mins).padStart(2, '0');
+  const secs = String(time.secs).padStart(2, '0');
+
+  return (
+    <div className="delorean-wrapper">
+      <div className="delorean-panel">
+        {/* Header plate */}
+        <div className="delorean-header">
+          <div className="delorean-label">DESTINATION TIME</div>
+          <div className="delorean-rivets">
+            <span className="rivet"></span>
+            <span className="rivet"></span>
+          </div>
+        </div>
+
+        {/* Main display */}
+        <div className="delorean-display">
+          <div className="delorean-row">
+            <div className="delorean-label-sm">MIN</div>
+            <div className="delorean-digits">
+              <SevenSegmentDigit digit={mins[0]} color="#FF3333" />
+              <SevenSegmentDigit digit={mins[1]} color="#FF3333" />
+            </div>
+            <div className="delorean-colon">
+              <span></span>
+              <span></span>
+            </div>
+            <div className="delorean-digits">
+              <SevenSegmentDigit digit={secs[0]} color="#FF3333" />
+              <SevenSegmentDigit digit={secs[1]} color="#FF3333" />
+            </div>
+            <div className="delorean-label-sm">SEC</div>
+          </div>
+        </div>
+
+        {/* Session info */}
+        <div className="delorean-session">
+          <span className="session-name">{currentSession?.nom_session}</span>
+          <span className={`session-status ${state?.mode}`}>
+            {state?.mode === 'play' && '● RUNNING'}
+            {state?.mode === 'pause' && '○ STOPPED'}
+            {state?.mode === 'termine' && '✓ COMPLETE'}
+          </span>
+        </div>
+
+        {/* Bottom rivets */}
+        <div className="delorean-footer">
+          <span className="rivet"></span>
+          <span className="rivet"></span>
+          <span className="rivet"></span>
+          <span className="rivet"></span>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// LED Board - Red LED scoreboard style
+const LEDBoardDisplay = ({ time, state, currentSession, progress }) => {
+  // Generate LED dot matrix for a character
+  const LEDChar = ({ char, color = '#FF0000' }) => {
+    // 5x7 LED matrix patterns
+    const patterns = {
+      '0': ['01110','10001','10011','10101','11001','10001','01110'],
+      '1': ['00100','01100','00100','00100','00100','00100','01110'],
+      '2': ['01110','10001','00001','00110','01000','10000','11111'],
+      '3': ['01110','10001','00001','00110','00001','10001','01110'],
+      '4': ['00010','00110','01010','10010','11111','00010','00010'],
+      '5': ['11111','10000','11110','00001','00001','10001','01110'],
+      '6': ['00110','01000','10000','11110','10001','10001','01110'],
+      '7': ['11111','00001','00010','00100','01000','01000','01000'],
+      '8': ['01110','10001','10001','01110','10001','10001','01110'],
+      '9': ['01110','10001','10001','01111','00001','00010','01100'],
+      ':': ['00000','00100','00100','00000','00100','00100','00000'],
+      ' ': ['00000','00000','00000','00000','00000','00000','00000']
+    };
+
+    const pattern = patterns[char] || patterns[' '];
+
+    return (
+      <div className="led-char">
+        {pattern.map((row, rowIndex) => (
+          <div key={rowIndex} className="led-row">
+            {row.split('').map((dot, colIndex) => (
+              <span
+                key={colIndex}
+                className={`led-dot ${dot === '1' ? 'on' : 'off'}`}
+                style={dot === '1' ? {
+                  backgroundColor: color,
+                  boxShadow: `0 0 6px ${color}, 0 0 12px ${color}`
+                } : {}}
+              />
+            ))}
+          </div>
+        ))}
+      </div>
+    );
+  };
+
+  const displayTime = `${String(time.mins).padStart(2, '0')}:${String(time.secs).padStart(2, '0')}`;
+
+  return (
+    <div className="ledboard-wrapper">
+      <div className="ledboard-frame">
+        {/* LED Border */}
+        <div className="ledboard-border">
+          {[...Array(40)].map((_, i) => (
+            <span
+              key={i}
+              className={`border-led ${i % 3 === 0 ? 'on' : 'off'}`}
+              style={{ animationDelay: `${i * 0.05}s` }}
+            />
+          ))}
+        </div>
+
+        {/* Main display area */}
+        <div className="ledboard-display">
+          {/* Session name */}
+          <div className="ledboard-title">
+            {currentSession?.nom_session?.toUpperCase() || 'TIMER'}
+          </div>
+
+          {/* Time display */}
+          <div className="ledboard-time">
+            {displayTime.split('').map((char, i) => (
+              <LEDChar
+                key={i}
+                char={char}
+                color={progress < 0.15 ? '#FF0000' : '#FF3300'}
+              />
+            ))}
+          </div>
+
+          {/* Status bar */}
+          <div className="ledboard-status">
+            <div className="status-indicator">
+              <span className={`status-light ${state?.mode}`}></span>
+              <span className="status-text">
+                {state?.mode === 'play' && 'RUNNING'}
+                {state?.mode === 'pause' && 'PAUSED'}
+                {state?.mode === 'termine' && 'COMPLETE'}
+              </span>
+            </div>
+            <div className="progress-bar">
+              <div
+                className="progress-fill"
+                style={{ width: `${progress * 100}%` }}
+              />
+            </div>
           </div>
         </div>
       </div>
@@ -805,6 +1125,24 @@ export default function TimerDisplay() {
             <TimeTimerDisplay
               progress={progress} time={time} state={state}
               currentSession={currentSession} sessionColor={sessionColor}
+            />
+          )}
+          {activeFormat === 'moderntimer' && (
+            <ModernTimerDisplay
+              progress={progress} time={time} state={state}
+              currentSession={currentSession} sessionColor={sessionColor}
+            />
+          )}
+          {activeFormat === 'delorean' && (
+            <DeLoreanDisplay
+              time={time} state={state}
+              currentSession={currentSession} sessionColor={sessionColor}
+            />
+          )}
+          {activeFormat === 'ledboard' && (
+            <LEDBoardDisplay
+              time={time} state={state}
+              currentSession={currentSession} progress={progress}
             />
           )}
           {activeFormat === 'circle' && (
