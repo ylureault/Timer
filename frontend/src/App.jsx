@@ -13,6 +13,8 @@ import Embed from './pages/Embed'
 import ReleaseNotes from './pages/ReleaseNotes'
 import Quiz from './pages/Quiz'
 import Blog from './pages/Blog'
+import ApiDocs from './pages/ApiDocs'
+import ThemeCreator from './pages/ThemeCreator'
 
 // Legacy pages (keep for backward compatibility)
 import CreateSalon from './pages/CreateSalon'
@@ -37,6 +39,8 @@ function App() {
           <Route path="/quiz/:code" element={<Quiz />} />
           <Route path="/blog" element={<Blog />} />
           <Route path="/blog/:slug" element={<Blog />} />
+          <Route path="/api-docs" element={<ApiDocs />} />
+          <Route path="/theme-creator" element={<ThemeCreator />} />
           <Route path="/display/:code" element={<TimerDisplay />} />
           <Route path="/remote/:code" element={<RemoteControlV2 />} />
 

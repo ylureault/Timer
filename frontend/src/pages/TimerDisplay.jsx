@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useDisplayOptions } from '../hooks/useDisplayOptions';
+import { useKeyboardShortcuts } from '../hooks/useKeyboardShortcuts';
 import '../styles/TimerDisplay.css';
 
 const API_URL = import.meta.env.VITE_API_URL ?? '';
@@ -873,6 +875,85 @@ export default function TimerDisplay() {
   const timerRef = useRef(null);
   const containerRef = useRef(null);
   const audioRef = useRef(null);
+  const [showUI, setShowUI] = useState(true);
+  const [showConfetti, setShowConfetti] = useState(false);
+  const [currentClock, setCurrentClock] = useState('');
+  const [soundEnabled, setSoundEnabled] = useState(true);
+
+  // Display options hook
+  const { options: displayOptions, updateOption } = useDisplayOptions();
+
+  // Current time clock
+  useEffect(() => {
+    if (displayOptions.showCurrentTime) {
+      const updateClock = () => {
+        setCurrentClock(new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }));
+      };
+      updateClock();
+      const interval = setInterval(updateClock, 1000);
+      return () => clearInterval(interval);
+    }
+  }, [displayOptions.showCurrentTime]);
+
+  // Confetti effect on timer complete
+  useEffect(() => {
+    if (state?.mode === 'termine' && displayOptions.confettiOnEnd) {
+      setShowConfetti(true);
+      setTimeout(() => setShowConfetti(false), 5000);
+    }
+  }, [state?.mode, displayOptions.confettiOnEnd]);
+
+  // Keyboard shortcuts handlers
+  const keyboardHandlers = {
+    togglePlayPause: () => {
+      // Display page is view-only, but we can trigger visual effects
+      console.log('Play/Pause - use remote control');
+    },
+    toggleFullscreen: () => {
+      if (!document.fullscreenElement) {
+        containerRef.current?.requestFullscreen();
+        setIsFullscreen(true);
+      } else {
+        document.exitFullscreen();
+        setIsFullscreen(false);
+      }
+    },
+    exitFullscreen: () => {
+      if (document.fullscreenElement) {
+        document.exitFullscreen();
+        setIsFullscreen(false);
+      }
+    },
+    toggleMute: () => setSoundEnabled(prev => !prev),
+    toggleUI: () => setShowUI(prev => !prev),
+    cycleTheme: () => {
+      const themeIds = Object.keys(VISUAL_THEMES);
+      const currentIndex = themeIds.indexOf(activeTheme?.id || 'cinematic');
+      const nextIndex = (currentIndex + 1) % themeIds.length;
+      setActiveTheme(VISUAL_THEMES[themeIds[nextIndex]]);
+    },
+    cycleFormat: () => {
+      const formatIds = Object.keys(TIMER_FORMATS);
+      const currentIndex = formatIds.indexOf(activeFormat);
+      const nextIndex = (currentIndex + 1) % formatIds.length;
+      setActiveFormat(formatIds[nextIndex]);
+    },
+    toggleDarkMode: () => {
+      if (activeTheme?.isLight) {
+        setActiveTheme(VISUAL_THEMES.cinematic);
+      } else {
+        setActiveTheme(VISUAL_THEMES.light);
+      }
+    },
+    toggleAnnotations: () => updateOption('showFacilitatorName', !displayOptions.showFacilitatorName),
+    copyCode: () => {
+      navigator.clipboard.writeText(code);
+    },
+    toggleQRCode: () => setShowQRCode(prev => !prev),
+    showHelp: () => {} // Handled by hook
+  };
+
+  const { showHelp, setShowHelp, getShortcutsList } = useKeyboardShortcuts(keyboardHandlers, true);
 
   // Theme and format are now synced via WebSocket only
   // No more localStorage polling needed

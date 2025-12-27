@@ -151,4 +151,48 @@ try {
   db.exec(`ALTER TABLE timer_states ADD COLUMN display_format TEXT DEFAULT 'circle'`);
 } catch (e) { /* Column already exists */ }
 
+// API Keys table for programmatic access
+db.exec(`
+  CREATE TABLE IF NOT EXISTS api_keys (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    key_hash TEXT UNIQUE NOT NULL,
+    key_prefix TEXT NOT NULL,
+    name TEXT NOT NULL,
+    permissions TEXT DEFAULT 'read,write',
+    is_active INTEGER DEFAULT 1,
+    last_used_at DATETIME,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    expires_at DATETIME,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+  );
+  CREATE INDEX IF NOT EXISTS idx_api_keys_user ON api_keys(user_id);
+  CREATE INDEX IF NOT EXISTS idx_api_keys_prefix ON api_keys(key_prefix);
+`);
+
+// Custom themes table for user-created themes
+db.exec(`
+  CREATE TABLE IF NOT EXISTS custom_themes (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    name TEXT NOT NULL,
+    config TEXT NOT NULL,
+    is_public INTEGER DEFAULT 0,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+  );
+  CREATE INDEX IF NOT EXISTS idx_custom_themes_user ON custom_themes(user_id);
+`);
+
+// Display options per timer
+try {
+  db.exec(`ALTER TABLE timer_states ADD COLUMN display_options TEXT DEFAULT '{}'`);
+} catch (e) { /* Column already exists */ }
+
+// Facilitator name
+try {
+  db.exec(`ALTER TABLE timers ADD COLUMN facilitator_name TEXT DEFAULT ''`);
+} catch (e) { /* Column already exists */ }
+
 export default db;

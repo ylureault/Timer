@@ -50,7 +50,9 @@ const DEFAULT_PREFERENCES = {
   showMessage: true,
   showSessionsList: true,
   compactMode: false,
-  quickEdit: true
+  quickEdit: true,
+  showSlider: false,
+  presenterMode: false
 };
 
 // Animated background orb
@@ -441,7 +443,7 @@ export default function RemoteControlV2() {
   }
 
   return (
-    <div className="remote-v2" style={{ '--session-color': sessionColor }}>
+    <div className={`remote-v2 ${preferences.presenterMode ? 'presenter-mode' : ''}`} style={{ '--session-color': sessionColor }}>
       {/* Animated background */}
       <div className="remote-bg">
         <Orb delay={0} size="350px" color={sessionColor} x="-15%" y="-10%" />
@@ -537,6 +539,30 @@ export default function RemoteControlV2() {
           <button onClick={() => handleAddTime(-30)}>-30s</button>
           <button onClick={() => handleAddTime(30)}>+30s</button>
           <button onClick={() => handleAddTime(60)}>+1 min</button>
+        </motion.div>
+      )}
+
+      {/* Time slider */}
+      {preferences.showSlider && currentSession && (
+        <motion.div className="time-slider" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.35 }}>
+          <input
+            type="range"
+            min="0"
+            max={currentSession.duree_secondes}
+            value={localTime}
+            onChange={(e) => {
+              const newTime = parseInt(e.target.value);
+              const diff = newTime - localTime;
+              if (Math.abs(diff) > 5) {
+                handleAddTime(diff);
+              }
+            }}
+            className="slider-input"
+          />
+          <div className="slider-labels">
+            <span>0:00</span>
+            <span>{formatTime(currentSession.duree_secondes)}</span>
+          </div>
         </motion.div>
       )}
 
@@ -701,6 +727,20 @@ export default function RemoteControlV2() {
                   <span>Édition rapide des sessions</span>
                   <span className="setting-desc">Modifier/supprimer depuis la liste</span>
                   <input type="checkbox" checked={preferences.quickEdit} onChange={(e) => updatePreferences('quickEdit', e.target.checked)} />
+                  <span className="toggle"></span>
+                </label>
+
+                <label className="setting-item">
+                  <span>Slider de temps</span>
+                  <span className="setting-desc">Ajuster le temps avec un curseur</span>
+                  <input type="checkbox" checked={preferences.showSlider} onChange={(e) => updatePreferences('showSlider', e.target.checked)} />
+                  <span className="toggle"></span>
+                </label>
+
+                <label className="setting-item">
+                  <span>Mode présentateur</span>
+                  <span className="setting-desc">Interface compacte pour présentation</span>
+                  <input type="checkbox" checked={preferences.presenterMode} onChange={(e) => updatePreferences('presenterMode', e.target.checked)} />
                   <span className="toggle"></span>
                 </label>
               </div>

@@ -1635,6 +1635,561 @@ function broadcastTimerUpdate(code) {
   });
 }
 
+// ============================
+// API KEY MANAGEMENT
+// ============================
+
+const crypto = await import('crypto');
+
+// Generate API key
+const generateApiKey = () => {
+  const prefix = 'it_'; // insuffle timer prefix
+  const key = crypto.randomBytes(32).toString('hex');
+  return prefix + key;
+};
+
+// Hash API key for storage
+const hashApiKey = (key) => {
+  return crypto.createHash('sha256').update(key).digest('hex');
+};
+
+// API Key authentication middleware
+const authenticateApiKey = (req, res, next) => {
+  const apiKey = req.headers['x-api-key'];
+
+  if (!apiKey) {
+    return res.status(401).json({ success: false, error: 'API key required' });
+  }
+
+  const keyHash = hashApiKey(apiKey);
+  const keyData = db.prepare(`
+    SELECT ak.*, u.id as user_id, u.email, u.username
+    FROM api_keys ak
+    JOIN users u ON u.id = ak.user_id
+    WHERE ak.key_hash = ? AND ak.is_active = 1
+    AND (ak.expires_at IS NULL OR ak.expires_at > datetime('now'))
+  `).get(keyHash);
+
+  if (!keyData) {
+    return res.status(403).json({ success: false, error: 'Invalid or expired API key' });
+  }
+
+  // Update last used
+  db.prepare('UPDATE api_keys SET last_used_at = CURRENT_TIMESTAMP WHERE id = ?').run(keyData.id);
+
+  req.user = { userId: keyData.user_id, email: keyData.email };
+  req.apiKey = keyData;
+  next();
+};
+
+// List user's API keys
+app.get('/api/keys', authenticateToken, (req, res) => {
+  try {
+    const keys = db.prepare(`
+      SELECT id, key_prefix, name, permissions, is_active, last_used_at, created_at, expires_at
+      FROM api_keys
+      WHERE user_id = ?
+      ORDER BY created_at DESC
+    `).all(req.user.userId);
+
+    res.json({ success: true, keys });
+  } catch (error) {
+    console.error('List API keys error:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// Create new API key
+app.post('/api/keys', authenticateToken, (req, res) => {
+  try {
+    const { name, permissions = 'read,write', expires_in_days } = req.body;
+
+    if (!name) {
+      return res.status(400).json({ success: false, error: 'API key name required' });
+    }
+
+    // Limit to 5 API keys per user
+    const keyCount = db.prepare('SELECT COUNT(*) as count FROM api_keys WHERE user_id = ?').get(req.user.userId).count;
+    if (keyCount >= 5) {
+      return res.status(400).json({ success: false, error: 'Maximum 5 API keys per user' });
+    }
+
+    const apiKey = generateApiKey();
+    const keyHash = hashApiKey(apiKey);
+    const keyPrefix = apiKey.substring(0, 10) + '...';
+
+    const expiresAt = expires_in_days
+      ? new Date(Date.now() + expires_in_days * 24 * 60 * 60 * 1000).toISOString()
+      : null;
+
+    const result = db.prepare(`
+      INSERT INTO api_keys (user_id, key_hash, key_prefix, name, permissions, expires_at)
+      VALUES (?, ?, ?, ?, ?, ?)
+    `).run(req.user.userId, keyHash, keyPrefix, name, permissions, expiresAt);
+
+    res.json({
+      success: true,
+      key: {
+        id: result.lastInsertRowid,
+        api_key: apiKey, // Only returned once, on creation
+        key_prefix: keyPrefix,
+        name,
+        permissions,
+        expires_at: expiresAt
+      },
+      warning: 'Save this API key now. You won\'t be able to see it again!'
+    });
+  } catch (error) {
+    console.error('Create API key error:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// Delete API key
+app.delete('/api/keys/:id', authenticateToken, (req, res) => {
+  try {
+    const result = db.prepare('DELETE FROM api_keys WHERE id = ? AND user_id = ?')
+      .run(req.params.id, req.user.userId);
+
+    if (result.changes === 0) {
+      return res.status(404).json({ success: false, error: 'API key not found' });
+    }
+
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Delete API key error:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// ============================
+// PUBLIC API (via API Key)
+// ============================
+
+// Create timer via API
+app.post('/api/v1/timers', authenticateApiKey, (req, res) => {
+  try {
+    const { name, description, sessions, facilitator_name } = req.body;
+
+    if (!name) {
+      return res.status(400).json({ success: false, error: 'Timer name required' });
+    }
+
+    if (!sessions || !Array.isArray(sessions) || sessions.length === 0) {
+      return res.status(400).json({ success: false, error: 'At least one session required' });
+    }
+
+    // Limit to 5 timers per user
+    const timerCount = db.prepare('SELECT COUNT(*) as count FROM timers WHERE user_id = ?').get(req.user.userId).count;
+    if (timerCount >= 5) {
+      return res.status(400).json({ success: false, error: 'Maximum 5 timers per user. Delete one to create another.' });
+    }
+
+    // Generate unique codes
+    let code, urlUnique;
+    do {
+      code = generate6CharCode();
+      urlUnique = generateUniqueId();
+    } while (db.prepare('SELECT id FROM timers WHERE code_4chiffres = ? OR url_unique = ?').get(code, urlUnique));
+
+    // Create timer
+    const timerResult = db.prepare(`
+      INSERT INTO timers (user_id, name, code_4chiffres, url_unique, description, facilitator_name)
+      VALUES (?, ?, ?, ?, ?, ?)
+    `).run(req.user.userId, name, code, urlUnique, description || '', facilitator_name || '');
+
+    const timerId = timerResult.lastInsertRowid;
+
+    // Create sessions
+    const insertSession = db.prepare(`
+      INSERT INTO sessions (timer_id, ordre, nom_session, duree_secondes, couleur, type)
+      VALUES (?, ?, ?, ?, ?, ?)
+    `);
+
+    sessions.forEach((session, index) => {
+      insertSession.run(
+        timerId,
+        index,
+        session.name || session.nom_session || `Session ${index + 1}`,
+        session.duration_seconds || session.duree_secondes || 300,
+        session.color || session.couleur || '#6366f1',
+        session.type || 'session'
+      );
+    });
+
+    // Create initial timer state
+    const firstSession = sessions[0];
+    db.prepare(`
+      INSERT INTO timer_states (timer_id, session_en_cours, temps_restant, mode, timestamp_dernier_update)
+      VALUES (?, 0, ?, 'pause', ?)
+    `).run(timerId, firstSession.duration_seconds || firstSession.duree_secondes || 300, Date.now());
+
+    res.json({
+      success: true,
+      timer: {
+        id: timerId,
+        code: code,
+        url: urlUnique,
+        name,
+        display_url: `/display/${code}`,
+        control_url: `/remote/${code}`
+      }
+    });
+  } catch (error) {
+    console.error('API create timer error:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// Get timer via API
+app.get('/api/v1/timers/:code', authenticateApiKey, (req, res) => {
+  try {
+    const timer = db.prepare(`
+      SELECT t.*, ts.mode, ts.session_en_cours, ts.temps_restant
+      FROM timers t
+      LEFT JOIN timer_states ts ON ts.timer_id = t.id
+      WHERE t.code_4chiffres = ? AND t.user_id = ?
+    `).get(req.params.code, req.user.userId);
+
+    if (!timer) {
+      return res.status(404).json({ success: false, error: 'Timer not found' });
+    }
+
+    const sessions = db.prepare('SELECT * FROM sessions WHERE timer_id = ? ORDER BY ordre').all(timer.id);
+
+    res.json({
+      success: true,
+      timer: {
+        ...timer,
+        sessions
+      }
+    });
+  } catch (error) {
+    console.error('API get timer error:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// Control timer via API (start, pause, next, etc.)
+app.post('/api/v1/timers/:code/control', authenticateApiKey, (req, res) => {
+  try {
+    const { action, session_index, seconds } = req.body;
+    const code = req.params.code;
+
+    const timer = db.prepare('SELECT * FROM timers WHERE code_4chiffres = ? AND user_id = ?')
+      .get(code, req.user.userId);
+
+    if (!timer) {
+      return res.status(404).json({ success: false, error: 'Timer not found' });
+    }
+
+    const sessions = db.prepare('SELECT * FROM sessions WHERE timer_id = ? ORDER BY ordre').all(timer.id);
+    const timerState = db.prepare('SELECT * FROM timer_states WHERE timer_id = ?').get(timer.id);
+
+    let newMode = timerState.mode;
+    let newSessionIndex = timerState.session_en_cours;
+    let newTimeRemaining = timerState.temps_restant;
+
+    switch (action) {
+      case 'start':
+      case 'play':
+        newMode = 'play';
+        break;
+      case 'pause':
+        newMode = 'pause';
+        // Calculate actual remaining time
+        if (timerState.mode === 'play') {
+          const elapsed = Math.floor((Date.now() - timerState.timestamp_dernier_update) / 1000);
+          newTimeRemaining = Math.max(0, timerState.temps_restant - elapsed);
+        }
+        break;
+      case 'next':
+        if (newSessionIndex + 1 < sessions.length) {
+          newSessionIndex++;
+          newTimeRemaining = sessions[newSessionIndex].duree_secondes;
+          newMode = 'pause';
+        }
+        break;
+      case 'previous':
+        if (newSessionIndex > 0) {
+          newSessionIndex--;
+          newTimeRemaining = sessions[newSessionIndex].duree_secondes;
+          newMode = 'pause';
+        }
+        break;
+      case 'goto':
+        if (session_index !== undefined && session_index >= 0 && session_index < sessions.length) {
+          newSessionIndex = session_index;
+          newTimeRemaining = sessions[newSessionIndex].duree_secondes;
+          newMode = 'pause';
+        }
+        break;
+      case 'reset':
+        newSessionIndex = 0;
+        newTimeRemaining = sessions[0].duree_secondes;
+        newMode = 'pause';
+        break;
+      case 'addtime':
+        const addSeconds = seconds || 60;
+        newTimeRemaining = Math.max(0, timerState.temps_restant + addSeconds);
+        break;
+      default:
+        return res.status(400).json({ success: false, error: 'Invalid action' });
+    }
+
+    db.prepare(`
+      UPDATE timer_states
+      SET mode = ?, session_en_cours = ?, temps_restant = ?, timestamp_dernier_update = ?
+      WHERE timer_id = ?
+    `).run(newMode, newSessionIndex, newTimeRemaining, Date.now(), timer.id);
+
+    broadcastTimerUpdate(code);
+
+    res.json({
+      success: true,
+      state: {
+        mode: newMode,
+        session_index: newSessionIndex,
+        time_remaining: newTimeRemaining
+      }
+    });
+  } catch (error) {
+    console.error('API control timer error:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// Delete timer via API
+app.delete('/api/v1/timers/:code', authenticateApiKey, (req, res) => {
+  try {
+    const result = db.prepare('DELETE FROM timers WHERE code_4chiffres = ? AND user_id = ?')
+      .run(req.params.code, req.user.userId);
+
+    if (result.changes === 0) {
+      return res.status(404).json({ success: false, error: 'Timer not found' });
+    }
+
+    res.json({ success: true });
+  } catch (error) {
+    console.error('API delete timer error:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// List all user timers via API
+app.get('/api/v1/timers', authenticateApiKey, (req, res) => {
+  try {
+    const timers = db.prepare(`
+      SELECT t.*, ts.mode, ts.session_en_cours
+      FROM timers t
+      LEFT JOIN timer_states ts ON ts.timer_id = t.id
+      WHERE t.user_id = ?
+      ORDER BY t.created_at DESC
+    `).all(req.user.userId);
+
+    res.json({ success: true, timers });
+  } catch (error) {
+    console.error('API list timers error:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// ============================
+// CUSTOM THEMES API
+// ============================
+
+// List user's custom themes
+app.get('/api/themes', authenticateToken, (req, res) => {
+  try {
+    const themes = db.prepare(`
+      SELECT * FROM custom_themes
+      WHERE user_id = ? OR is_public = 1
+      ORDER BY created_at DESC
+    `).all(req.user.userId);
+
+    res.json({
+      success: true,
+      themes: themes.map(t => ({
+        ...t,
+        config: JSON.parse(t.config)
+      }))
+    });
+  } catch (error) {
+    console.error('List themes error:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// Create custom theme
+app.post('/api/themes', authenticateToken, (req, res) => {
+  try {
+    const { name, config, is_public = false } = req.body;
+
+    if (!name || !config) {
+      return res.status(400).json({ success: false, error: 'Name and config required' });
+    }
+
+    // Limit to 10 themes per user
+    const themeCount = db.prepare('SELECT COUNT(*) as count FROM custom_themes WHERE user_id = ?').get(req.user.userId).count;
+    if (themeCount >= 10) {
+      return res.status(400).json({ success: false, error: 'Maximum 10 custom themes per user' });
+    }
+
+    const result = db.prepare(`
+      INSERT INTO custom_themes (user_id, name, config, is_public)
+      VALUES (?, ?, ?, ?)
+    `).run(req.user.userId, name, JSON.stringify(config), is_public ? 1 : 0);
+
+    res.json({
+      success: true,
+      theme: {
+        id: result.lastInsertRowid,
+        name,
+        config,
+        is_public
+      }
+    });
+  } catch (error) {
+    console.error('Create theme error:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// Update custom theme
+app.put('/api/themes/:id', authenticateToken, (req, res) => {
+  try {
+    const { name, config, is_public } = req.body;
+
+    const theme = db.prepare('SELECT * FROM custom_themes WHERE id = ? AND user_id = ?')
+      .get(req.params.id, req.user.userId);
+
+    if (!theme) {
+      return res.status(404).json({ success: false, error: 'Theme not found' });
+    }
+
+    db.prepare(`
+      UPDATE custom_themes
+      SET name = ?, config = ?, is_public = ?, updated_at = CURRENT_TIMESTAMP
+      WHERE id = ?
+    `).run(
+      name || theme.name,
+      config ? JSON.stringify(config) : theme.config,
+      is_public !== undefined ? (is_public ? 1 : 0) : theme.is_public,
+      req.params.id
+    );
+
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Update theme error:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// Delete custom theme
+app.delete('/api/themes/:id', authenticateToken, (req, res) => {
+  try {
+    const result = db.prepare('DELETE FROM custom_themes WHERE id = ? AND user_id = ?')
+      .run(req.params.id, req.user.userId);
+
+    if (result.changes === 0) {
+      return res.status(404).json({ success: false, error: 'Theme not found' });
+    }
+
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Delete theme error:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// Export theme (public)
+app.get('/api/themes/:id/export', optionalAuth, (req, res) => {
+  try {
+    const theme = db.prepare(`
+      SELECT * FROM custom_themes
+      WHERE id = ? AND (is_public = 1 OR user_id = ?)
+    `).get(req.params.id, req.user?.userId || -1);
+
+    if (!theme) {
+      return res.status(404).json({ success: false, error: 'Theme not found' });
+    }
+
+    res.json({
+      success: true,
+      export: {
+        name: theme.name,
+        config: JSON.parse(theme.config),
+        version: '1.0'
+      }
+    });
+  } catch (error) {
+    console.error('Export theme error:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// Import theme
+app.post('/api/themes/import', authenticateToken, (req, res) => {
+  try {
+    const { name, config, version } = req.body;
+
+    if (!name || !config) {
+      return res.status(400).json({ success: false, error: 'Invalid theme data' });
+    }
+
+    // Limit to 10 themes per user
+    const themeCount = db.prepare('SELECT COUNT(*) as count FROM custom_themes WHERE user_id = ?').get(req.user.userId).count;
+    if (themeCount >= 10) {
+      return res.status(400).json({ success: false, error: 'Maximum 10 custom themes per user' });
+    }
+
+    const result = db.prepare(`
+      INSERT INTO custom_themes (user_id, name, config, is_public)
+      VALUES (?, ?, ?, 0)
+    `).run(req.user.userId, name + ' (imported)', JSON.stringify(config));
+
+    res.json({
+      success: true,
+      theme: {
+        id: result.lastInsertRowid,
+        name: name + ' (imported)',
+        config
+      }
+    });
+  } catch (error) {
+    console.error('Import theme error:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// ============================
+// DISPLAY OPTIONS API
+// ============================
+
+// Update display options for a timer
+app.post('/api/timer/:code/display-options', (req, res) => {
+  try {
+    const { display_options } = req.body;
+    const timer = db.prepare('SELECT id FROM timers WHERE code_4chiffres = ?').get(req.params.code);
+
+    if (!timer) {
+      return res.status(404).json({ success: false, error: 'Timer not found' });
+    }
+
+    db.prepare(`
+      UPDATE timer_states
+      SET display_options = ?
+      WHERE timer_id = ?
+    `).run(JSON.stringify(display_options), timer.id);
+
+    broadcastTimerUpdate(req.params.code);
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Update display options error:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
 // SPA fallback - serve index.html for all non-API routes (must be after all API routes)
 if (existsSync(frontendDistPath)) {
   app.get('*', (req, res) => {
