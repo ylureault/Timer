@@ -23,7 +23,7 @@ import '../styles/CreateSalon.css'
 const DEFAULT_COLORS = [
   '#3B82F6', // blue
   '#10B981', // green
-  '#F59E0B', // orange
+  '#F59E0B', // amber
   '#8B5CF6', // purple
   '#EC4899', // pink
   '#EF4444', // red
@@ -56,12 +56,12 @@ function SortableSession({ session, onEdit, onRemove }) {
     >
       <div className="session-drag-handle" {...listeners} {...attributes}>
         <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
-          <circle cx="7" cy="5" r="1.5"/>
-          <circle cx="7" cy="10" r="1.5"/>
-          <circle cx="7" cy="15" r="1.5"/>
-          <circle cx="13" cy="5" r="1.5"/>
-          <circle cx="13" cy="10" r="1.5"/>
-          <circle cx="13" cy="15" r="1.5"/>
+          <circle cx="7" cy="5" r="1.5" />
+          <circle cx="7" cy="10" r="1.5" />
+          <circle cx="7" cy="15" r="1.5" />
+          <circle cx="13" cy="5" r="1.5" />
+          <circle cx="13" cy="10" r="1.5" />
+          <circle cx="13" cy="15" r="1.5" />
         </svg>
       </div>
 
@@ -76,7 +76,9 @@ function SortableSession({ session, onEdit, onRemove }) {
           placeholder="Nom de la session"
         />
         <div className="session-meta">
-          <span className="badge badge-primary">{session.type}</span>
+          <span className={`badge ${session.type === 'pause' ? 'badge-pause' : 'badge-primary'}`}>
+            {session.type === 'pause' ? 'Pause' : 'Session'}
+          </span>
         </div>
       </div>
 
@@ -94,9 +96,10 @@ function SortableSession({ session, onEdit, onRemove }) {
         className="session-remove-btn"
         onClick={() => onRemove(session.id)}
         type="button"
+        title="Supprimer cette session"
       >
         <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor">
-          <path d="M6 6l8 8M14 6l-8 8" strokeWidth="2" strokeLinecap="round"/>
+          <path d="M6 6l8 8M14 6l-8 8" strokeWidth="2" strokeLinecap="round" />
         </svg>
       </button>
     </div>
@@ -120,7 +123,7 @@ function EditTimer() {
     nom_session: '',
     duree_minutes: 30,
     couleur: DEFAULT_COLORS[0],
-    type: 'session'
+    type: 'session',
   })
 
   const sensors = useSensors(
@@ -151,14 +154,16 @@ function EditTimer() {
         setTimerName(timer.name || '')
         setTimerCode(timer.code || '')
         setEditToken(timer.edit_token || token)
-        setSessions((data.sessions || []).map((s, idx) => ({
-          ...s,
-          id: s.id || Date.now() + idx,
-          duree_minutes: s.duree_minutes || Math.floor((s.duree_secondes || 0) / 60),
-          duree_secondes: s.duree_secondes || (s.duree_minutes || 0) * 60,
-          couleur: s.couleur || DEFAULT_COLORS[idx % DEFAULT_COLORS.length],
-          type: s.type || 'session'
-        })))
+        setSessions(
+          (data.sessions || []).map((s, idx) => ({
+            ...s,
+            id: s.id || Date.now() + idx,
+            duree_minutes: s.duree_minutes || Math.floor((s.duree_secondes || 0) / 60),
+            duree_secondes: s.duree_secondes || (s.duree_minutes || 0) * 60,
+            couleur: s.couleur || DEFAULT_COLORS[idx % DEFAULT_COLORS.length],
+            type: s.type || 'session',
+          }))
+        )
         setLoading(false)
       } catch (err) {
         console.error('Error fetching timer:', err)
@@ -186,15 +191,17 @@ function EditTimer() {
       try {
         const config = await importSalonConfig(file)
         setTimerName(config.name || timerName || 'Mon Timer')
-        setSessions(config.sessions.map((s, idx) => ({
-          ...s,
-          id: Date.now() + idx,
-          duree_secondes: s.duree_minutes * 60,
-          couleur: s.couleur || DEFAULT_COLORS[idx % DEFAULT_COLORS.length],
-          type: s.type || 'session'
-        })))
+        setSessions(
+          config.sessions.map((s, idx) => ({
+            ...s,
+            id: Date.now() + idx,
+            duree_secondes: s.duree_minutes * 60,
+            couleur: s.couleur || DEFAULT_COLORS[idx % DEFAULT_COLORS.length],
+            type: s.type || 'session',
+          }))
+        )
       } catch (error) {
-        alert('Erreur lors de l\'import: ' + error.message)
+        alert("Erreur lors de l'import : " + error.message)
       }
     }
     // Reset file input
@@ -206,38 +213,47 @@ function EditTimer() {
   const handleAddSession = () => {
     if (newSession.nom_session.trim()) {
       const colorIndex = sessions.length % DEFAULT_COLORS.length
-      setSessions([...sessions, {
-        ...newSession,
-        id: Date.now(),
-        duree_secondes: newSession.duree_minutes * 60,
-        couleur: newSession.couleur || DEFAULT_COLORS[colorIndex]
-      }])
+      setSessions([
+        ...sessions,
+        {
+          ...newSession,
+          id: Date.now(),
+          duree_secondes: newSession.duree_minutes * 60,
+          couleur: newSession.couleur || DEFAULT_COLORS[colorIndex],
+        },
+      ])
       setNewSession({
         nom_session: '',
         duree_minutes: 30,
         couleur: DEFAULT_COLORS[(colorIndex + 1) % DEFAULT_COLORS.length],
-        type: 'session'
+        type: 'session',
       })
       setShowAddSession(false)
     }
   }
 
   const handleEditSession = (id, field, value) => {
-    setSessions(sessions.map(session =>
-      session.id === id
-        ? { ...session, [field]: value, duree_secondes: field === 'duree_minutes' ? value * 60 : session.duree_secondes }
-        : session
-    ))
+    setSessions(
+      sessions.map((session) =>
+        session.id === id
+          ? {
+              ...session,
+              [field]: value,
+              duree_secondes: field === 'duree_minutes' ? value * 60 : session.duree_secondes,
+            }
+          : session
+      )
+    )
   }
 
   const handleRemoveSession = (id) => {
-    setSessions(sessions.filter(session => session.id !== id))
+    setSessions(sessions.filter((session) => session.id !== id))
   }
 
   const handleDragEnd = (event) => {
     const { active, over } = event
 
-    if (active.id !== over.id) {
+    if (over && active.id !== over.id) {
       setSessions((items) => {
         const oldIndex = items.findIndex((item) => item.id === active.id)
         const newIndex = items.findIndex((item) => item.id === over.id)
@@ -261,13 +277,13 @@ function EditTimer() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name: timerName || 'Mon Timer',
-          sessions: sessions.map(s => ({
+          sessions: sessions.map((s) => ({
             nom_session: s.nom_session,
             duree_secondes: s.duree_minutes * 60,
             couleur: s.couleur,
-            type: s.type
-          }))
-        })
+            type: s.type,
+          })),
+        }),
       })
 
       if (!response.ok) {
@@ -283,7 +299,7 @@ function EditTimer() {
       setTimeout(() => setSaved(false), 3000)
     } catch (error) {
       console.error('Error saving timer:', error)
-      alert(`Erreur lors de la sauvegarde: ${error.message}`)
+      alert(`Erreur lors de la sauvegarde : ${error.message}`)
     } finally {
       setSaving(false)
     }
@@ -293,12 +309,14 @@ function EditTimer() {
     navigator.clipboard.writeText(text)
   }
 
+  const totalMinutes = sessions.reduce((acc, s) => acc + s.duree_minutes, 0)
+
   if (loading) {
     return (
-      <div className="create-salon-modern" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh' }}>
-        <div style={{ textAlign: 'center' }}>
+      <div className="create-salon-modern state-center">
+        <div className="state-inner">
           <div className="loader" style={{ margin: '0 auto 16px' }}></div>
-          <p style={{ color: 'rgba(255, 255, 255, 0.7)' }}>Chargement du timer...</p>
+          <p>Chargement du timer…</p>
         </div>
       </div>
     )
@@ -306,10 +324,10 @@ function EditTimer() {
 
   if (error) {
     return (
-      <div className="create-salon-modern" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh' }}>
-        <div style={{ textAlign: 'center', maxWidth: '400px' }}>
-          <h2 style={{ color: '#EF4444', marginBottom: '12px' }}>Erreur</h2>
-          <p style={{ color: 'rgba(255, 255, 255, 0.7)', marginBottom: '24px' }}>{error}</p>
+      <div className="create-salon-modern state-center">
+        <div className="state-inner">
+          <h2>Erreur</h2>
+          <p style={{ marginBottom: '24px' }}>{error}</p>
           <button className="btn btn-primary" onClick={() => navigate('/')}>
             Retour à l'accueil
           </button>
@@ -318,137 +336,109 @@ function EditTimer() {
     )
   }
 
+  const displayUrl = `${window.location.origin}/timer/${timerCode}`
+  const remoteUrl = `${window.location.origin}/remote/${timerCode}`
+  const editUrl = `${window.location.origin}/edit/${editToken}`
+
   return (
     <div className="create-salon-modern">
-      <div className="create-header-modern">
-        <div className="container">
-          <button className="btn-back" onClick={() => navigate('/')}>
-            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor">
-              <path d="M12 6l-6 6 6 6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-            Retour
-          </button>
-        </div>
-      </div>
-
       {/* Save toast */}
       <AnimatePresence>
         {saved && (
           <motion.div
-            initial={{ opacity: 0, y: -40 }}
+            initial={{ opacity: 0, y: -24 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -40 }}
+            exit={{ opacity: 0, y: -24 }}
+            transition={{ duration: 0.25 }}
             style={{
               position: 'fixed',
               top: '24px',
               left: '50%',
               transform: 'translateX(-50%)',
               zIndex: 1000,
-              background: '#10B981',
+              background: 'var(--success)',
               color: '#fff',
-              padding: '12px 28px',
-              borderRadius: '12px',
-              fontWeight: '600',
-              fontSize: '1rem',
-              boxShadow: '0 4px 24px rgba(16, 185, 129, 0.4)',
+              padding: '0.75rem 1.5rem',
+              borderRadius: 'var(--radius)',
+              fontWeight: 600,
+              fontSize: '0.95rem',
+              boxShadow: 'var(--shadow-md)',
               display: 'flex',
               alignItems: 'center',
-              gap: '8px',
+              gap: '0.5rem',
             }}
           >
             <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-              <circle cx="10" cy="10" r="10" fill="rgba(255,255,255,0.2)"/>
-              <path d="M6 10l3 3 5-5" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              <circle cx="10" cy="10" r="10" fill="rgba(255,255,255,0.25)" />
+              <path d="M6 10l3 3 5-5" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
-            Saved !
+            Enregistré !
           </motion.div>
         )}
       </AnimatePresence>
 
-      <div className="container">
+      <div className="container-sm">
+        <div className="create-header-modern">
+          <button className="btn btn-ghost" onClick={() => navigate('/')}>
+            ← Retour
+          </button>
+        </div>
+
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.35 }}
           className="create-content-modern"
         >
           <div className="create-title-section">
             <h1>Modifier le timer</h1>
-            <div
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '12px',
-                background: 'rgba(31, 58, 139, 0.3)',
-                border: '1px solid rgba(255, 222, 89, 0.3)',
-                borderRadius: '12px',
-                padding: '8px 20px',
-                marginTop: '8px',
-              }}
-            >
-              <span style={{ color: 'rgba(255, 255, 255, 0.7)', fontSize: '0.9rem' }}>Code :</span>
-              <span style={{ fontWeight: '700', fontSize: '1.2rem', color: '#ffde59', letterSpacing: '2px' }}>{timerCode}</span>
-              <button
-                className="btn-copy"
-                onClick={() => copyToClipboard(timerCode)}
-                style={{ padding: '4px 12px', fontSize: '0.8rem' }}
-              >
+            <div className="edit-code-chip">
+              <span className="label">Code :</span>
+              <span className="code">{timerCode}</span>
+              <button className="btn-copy" onClick={() => copyToClipboard(timerCode)}>
                 Copier
               </button>
             </div>
           </div>
 
           {/* Timer links & QR code */}
-          <div className="card" style={{ padding: '24px', marginBottom: '24px' }}>
-            <h3 style={{ marginBottom: '16px', color: 'var(--text-white, #fff)' }}>Liens du timer</h3>
-            <div style={{ display: 'flex', gap: '24px', flexWrap: 'wrap' }}>
-              <div style={{ flex: '1', minWidth: '280px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+          <div className="links-card">
+            <h3>Liens du timer</h3>
+            <div className="links-card-body">
+              <div className="links-card-urls">
                 <div className="url-display-modern">
-                  <span>Affichage : {window.location.origin}/timer/{timerCode}</span>
-                  <button
-                    className="btn-copy"
-                    onClick={() => copyToClipboard(`${window.location.origin}/timer/${timerCode}`)}
-                  >
+                  <span>Affichage : {displayUrl}</span>
+                  <button className="btn-copy" onClick={() => copyToClipboard(displayUrl)}>
                     Copier
                   </button>
                 </div>
                 <div className="url-display-modern">
-                  <span>Télécommande : {window.location.origin}/remote/{timerCode}</span>
-                  <button
-                    className="btn-copy"
-                    onClick={() => copyToClipboard(`${window.location.origin}/remote/${timerCode}`)}
-                  >
+                  <span>Télécommande : {remoteUrl}</span>
+                  <button className="btn-copy" onClick={() => copyToClipboard(remoteUrl)}>
                     Copier
                   </button>
                 </div>
-                <div className="url-display-modern" style={{ borderColor: 'rgba(245, 158, 11, 0.5)' }}>
-                  <span>Modification : {window.location.origin}/edit/{editToken}</span>
-                  <button
-                    className="btn-copy"
-                    onClick={() => copyToClipboard(`${window.location.origin}/edit/${editToken}`)}
-                  >
+                <div className="url-display-modern is-warning">
+                  <span>Modification : {editUrl}</span>
+                  <button className="btn-copy" onClick={() => copyToClipboard(editUrl)}>
                     Copier
                   </button>
                 </div>
               </div>
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
-                <div style={{
-                  background: 'rgba(255, 255, 255, 0.95)',
-                  borderRadius: '12px',
-                  padding: '16px',
-                  border: '1px solid rgba(59, 130, 246, 0.2)',
-                }}>
+              <div className="links-card-qr">
+                <div className="qr-box">
                   <img
-                    src={generateQRCodeSVG(`${window.location.origin}/timer/${timerCode}`, 160)}
+                    src={generateQRCodeSVG(displayUrl, 160)}
                     alt="QR Code"
                     style={{ width: '160px', height: '160px', display: 'block' }}
                   />
                 </div>
-                <span style={{ fontSize: '0.75rem', color: 'rgba(255, 255, 255, 0.5)' }}>QR Code affichage</span>
+                <span className="qr-caption">QR Code affichage</span>
               </div>
             </div>
           </div>
 
-          <div className="card create-card-modern">
+          <div className="create-card-modern">
             {/* Import / Export */}
             <div className="form-section-modern">
               <div className="section-header-create">
@@ -456,16 +446,12 @@ function EditTimer() {
                   <h2>Configuration</h2>
                   <p className="section-subtitle">Importez ou exportez la configuration des sessions</p>
                 </div>
-                <div style={{ display: 'flex', gap: '12px' }}>
-                  <button
-                    className="btn btn-outline"
-                    onClick={handleExport}
-                    type="button"
-                  >
+                <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                  <button className="btn btn-secondary btn-sm" onClick={handleExport} type="button">
                     Exporter
                   </button>
                   <button
-                    className="btn btn-outline"
+                    className="btn btn-secondary btn-sm"
                     onClick={() => fileInputRef.current?.click()}
                     type="button"
                   >
@@ -488,7 +474,7 @@ function EditTimer() {
               <input
                 type="text"
                 className="input"
-                placeholder="Ex: Atelier Design Thinking"
+                placeholder="Ex : Atelier Design Thinking"
                 value={timerName}
                 onChange={(e) => setTimerName(e.target.value)}
               />
@@ -502,8 +488,9 @@ function EditTimer() {
                   <p className="section-subtitle">Glissez-déposez pour réorganiser</p>
                 </div>
                 <button
-                  className="btn btn-primary"
+                  className="btn btn-primary btn-sm"
                   onClick={() => setShowAddSession(true)}
+                  type="button"
                 >
                   + Ajouter une session
                 </button>
@@ -512,10 +499,12 @@ function EditTimer() {
               <AnimatePresence>
                 {showAddSession && (
                   <motion.div
-                    className="add-session-card card-glass"
+                    className="add-session-card"
                     initial={{ opacity: 0, height: 0 }}
                     animate={{ opacity: 1, height: 'auto' }}
                     exit={{ opacity: 0, height: 0 }}
+                    transition={{ duration: 0.25 }}
+                    style={{ overflow: 'hidden' }}
                   >
                     <div className="add-session-grid">
                       <div className="form-group-modern">
@@ -523,7 +512,7 @@ function EditTimer() {
                         <input
                           type="text"
                           className="input"
-                          placeholder="Ex: Brainstorming"
+                          placeholder="Ex : Brainstorming"
                           value={newSession.nom_session}
                           onChange={(e) => setNewSession({ ...newSession, nom_session: e.target.value })}
                           onKeyDown={(e) => e.key === 'Enter' && handleAddSession()}
@@ -538,20 +527,24 @@ function EditTimer() {
                           className="input"
                           min="1"
                           value={newSession.duree_minutes}
-                          onChange={(e) => setNewSession({ ...newSession, duree_minutes: parseInt(e.target.value) || 1 })}
+                          onChange={(e) =>
+                            setNewSession({ ...newSession, duree_minutes: parseInt(e.target.value) || 1 })
+                          }
                         />
                       </div>
 
                       <div className="form-group-modern">
                         <label>Type</label>
                         <select
-                          className="input"
+                          className="select"
                           value={newSession.type}
-                          onChange={(e) => setNewSession({
-                            ...newSession,
-                            type: e.target.value,
-                            couleur: e.target.value === 'pause' ? '#64748B' : newSession.couleur
-                          })}
+                          onChange={(e) =>
+                            setNewSession({
+                              ...newSession,
+                              type: e.target.value,
+                              couleur: e.target.value === 'pause' ? '#64748B' : newSession.couleur,
+                            })
+                          }
                         >
                           <option value="session">Session</option>
                           <option value="pause">Pause</option>
@@ -561,13 +554,14 @@ function EditTimer() {
                       <div className="form-group-modern">
                         <label>Couleur</label>
                         <div className="color-picker-modern">
-                          {DEFAULT_COLORS.map(color => (
+                          {DEFAULT_COLORS.map((color) => (
                             <button
                               key={color}
                               className={`color-option-modern ${newSession.couleur === color ? 'active' : ''}`}
                               style={{ backgroundColor: color }}
                               onClick={() => setNewSession({ ...newSession, couleur: color })}
                               type="button"
+                              title={color}
                             />
                           ))}
                         </div>
@@ -575,10 +569,14 @@ function EditTimer() {
                     </div>
 
                     <div className="add-session-actions">
-                      <button className="btn btn-success" onClick={handleAddSession}>
+                      <button className="btn btn-primary btn-sm" onClick={handleAddSession} type="button">
                         Ajouter
                       </button>
-                      <button className="btn btn-outline" onClick={() => setShowAddSession(false)}>
+                      <button
+                        className="btn btn-secondary btn-sm"
+                        onClick={() => setShowAddSession(false)}
+                        type="button"
+                      >
                         Annuler
                       </button>
                     </div>
@@ -587,15 +585,8 @@ function EditTimer() {
               </AnimatePresence>
 
               {sessions.length > 0 ? (
-                <DndContext
-                  sensors={sensors}
-                  collisionDetection={closestCenter}
-                  onDragEnd={handleDragEnd}
-                >
-                  <SortableContext
-                    items={sessions}
-                    strategy={verticalListSortingStrategy}
-                  >
+                <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+                  <SortableContext items={sessions} strategy={verticalListSortingStrategy}>
                     <div className="sessions-list-modern">
                       {sessions.map((session) => (
                         <SortableSession
@@ -621,20 +612,21 @@ function EditTimer() {
               <div className="create-footer-modern">
                 <div className="summary-info">
                   <span>{sessions.length} session{sessions.length > 1 ? 's' : ''}</span>
-                  <span>•</span>
-                  <span>{sessions.reduce((acc, s) => acc + s.duree_minutes, 0)} minutes au total</span>
+                  <span className="dot">·</span>
+                  <span>{totalMinutes} minute{totalMinutes > 1 ? 's' : ''} au total</span>
                 </div>
-                <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-                  <button
-                    className="btn btn-primary btn-xl"
-                    onClick={handleSave}
-                    disabled={saving}
-                  >
-                    {saving ? 'Sauvegarde...' : 'Sauvegarder les modifications'}
-                  </button>
-                </div>
+                <button className="btn btn-primary btn-lg" onClick={handleSave} disabled={saving}>
+                  {saving ? 'Enregistrement…' : 'Enregistrer les modifications'}
+                </button>
               </div>
             )}
+          </div>
+
+          {/* ---- INSUFFLE Footer ---- */}
+          <div className="insuffle-footer">
+            <p>
+              Timer par <span className="insuffle-mark">INSUFFLE</span>
+            </p>
           </div>
         </motion.div>
       </div>

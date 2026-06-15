@@ -131,9 +131,9 @@ function RemoteControl() {
   }
 
   const themes = [
-    { id: 'luxe', name: 'Luxe', emoji: '⌨️', color: '#888' },
-    { id: 'aplat', name: 'Aplat', emoji: '▬', color: '#3B82F6' },
-    { id: 'aurora', name: 'Aurora', emoji: '◉', color: '#ec4899' }
+    { id: 'luxe', name: 'Luxe' },
+    { id: 'aplat', name: 'Aplat' },
+    { id: 'aurora', name: 'Aurora' }
   ]
 
   const fetchState = async () => {
@@ -304,7 +304,7 @@ function RemoteControl() {
 
   if (loading) {
     return (
-      <div className="remote-control loading">
+      <div className="rc-state">
         <div className="loader"></div>
         <p>Connexion au timer...</p>
       </div>
@@ -313,11 +313,11 @@ function RemoteControl() {
 
   if (error) {
     return (
-      <div className="remote-control error">
-        <div className="error-content">
+      <div className="rc-state">
+        <div className="rc-state-card card">
           <h1>Timer introuvable</h1>
-          <h2>{error}</h2>
-          <button className="btn btn-primary" onClick={() => navigate('/')}>
+          <p>{error}</p>
+          <button className="btn btn-primary btn-lg" onClick={() => navigate('/')}>
             Retour
           </button>
         </div>
@@ -327,10 +327,10 @@ function RemoteControl() {
 
   if (!state || !state.current_session) {
     return (
-      <div className="remote-control error">
-        <div className="error-content">
+      <div className="rc-state">
+        <div className="rc-state-card card">
           <h1>Aucune session</h1>
-          <h2>Configurez des sessions pour ce timer</h2>
+          <p>Configurez des sessions pour ce timer.</p>
         </div>
       </div>
     )
@@ -343,457 +343,382 @@ function RemoteControl() {
   const isPaused = mode === 'pause'
   const isCompleted = mode === 'termine'
 
+  const sessionColor = current_session.couleur || 'var(--brand)'
+  const RADIUS = 90
+  const CIRCUMFERENCE = 2 * Math.PI * RADIUS
+
   return (
-    <div className="remote-control" style={{ '--session-color': current_session.couleur }}>
+    <div className="rc" style={{ '--session-color': sessionColor }}>
       {actionFeedback && (
-        <div className="action-feedback">{actionFeedback}</div>
+        <div className="rc-feedback">{actionFeedback}</div>
       )}
 
       {isScrolled && (
-        <div style={{
-          position: 'fixed', top: 0, left: 0, right: 0, zIndex: 1000,
-          background: 'linear-gradient(135deg, var(--brand-dark) 0%, var(--brand-primary) 100%)',
-          boxShadow: '0 4px 20px rgba(0, 0, 0, 0.3)', padding: '12px 20px',
-          display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-          animation: 'slideDown 0.3s ease-out'
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-            <div style={{ fontSize: '1.5rem', fontWeight: '900', color: 'white' }}>
-              {formatTime(temps_restant)}
-            </div>
-            <div style={{ color: 'rgba(255, 255, 255, 0.9)', fontSize: '0.9rem', fontWeight: '600' }}>
-              {current_session.nom_session}
-            </div>
+        <div className="rc-sticky">
+          <div className="rc-sticky-left">
+            <span className="rc-sticky-time">{formatTime(temps_restant)}</span>
+            <span className="rc-sticky-name">{current_session.nom_session}</span>
           </div>
-          <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-            <div style={{ fontSize: '0.75rem', color: 'rgba(255, 255, 255, 0.7)', fontWeight: '600' }}>
-              {session_en_cours + 1}/{total_sessions}
-            </div>
+          <div className="rc-sticky-right">
+            <span className="rc-sticky-count">{session_en_cours + 1}/{total_sessions}</span>
             {!isCompleted && (
               <button
+                className="btn btn-sm btn-primary"
                 onClick={isPlaying ? handlePause : handleStart}
-                style={{
-                  padding: '6px 12px', background: isPlaying ? 'rgba(255, 255, 255, 0.2)' : current_session.couleur,
-                  color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: '600', fontSize: '0.8rem'
-                }}
               >
-                {isPlaying ? 'Pause' : 'Play'}
+                {isPlaying ? 'Pause' : 'Démarrer'}
               </button>
             )}
           </div>
         </div>
       )}
 
-      <div className="remote-header">
-        <div className="salon-info">
-          <h3>Télécommande</h3>
-          <p>Code: {state.timer?.code || code}</p>
-        </div>
-        <div style={{ display: 'flex', gap: '4px', alignItems: 'center', flexShrink: 0 }}>
-          <button
-            onClick={handleAutoModeToggle}
-            className="header-btn-compact"
-            style={{
-              background: autoMode ? 'var(--brand-primary)' : 'rgba(255, 255, 255, 0.1)',
-              borderColor: autoMode ? 'var(--brand-primary)' : 'rgba(255, 255, 255, 0.3)'
-            }}
-            title={autoMode ? 'Mode AUTO activé' : 'Mode AUTO désactivé'}
-          >
-            {autoMode ? '⚡' : '🔘'}
-          </button>
-          <button
-            onClick={toggleSound}
-            className="header-btn-compact"
-            style={{
-              background: soundEnabled ? 'var(--brand-primary)' : 'rgba(255, 255, 255, 0.1)',
-              borderColor: soundEnabled ? 'var(--brand-primary)' : 'rgba(255, 255, 255, 0.3)'
-            }}
-            title={soundEnabled ? 'Sons activés' : 'Sons désactivés'}
-          >
-            {soundEnabled ? '🔊' : '🔇'}
-          </button>
-          <button className="btn-icon" onClick={() => window.location.reload()}>
-            🔄
-          </button>
-        </div>
-      </div>
-
-      <div className="current-session-card" style={{ borderColor: current_session.couleur }}>
-        <div className="session-header">
-          <span className="session-badge" style={{ backgroundColor: current_session.couleur }}>
-            {current_session.type === 'pause' ? '☕' : '🎯'}
-          </span>
-          <div className="session-details">
-            <h2>{current_session.nom_session}</h2>
-            <p>Session {session_en_cours + 1} / {total_sessions}</p>
+      <div className="rc-shell">
+        {/* Main header */}
+        <header className="rc-header">
+          <div className="rc-title">
+            <h1>Télécommande</h1>
+            <p className="rc-code">Code: {state.timer?.code || code}</p>
           </div>
-        </div>
-
-        <div className="timer-circle">
-          <svg viewBox="0 0 200 200">
-            <circle cx="100" cy="100" r="90" fill="none" stroke="#E5E7EB" strokeWidth="12" />
-            <circle
-              cx="100" cy="100" r="90" fill="none" stroke={current_session.couleur}
-              strokeWidth="12" strokeLinecap="round"
-              strokeDasharray={565.48} strokeDashoffset={565.48 * (1 - progress)}
-              transform="rotate(-90 100 100)"
-              style={{ transition: isPlaying ? 'stroke-dashoffset 1s linear' : 'none' }}
-            />
-          </svg>
-          <div className="timer-text">
-            <div className="timer-time">{formatTime(temps_restant)}</div>
-            <div className="timer-label">{isPlaying ? 'en cours' : isPaused ? 'en pause' : 'terminé'}</div>
-          </div>
-        </div>
-
-        <div className="progress-info">
-          <span>{Math.round(progressPercentage)}%</span>
-        </div>
-      </div>
-
-      <div className="main-controls">
-        <div style={{ display: 'flex', gap: '12px', alignItems: 'center', width: '100%' }}>
-          {!isCompleted && (
+          <div className="rc-header-actions">
             <button
-              className={`btn-control btn-play-pause ${isPlaying ? 'playing' : ''}`}
+              onClick={handleAutoModeToggle}
+              className={`rc-icon-btn ${autoMode ? 'is-active' : ''}`}
+              title={autoMode ? 'Mode AUTO activé' : 'Mode AUTO désactivé'}
+              aria-label="Mode automatique"
+            >
+              {autoMode ? '⚡' : '🔘'}
+            </button>
+            <button
+              onClick={toggleSound}
+              className={`rc-icon-btn ${soundEnabled ? 'is-active' : ''}`}
+              title={soundEnabled ? 'Sons activés' : 'Sons désactivés'}
+              aria-label="Son"
+            >
+              {soundEnabled ? '🔊' : '🔇'}
+            </button>
+            <button
+              className="rc-icon-btn"
+              onClick={() => window.location.reload()}
+              title="Rafraîchir"
+              aria-label="Rafraîchir"
+            >
+              🔄
+            </button>
+          </div>
+        </header>
+
+        {/* Current session card */}
+        <section className="card rc-session-card">
+          <div className="rc-session-head">
+            <span className="rc-session-dot" style={{ backgroundColor: sessionColor }}>
+              {current_session.type === 'pause' ? '☕' : '🎯'}
+            </span>
+            <div className="rc-session-meta">
+              <h2>{current_session.nom_session}</h2>
+              <p>Session {session_en_cours + 1} / {total_sessions}</p>
+            </div>
+          </div>
+
+          <div className="rc-ring">
+            <svg viewBox="0 0 200 200">
+              <circle cx="100" cy="100" r={RADIUS} fill="none" stroke="var(--surface-2)" strokeWidth="12" />
+              <circle
+                cx="100" cy="100" r={RADIUS} fill="none" stroke={sessionColor}
+                strokeWidth="12" strokeLinecap="round"
+                strokeDasharray={CIRCUMFERENCE} strokeDashoffset={CIRCUMFERENCE * (1 - progress)}
+                transform="rotate(-90 100 100)"
+                style={{ transition: isPlaying ? 'stroke-dashoffset 1s linear' : 'none' }}
+              />
+            </svg>
+            <div className="rc-ring-text">
+              <div className="rc-ring-time">{formatTime(temps_restant)}</div>
+              <div className="rc-ring-label">
+                {isPlaying ? 'en cours' : isPaused ? 'en pause' : 'terminé'}
+              </div>
+            </div>
+          </div>
+
+          <div className="rc-progress-pct">{Math.round(progressPercentage)}%</div>
+        </section>
+
+        {/* Primary controls */}
+        <div className="rc-primary">
+          {!isCompleted ? (
+            <button
+              className="rc-playpause"
               onClick={isPlaying ? handlePause : handleStart}
-              style={{ backgroundColor: current_session.couleur, flex: 1 }}
+              style={{ backgroundColor: isPlaying ? 'var(--brand)' : sessionColor }}
             >
               {isPlaying ? (
-                <><span className="control-icon">⏸</span><span>Pause</span></>
+                <><span className="rc-pp-icon">⏸</span><span>Pause</span></>
               ) : (
-                <><span className="control-icon">▶</span><span>Démarrer</span></>
+                <><span className="rc-pp-icon">▶</span><span>Démarrer</span></>
               )}
             </button>
-          )}
-
-          {isCompleted && (
-            <div className="completed-message" style={{ flex: 1 }}>
-              <span className="completed-icon">✓</span>
+          ) : (
+            <div className="rc-completed">
+              <span className="rc-completed-icon">✓</span>
               <span>Toutes les sessions terminées</span>
             </div>
           )}
 
-          <button
-            onClick={playBell}
-            style={{
-              padding: '16px', background: '#f59e0b', color: 'white', border: 'none',
-              borderRadius: '12px', cursor: 'pointer', fontWeight: '700', fontSize: '1.5rem',
-              transition: 'all 0.2s', boxShadow: '0 4px 12px rgba(245, 158, 11, 0.3)', minWidth: '64px'
-            }}
-            title="Sonnerie"
-          >
+          <button onClick={playBell} className="rc-bell" title="Sonnerie" aria-label="Sonnerie">
             🔔
           </button>
         </div>
-      </div>
 
-      <div className="nav-controls">
-        <button className="btn-nav" onClick={handlePrevious} disabled={session_en_cours === 0}>
-          <span className="nav-icon">◀</span><span>Précédent</span>
-        </button>
-        <button className="btn-nav" onClick={handleNext} disabled={session_en_cours >= total_sessions - 1}>
-          <span>Suivant</span><span className="nav-icon">▶</span>
-        </button>
-      </div>
-
-      {!isCompleted && (
-        <div className="time-controls">
-          <h4>Ajuster le temps</h4>
-          <div className="time-buttons-grid">
-            <button className="btn-time btn-time-negative" onClick={() => handleAddTime(-60)}
-              style={{ background: 'rgba(239, 68, 68, 0.15)', borderColor: 'rgba(239, 68, 68, 0.3)' }}>-1 min</button>
-            <button className="btn-time btn-time-negative" onClick={() => handleAddTime(-30)}
-              style={{ background: 'rgba(239, 68, 68, 0.15)', borderColor: 'rgba(239, 68, 68, 0.3)' }}>-30 sec</button>
-            <button className="btn-time btn-time-positive" onClick={() => handleAddTime(30)}
-              style={{ background: 'rgba(34, 197, 94, 0.15)', borderColor: 'rgba(34, 197, 94, 0.3)' }}>+30 sec</button>
-            <button className="btn-time btn-time-positive" onClick={() => handleAddTime(60)}
-              style={{ background: 'rgba(34, 197, 94, 0.15)', borderColor: 'rgba(34, 197, 94, 0.3)' }}>+1 min</button>
-          </div>
-        </div>
-      )}
-
-      <div style={{
-        background: 'var(--brand-card)', borderRadius: '12px', padding: '16px', marginBottom: '16px',
-        boxShadow: '0 4px 12px rgba(31, 58, 139, 0.3)', border: '1px solid rgba(59, 130, 246, 0.2)'
-      }}>
-        <h4 style={{ marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--text-white)', fontSize: '0.9rem' }}>
-          <span style={{ fontSize: '1rem' }}>🎨</span><span>Thème</span>
-        </h4>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px' }}>
-          {themes.map(theme => (
-            <button
-              key={theme.id}
-              onClick={() => handleThemeChange(theme.id)}
-              style={{
-                padding: '10px 6px',
-                background: currentTheme === theme.id ? 'var(--brand-primary)' : 'rgba(31, 58, 139, 0.1)',
-                color: currentTheme === theme.id ? 'white' : 'var(--text-white)',
-                border: '2px solid', borderColor: currentTheme === theme.id ? 'var(--brand-primary)' : 'rgba(59, 130, 246, 0.3)',
-                borderRadius: '8px', cursor: 'pointer', transition: 'all 0.2s', textAlign: 'center',
-                fontSize: '0.8rem', fontWeight: '600', display: 'flex', flexDirection: 'column', gap: '3px'
-              }}
-            >
-              <span style={{ fontSize: '1.5rem' }}>{theme.emoji}</span>
-              <span style={{ fontSize: '0.7rem' }}>{theme.name}</span>
-            </button>
-          ))}
-        </div>
-      </div>
-
-      <div style={{
-        background: 'var(--brand-card)', borderRadius: '12px', padding: '20px', marginBottom: '20px',
-        boxShadow: '0 4px 12px rgba(31, 58, 139, 0.3)', border: '1px solid rgba(59, 130, 246, 0.2)'
-      }}>
-        <h4 style={{ marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--text-white)' }}>
-          <span>📢</span><span>Envoyer un message</span>
-        </h4>
-        <div style={{ display: 'flex', gap: '8px', marginBottom: state.message_actuel ? '12px' : '0' }}>
-          <input
-            type="text" placeholder="Message sur l'écran principal..."
-            value={message} onChange={(e) => setMessage(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
-            style={{
-              flex: 1, padding: '12px', border: '2px solid rgba(59, 130, 246, 0.3)', borderRadius: '8px',
-              fontSize: '0.9375rem', fontFamily: 'inherit', background: 'rgba(31, 58, 139, 0.1)', color: 'var(--text-white)'
-            }}
-          />
+        {/* Navigation */}
+        <div className="rc-nav">
           <button
-            onClick={handleSendMessage} disabled={!message.trim()}
-            style={{
-              padding: '12px 20px', background: message.trim() ? 'var(--brand-primary)' : 'rgba(100, 116, 139, 0.3)',
-              color: 'white', border: 'none', borderRadius: '8px',
-              cursor: message.trim() ? 'pointer' : 'not-allowed', fontWeight: '600', whiteSpace: 'nowrap'
-            }}
+            className="btn btn-secondary btn-lg"
+            onClick={handlePrevious}
+            disabled={session_en_cours === 0}
           >
-            Envoyer
+            ◀ Précédent
+          </button>
+          <button
+            className="btn btn-secondary btn-lg"
+            onClick={handleNext}
+            disabled={session_en_cours >= total_sessions - 1}
+          >
+            Suivant ▶
           </button>
         </div>
-        {state.message_actuel && (
-          <div style={{
-            padding: '12px', background: 'rgba(255, 222, 89, 0.15)', border: '2px solid var(--brand-accent)',
-            borderRadius: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center'
-          }}>
-            <span style={{ fontWeight: '600', color: 'var(--text-white)' }}>📢 {state.message_actuel}</span>
-            <button onClick={handleClearMessage} style={{
-              padding: '4px 12px', background: 'rgba(255, 255, 255, 0.1)', color: 'var(--text-white)',
-              border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: '600'
-            }}>✕</button>
-          </div>
-        )}
-      </div>
 
-      {stats && (
-        <div style={{
-          background: 'var(--brand-card)', borderRadius: '12px', padding: '16px', marginBottom: '16px',
-          boxShadow: '0 4px 12px rgba(31, 58, 139, 0.3)', border: '1px solid rgba(59, 130, 246, 0.2)'
-        }}>
-          <h4 style={{
-            marginBottom: showStats ? '12px' : '0', display: 'flex', justifyContent: 'space-between',
-            alignItems: 'center', cursor: 'pointer', color: 'var(--text-white)'
-          }} onClick={() => setShowStats(!showStats)}>
-            <span>📊 Statistiques</span>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span style={{ fontSize: '1.5rem', fontWeight: '900', color: 'var(--brand-accent)' }}>
-                {stats.progress_percentage}%
-              </span>
-              <span style={{ fontSize: '1.25rem' }}>{showStats ? '▼' : '▶'}</span>
+        {/* Time adjust */}
+        {!isCompleted && (
+          <section className="card rc-block">
+            <h3 className="rc-block-title">Ajuster le temps</h3>
+            <div className="rc-time-grid">
+              <button className="rc-time-btn rc-time-neg" onClick={() => handleAddTime(-60)}>−1 min</button>
+              <button className="rc-time-btn rc-time-neg" onClick={() => handleAddTime(-30)}>−30 s</button>
+              <button className="rc-time-btn rc-time-pos" onClick={() => handleAddTime(30)}>+30 s</button>
+              <button className="rc-time-btn rc-time-pos" onClick={() => handleAddTime(60)}>+1 min</button>
             </div>
-          </h4>
-          {showStats && (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '8px' }}>
-              <div style={{ padding: '8px', background: 'rgba(31, 58, 139, 0.15)', borderRadius: '8px' }}>
-                <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginBottom: '2px' }}>Sessions</div>
-                <div style={{ fontSize: '1.25rem', fontWeight: '700', color: 'var(--text-white)' }}>
-                  {stats.completed_sessions}/{stats.total_sessions}
-                </div>
-              </div>
-              <div style={{ padding: '8px', background: 'rgba(31, 58, 139, 0.15)', borderRadius: '8px' }}>
-                <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginBottom: '2px' }}>Temps écoulé</div>
-                <div style={{ fontSize: '1.25rem', fontWeight: '700', color: 'var(--text-white)' }}>
-                  {stats.completed_duration_minutes}/{stats.total_duration_minutes} min
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-      )}
-
-      <div style={{
-        background: 'var(--brand-card)', borderRadius: '12px', padding: '20px', marginBottom: '20px',
-        boxShadow: '0 4px 12px rgba(31, 58, 139, 0.3)', border: '1px solid rgba(59, 130, 246, 0.2)'
-      }}>
-        <h4 style={{
-          marginBottom: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-          cursor: 'pointer', color: 'var(--text-white)'
-        }} onClick={() => setShowNotes(!showNotes)}>
-          <span>📝 Notes de session</span>
-          <span style={{ fontSize: '1.5rem' }}>{showNotes ? '▼' : '▶'}</span>
-        </h4>
-        {showNotes && (
-          <textarea
-            value={notes} onChange={handleNotesChange}
-            placeholder="Prenez des notes pour cette session..."
-            style={{
-              width: '100%', minHeight: '120px', padding: '12px', border: '2px solid rgba(59, 130, 246, 0.3)',
-              borderRadius: '8px', fontSize: '0.9375rem', fontFamily: 'inherit', resize: 'vertical',
-              background: 'rgba(31, 58, 139, 0.1)', color: 'var(--text-white)'
-            }}
-          />
+          </section>
         )}
-      </div>
 
-      <div style={{
-        background: 'var(--brand-card)', borderRadius: '12px', padding: '20px', marginBottom: '20px',
-        boxShadow: '0 4px 12px rgba(31, 58, 139, 0.3)', border: '1px solid rgba(59, 130, 246, 0.2)'
-      }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-          <h4 style={{ margin: 0, color: 'var(--text-white)' }}>📋 Sessions</h4>
-          <div style={{ display: 'flex', gap: '8px', background: 'rgba(31, 58, 139, 0.2)', padding: '4px', borderRadius: '8px' }}>
-            <button
-              onClick={() => setViewMode('normal')}
-              style={{
-                padding: '8px 16px', background: viewMode === 'normal' ? 'var(--brand-primary)' : 'transparent',
-                color: viewMode === 'normal' ? 'white' : 'var(--text-muted)', border: 'none', borderRadius: '6px',
-                cursor: 'pointer', fontWeight: '600', fontSize: '0.875rem', transition: 'all 0.2s'
-              }}
-            >Normal</button>
-            <button
-              onClick={() => setViewMode('agenda')}
-              style={{
-                padding: '8px 16px', background: viewMode === 'agenda' ? 'var(--brand-primary)' : 'transparent',
-                color: viewMode === 'agenda' ? 'white' : 'var(--text-muted)', border: 'none', borderRadius: '6px',
-                cursor: 'pointer', fontWeight: '600', fontSize: '0.875rem', transition: 'all 0.2s'
-              }}
-            >Agenda</button>
-          </div>
-        </div>
-
-        {viewMode === 'normal' ? (
-          <div style={{ maxHeight: '400px', overflowY: 'auto' }}>
-            {state.sessions.map((session, idx) => (
-              <div
-                key={idx}
-                onClick={() => handleJumpToSession(idx)}
-                style={{
-                  borderLeft: `4px solid ${session.couleur}`, padding: '12px', marginBottom: '8px', borderRadius: '8px',
-                  background: idx === session_en_cours ? 'rgba(59, 130, 246, 0.15)' : idx < session_en_cours ? 'rgba(239, 68, 68, 0.1)' : 'rgba(31, 58, 139, 0.05)',
-                  display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer', transition: 'all 0.2s'
-                }}
+        {/* Theme */}
+        <section className="card rc-block">
+          <h3 className="rc-block-title">Thème</h3>
+          <div className="rc-theme-grid">
+            {themes.map(theme => (
+              <button
+                key={theme.id}
+                onClick={() => handleThemeChange(theme.id)}
+                className={`rc-theme-btn ${currentTheme === theme.id ? 'is-selected' : ''}`}
               >
-                <div style={{
-                  width: '32px', height: '32px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontWeight: '700', fontSize: '1rem',
-                  background: idx === session_en_cours ? 'var(--brand-accent)' : idx < session_en_cours ? '#ef4444' : 'rgba(100, 116, 139, 0.3)',
-                  color: idx === session_en_cours ? 'var(--brand-dark)' : 'white'
-                }}>
-                  {idx < session_en_cours ? '✓' : idx + 1}
-                </div>
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontWeight: '600', color: 'var(--text-white)', marginBottom: '2px' }}>{session.nom_session}</div>
-                  <div style={{ fontSize: '0.875rem', color: 'var(--text-muted)' }}>{Math.floor(session.duree_secondes / 60)} min</div>
-                </div>
-              </div>
+                {theme.name}
+              </button>
             ))}
           </div>
-        ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            {state.sessions.map((session, idx) => {
-              const isSessionCompleted = idx < session_en_cours
-              const isCurrent = idx === session_en_cours
-              const isUpcoming = idx > session_en_cours
-              let progressPercent = 0
-              if (isCurrent && state.current_session) {
-                const elapsed = state.current_session.duree_secondes - temps_restant
-                progressPercent = (elapsed / state.current_session.duree_secondes) * 100
-              }
+        </section>
 
-              return (
-                <div
-                  key={idx}
-                  onClick={() => handleJumpToSession(idx)}
-                  style={{
-                    position: 'relative', padding: '16px', borderRadius: '12px',
-                    border: `2px solid ${isCurrent ? session.couleur : 'rgba(59, 130, 246, 0.2)'}`,
-                    background: isSessionCompleted ? 'rgba(239, 68, 68, 0.1)' : isCurrent ? 'rgba(31, 58, 139, 0.15)' : 'rgba(100, 116, 139, 0.05)',
-                    overflow: 'hidden',
-                    boxShadow: isCurrent ? `0 0 20px ${session.couleur}40` : '0 2px 8px rgba(0,0,0,0.1)',
-                    transition: 'all 0.3s ease', cursor: 'pointer'
-                  }}
-                >
-                  {isCurrent && (
-                    <div style={{
-                      position: 'absolute', left: 0, top: 0, bottom: 0, width: `${progressPercent}%`,
-                      background: `linear-gradient(90deg, ${session.couleur}20, ${session.couleur}40)`,
-                      transition: 'width 0.3s ease', zIndex: 0
-                    }} />
-                  )}
-                  <div style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', gap: '12px' }}>
-                    <div style={{
-                      width: '48px', height: '48px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      fontWeight: '900', fontSize: '1.5rem',
-                      background: isSessionCompleted ? '#ef4444' : isCurrent ? session.couleur : 'rgba(100, 116, 139, 0.3)',
-                      color: isSessionCompleted || isCurrent ? 'white' : 'rgba(255,255,255,0.5)',
-                      boxShadow: isCurrent ? `0 0 15px ${session.couleur}60` : 'none', flexShrink: 0
-                    }}>
-                      {isSessionCompleted ? '✓' : isUpcoming ? '⭕' : '▶'}
-                    </div>
-                    <div style={{ flex: 1 }}>
-                      <div style={{ fontWeight: '700', fontSize: '1.125rem', color: 'var(--text-white)', marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <span>{session.nom_session}</span>
-                        {session.type === 'pause' && <span>☕</span>}
-                      </div>
-                      <div style={{ fontSize: '0.875rem', color: 'var(--text-muted)', display: 'flex', gap: '12px', alignItems: 'center' }}>
-                        <span>{Math.floor(session.duree_secondes / 60)} min</span>
-                        {isSessionCompleted && <span style={{ color: '#ef4444', fontWeight: '600' }}>Terminée</span>}
-                        {isUpcoming && <span style={{ color: 'var(--text-muted)' }}>À venir</span>}
-                      </div>
-                    </div>
-                    {isCurrent && (
-                      <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                        <div style={{
-                          fontSize: '2rem', fontWeight: '900', color: 'var(--brand-accent)', lineHeight: 1,
-                          fontVariantNumeric: 'tabular-nums', textShadow: '0 0 10px rgba(255, 222, 89, 0.5)'
-                        }}>
-                          {formatTime(temps_restant)}
-                        </div>
-                        <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '4px', fontWeight: '600' }}>
-                          {Math.round(progressPercent)}% écoulé
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )
-            })}
+        {/* Message */}
+        <section className="card rc-block">
+          <h3 className="rc-block-title">Message à l'écran</h3>
+          <div className="rc-message-row">
+            <input
+              className="input"
+              type="text"
+              placeholder="Message sur l'écran principal..."
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
+            />
+            <button
+              className="btn btn-primary"
+              onClick={handleSendMessage}
+              disabled={!message.trim()}
+            >
+              Envoyer
+            </button>
           </div>
+          {state.message_actuel && (
+            <div className="rc-message-active">
+              <span className="rc-message-text">📢 {state.message_actuel}</span>
+              <button className="rc-message-clear" onClick={handleClearMessage} aria-label="Effacer">✕</button>
+            </div>
+          )}
+        </section>
+
+        {/* Stats */}
+        {stats && (
+          <section className="card rc-block">
+            <button className="rc-collapse-head" onClick={() => setShowStats(!showStats)}>
+              <span className="rc-block-title">Statistiques</span>
+              <span className="rc-collapse-right">
+                <span className="rc-stat-pct">{stats.progress_percentage}%</span>
+                <span className="rc-chevron">{showStats ? '▼' : '▶'}</span>
+              </span>
+            </button>
+            {showStats && (
+              <div className="rc-stats-grid">
+                <div className="rc-stat-cell">
+                  <div className="rc-stat-label">Sessions</div>
+                  <div className="rc-stat-value">{stats.completed_sessions}/{stats.total_sessions}</div>
+                </div>
+                <div className="rc-stat-cell">
+                  <div className="rc-stat-label">Temps écoulé</div>
+                  <div className="rc-stat-value">{stats.completed_duration_minutes}/{stats.total_duration_minutes} min</div>
+                </div>
+              </div>
+            )}
+          </section>
         )}
-      </div>
 
-      <div className="danger-zone">
-        <button className="btn-stop" onClick={handleReset}>
-          ⏹ Réinitialiser
-        </button>
-      </div>
+        {/* Notes */}
+        <section className="card rc-block">
+          <button className="rc-collapse-head" onClick={() => setShowNotes(!showNotes)}>
+            <span className="rc-block-title">Notes de session</span>
+            <span className="rc-chevron">{showNotes ? '▼' : '▶'}</span>
+          </button>
+          {showNotes && (
+            <textarea
+              className="textarea rc-notes"
+              value={notes}
+              onChange={handleNotesChange}
+              placeholder="Prenez des notes pour cette session..."
+            />
+          )}
+        </section>
 
-      <div className="remote-footer">
-        <a href={`/timer/${code}`} target="_blank" rel="noopener noreferrer">
-          Voir l'affichage principal ↗
-        </a>
-      </div>
+        {/* Sessions */}
+        <section className="card rc-block">
+          <div className="rc-sessions-head">
+            <h3 className="rc-block-title">Sessions</h3>
+            <div className="rc-view-toggle">
+              <button
+                className={`rc-view-btn ${viewMode === 'agenda' ? 'is-active' : ''}`}
+                onClick={() => setViewMode('agenda')}
+              >
+                Agenda
+              </button>
+              <button
+                className={`rc-view-btn ${viewMode === 'normal' ? 'is-active' : ''}`}
+                onClick={() => setViewMode('normal')}
+              >
+                Liste
+              </button>
+            </div>
+          </div>
 
-      <a
-        href="https://www.insuffle.com"
-        target="_blank"
-        rel="noopener noreferrer"
-        style={{
-          position: 'fixed', bottom: '15px', left: '20px', fontSize: '0.85rem',
-          color: 'rgba(255, 255, 255, 0.7)', textDecoration: 'none', transition: 'color 0.2s ease',
-          zIndex: 1500, fontWeight: '500'
-        }}
-      >
-        Timer par Insuffle
-      </a>
+          {viewMode === 'normal' ? (
+            <div className="rc-list">
+              {state.sessions.map((session, idx) => {
+                const done = idx < session_en_cours
+                const current = idx === session_en_cours
+                return (
+                  <button
+                    key={idx}
+                    onClick={() => handleJumpToSession(idx)}
+                    className={`rc-list-item ${current ? 'is-current' : ''} ${done ? 'is-done' : ''}`}
+                    style={{ borderLeftColor: session.couleur }}
+                  >
+                    <span
+                      className="rc-list-num"
+                      style={current ? { background: session.couleur, color: '#fff' } : undefined}
+                    >
+                      {done ? '✓' : idx + 1}
+                    </span>
+                    <span className="rc-list-info">
+                      <span className="rc-list-name">{session.nom_session}</span>
+                      <span className="rc-list-dur">{Math.floor(session.duree_secondes / 60)} min</span>
+                    </span>
+                  </button>
+                )
+              })}
+            </div>
+          ) : (
+            <div className="rc-agenda">
+              {state.sessions.map((session, idx) => {
+                const isSessionCompleted = idx < session_en_cours
+                const isCurrent = idx === session_en_cours
+                const isUpcoming = idx > session_en_cours
+                let progressPercent = 0
+                if (isCurrent && state.current_session) {
+                  const elapsed = state.current_session.duree_secondes - temps_restant
+                  progressPercent = (elapsed / state.current_session.duree_secondes) * 100
+                }
+
+                return (
+                  <button
+                    key={idx}
+                    onClick={() => handleJumpToSession(idx)}
+                    className={`rc-agenda-item ${isCurrent ? 'is-current' : ''} ${isSessionCompleted ? 'is-done' : ''}`}
+                    style={isCurrent ? { borderColor: session.couleur } : undefined}
+                  >
+                    {isCurrent && (
+                      <span
+                        className="rc-agenda-fill"
+                        style={{
+                          width: `${progressPercent}%`,
+                          background: `${session.couleur}22`
+                        }}
+                      />
+                    )}
+                    <span className="rc-agenda-row">
+                      <span
+                        className="rc-agenda-num"
+                        style={
+                          isCurrent
+                            ? { background: session.couleur, color: '#fff' }
+                            : isSessionCompleted
+                              ? { background: 'var(--success)', color: '#fff' }
+                              : undefined
+                        }
+                      >
+                        {isSessionCompleted ? '✓' : isUpcoming ? '○' : '▶'}
+                      </span>
+                      <span className="rc-agenda-info">
+                        <span className="rc-agenda-name">
+                          {session.nom_session}
+                          {session.type === 'pause' && <span> ☕</span>}
+                        </span>
+                        <span className="rc-agenda-sub">
+                          <span>{Math.floor(session.duree_secondes / 60)} min</span>
+                          {isSessionCompleted && <span className="rc-tag rc-tag-done">Terminée</span>}
+                          {isUpcoming && <span className="rc-tag">À venir</span>}
+                        </span>
+                      </span>
+                      {isCurrent && (
+                        <span className="rc-agenda-time">
+                          <span className="rc-agenda-time-val">{formatTime(temps_restant)}</span>
+                          <span className="rc-agenda-time-pct">{Math.round(progressPercent)}% écoulé</span>
+                        </span>
+                      )}
+                    </span>
+                  </button>
+                )
+              })}
+            </div>
+          )}
+        </section>
+
+        {/* Footer */}
+        <div className="rc-footer">
+          <button className="btn btn-danger btn-lg btn-block" onClick={handleReset}>
+            ⏹ Réinitialiser
+          </button>
+          <a
+            className="rc-display-link"
+            href={`/timer/${code}`}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Voir l'affichage ↗
+          </a>
+          <a
+            className="rc-credit"
+            href="https://www.insuffle.com"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Timer par INSUFFLE
+          </a>
+        </div>
+      </div>
     </div>
   )
 }

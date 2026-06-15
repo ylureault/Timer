@@ -53,19 +53,19 @@ function SortableSession({ session, index, onEdit, onRemove }) {
       ref={setNodeRef}
       style={style}
       className={`session-item-modern ${isDragging ? 'dragging' : ''}`}
-      initial={{ opacity: 0, x: -20 }}
+      initial={{ opacity: 0, x: -12 }}
       animate={{ opacity: 1, x: 0 }}
-      exit={{ opacity: 0, x: 20, height: 0 }}
-      transition={{ duration: 0.2, delay: index * 0.05 }}
+      exit={{ opacity: 0, x: 12, height: 0 }}
+      transition={{ duration: 0.2, delay: index * 0.04 }}
     >
       <div className="session-drag-handle" {...listeners} {...attributes}>
         <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
-          <circle cx="7" cy="5" r="1.5"/>
-          <circle cx="7" cy="10" r="1.5"/>
-          <circle cx="7" cy="15" r="1.5"/>
-          <circle cx="13" cy="5" r="1.5"/>
-          <circle cx="13" cy="10" r="1.5"/>
-          <circle cx="13" cy="15" r="1.5"/>
+          <circle cx="7" cy="5" r="1.5" />
+          <circle cx="7" cy="10" r="1.5" />
+          <circle cx="7" cy="15" r="1.5" />
+          <circle cx="13" cy="5" r="1.5" />
+          <circle cx="13" cy="10" r="1.5" />
+          <circle cx="13" cy="15" r="1.5" />
         </svg>
       </div>
 
@@ -84,7 +84,7 @@ function SortableSession({ session, index, onEdit, onRemove }) {
         />
         <div className="session-meta">
           <span className={`badge ${session.type === 'pause' ? 'badge-pause' : 'badge-primary'}`}>
-            {session.type}
+            {session.type === 'pause' ? 'Pause' : 'Session'}
           </span>
         </div>
       </div>
@@ -106,7 +106,7 @@ function SortableSession({ session, index, onEdit, onRemove }) {
         title="Supprimer cette session"
       >
         <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor">
-          <path d="M6 6l8 8M14 6l-8 8" strokeWidth="2" strokeLinecap="round"/>
+          <path d="M6 6l8 8M14 6l-8 8" strokeWidth="2" strokeLinecap="round" />
         </svg>
       </button>
     </motion.div>
@@ -163,7 +163,7 @@ function CreateTimer() {
     if (sessions.length > 0) {
       exportSalonConfig(timerName || 'Mon Timer', sessions)
     } else {
-      alert('Aucune session a exporter')
+      alert('Aucune session à exporter')
     }
   }
 
@@ -180,7 +180,7 @@ function CreateTimer() {
         }))
       )
     } catch (error) {
-      alert("Erreur lors de l'import: " + error.message)
+      alert("Erreur lors de l'import : " + error.message)
     }
     if (fileInputRef.current) fileInputRef.current.value = ''
   }
@@ -255,13 +255,13 @@ function CreateTimer() {
       }
       const data = await response.json()
       if (!data.success || !data.code) {
-        throw new Error(data.error || 'Echec de la creation du timer')
+        throw new Error(data.error || 'Échec de la création du timer')
       }
       saveToHistory(data)
       setCreatedTimer(data)
     } catch (error) {
       console.error('Error creating timer:', error)
-      alert(`Erreur lors de la creation du timer: ${error.message}`)
+      alert(`Erreur lors de la création du timer : ${error.message}`)
       setIsCreating(false)
     }
   }
@@ -317,16 +317,16 @@ function CreateTimer() {
 
     return (
       <div className="create-salon-modern">
-        <div className="container">
+        <div className="container-sm">
           <motion.div
-            className="success-modal-modern card"
-            initial={{ scale: 0.9, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ type: 'spring', stiffness: 200, damping: 20 }}
+            className="success-modal-modern"
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.35 }}
           >
             <div className="success-icon-modern">
-              <svg width="64" height="64" viewBox="0 0 64 64" fill="none">
-                <circle cx="32" cy="32" r="32" fill="#10B981" />
+              <svg width="56" height="56" viewBox="0 0 64 64" fill="none">
+                <circle cx="32" cy="32" r="32" fill="var(--success)" />
                 <motion.path
                   d="M20 32l8 8 16-16"
                   stroke="white"
@@ -335,31 +335,22 @@ function CreateTimer() {
                   strokeLinejoin="round"
                   initial={{ pathLength: 0 }}
                   animate={{ pathLength: 1 }}
-                  transition={{ duration: 0.5, delay: 0.3 }}
+                  transition={{ duration: 0.4, delay: 0.2 }}
                 />
               </svg>
             </div>
 
-            <h1>Timer cree avec succes !</h1>
-            <p className="success-subtitle">Votre timer est pret a etre utilise</p>
+            <h1>Timer créé avec succès !</h1>
+            <p className="success-subtitle">Votre timer est prêt à être utilisé</p>
 
             {copyFeedback && (
               <motion.div
-                initial={{ opacity: 0, y: -10 }}
+                className="copy-toast"
+                initial={{ opacity: 0, y: -8 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0 }}
-                style={{
-                  textAlign: 'center',
-                  padding: '8px 16px',
-                  background: 'rgba(16, 185, 129, 0.2)',
-                  borderRadius: '8px',
-                  color: '#10B981',
-                  fontWeight: 600,
-                  fontSize: '0.875rem',
-                  marginBottom: '16px',
-                }}
               >
-                {copyFeedback} copie !
+                {copyFeedback} copié !
               </motion.div>
             )}
 
@@ -373,16 +364,7 @@ function CreateTimer() {
               {/* QR Code */}
               <div className="url-block">
                 <label>QR Code pour rejoindre</label>
-                <div
-                  style={{
-                    display: 'flex',
-                    justifyContent: 'center',
-                    padding: '20px',
-                    background: 'rgba(255, 255, 255, 0.95)',
-                    borderRadius: '12px',
-                    border: '1px solid rgba(59, 130, 246, 0.2)',
-                  }}
-                >
+                <div className="qr-container">
                   <img
                     src={qrUrl}
                     alt="QR Code"
@@ -393,7 +375,7 @@ function CreateTimer() {
 
               {/* Display URL */}
               <div className="url-block">
-                <label>URL d'affichage (a projeter)</label>
+                <label>URL d'affichage (à projeter)</label>
                 <div className="url-display-modern">
                   <span>{displayUrl}</span>
                   <button
@@ -407,12 +389,12 @@ function CreateTimer() {
 
               {/* Remote URL */}
               <div className="url-block">
-                <label>URL de la telecommande</label>
+                <label>URL de la télécommande</label>
                 <div className="url-display-modern">
                   <span>{remoteUrl}</span>
                   <button
                     className="btn-copy"
-                    onClick={() => copyToClipboard(remoteUrl, 'URL telecommande')}
+                    onClick={() => copyToClipboard(remoteUrl, 'URL télécommande')}
                   >
                     Copier
                   </button>
@@ -422,10 +404,7 @@ function CreateTimer() {
               {/* Edit URL */}
               <div className="url-block">
                 <label>Lien de modification</label>
-                <div
-                  className="url-display-modern"
-                  style={{ borderColor: 'rgba(245, 158, 11, 0.5)' }}
-                >
+                <div className="url-display-modern is-warning">
                   <span>{editUrl}</span>
                   <button
                     className="btn-copy"
@@ -434,15 +413,8 @@ function CreateTimer() {
                     Copier
                   </button>
                 </div>
-                <p
-                  style={{
-                    fontSize: '0.8rem',
-                    color: '#f59e0b',
-                    marginTop: '8px',
-                    fontWeight: 600,
-                  }}
-                >
-                  Conservez ce lien, c'est le seul moyen de modifier votre timer
+                <p className="edit-warning">
+                  Conservez ce lien, c'est le seul moyen de modifier votre timer.
                 </p>
               </div>
             </div>
@@ -458,22 +430,13 @@ function CreateTimer() {
                 className="btn btn-secondary btn-lg"
                 onClick={() => window.open(`/remote/${createdTimer.code}`, '_blank')}
               >
-                Ouvrir la telecommande
+                Ouvrir la télécommande
               </button>
             </div>
 
-            {/* INSUFFLE Footer */}
-            <div
-              style={{
-                textAlign: 'center',
-                marginTop: '2rem',
-                paddingTop: '1.5rem',
-                borderTop: '1px solid rgba(59, 130, 246, 0.15)',
-              }}
-            >
-              <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', letterSpacing: '1px' }}>
-                TIMER PAR{' '}
-                <span style={{ fontWeight: 800, color: 'var(--brand-accent)' }}>INSUFFLE</span>
+            <div className="insuffle-footer">
+              <p>
+                Timer par <span className="insuffle-mark">INSUFFLE</span>
               </p>
             </div>
           </motion.div>
@@ -487,49 +450,40 @@ function CreateTimer() {
   // ================================================================
   return (
     <div className="create-salon-modern">
-      <div className="create-header-modern">
-        <div className="container">
-          <button className="btn-back" onClick={() => navigate('/')}>
-            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor">
-              <path d="M12 4l-6 6 6 6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-            Retour
+      <div className="container-sm">
+        <div className="create-header-modern">
+          <button className="btn btn-ghost" onClick={() => navigate('/')}>
+            ← Retour
           </button>
         </div>
-      </div>
 
-      <div className="container">
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
+          transition={{ duration: 0.35 }}
           className="create-content-modern"
         >
           <div className="create-title-section">
-            <h1>Creer un nouveau timer</h1>
+            <h1>Créer un nouveau timer</h1>
             <p>Configurez vos sessions et partagez votre timer</p>
           </div>
 
-          <div className="card create-card-modern">
+          <div className="create-card-modern">
             {/* ---- Templates & Import/Export ---- */}
             <div className="form-section-modern">
               <div className="section-header-create">
                 <div>
-                  <h2>Demarrage rapide</h2>
+                  <h2>Démarrage rapide</h2>
                   <p className="section-subtitle">
-                    Choisissez un template ou importez une configuration
+                    Choisissez un modèle ou importez une configuration
                   </p>
                 </div>
-                <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-                  <button
-                    className="btn btn-outline"
-                    onClick={handleExport}
-                    type="button"
-                  >
+                <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                  <button className="btn btn-secondary btn-sm" onClick={handleExport} type="button">
                     Exporter
                   </button>
                   <button
-                    className="btn btn-outline"
+                    className="btn btn-secondary btn-sm"
                     onClick={() => fileInputRef.current?.click()}
                     type="button"
                   >
@@ -545,29 +499,19 @@ function CreateTimer() {
                 </div>
               </div>
 
-              <div
-                style={{
-                  display: 'grid',
-                  gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
-                  gap: '12px',
-                  marginBottom: '24px',
-                }}
-              >
+              <div className="templates-grid">
                 {Object.entries(SESSION_TEMPLATES).map(([key, template]) => (
                   <motion.button
                     key={key}
-                    className="btn btn-outline"
+                    className="template-card"
                     onClick={() => loadTemplate(key)}
                     type="button"
-                    whileHover={{ scale: 1.02 }}
+                    whileHover={{ y: -2 }}
                     whileTap={{ scale: 0.98 }}
-                    style={{ padding: '16px', textAlign: 'left' }}
                   >
-                    <div style={{ fontWeight: 'bold', marginBottom: '4px' }}>
-                      {template.name}
-                    </div>
-                    <div style={{ fontSize: '0.75rem', opacity: 0.7 }}>
-                      {template.sessions.length} session{template.sessions.length > 1 ? 's' : ''} &middot;{' '}
+                    <div className="template-card-name">{template.name}</div>
+                    <div className="template-card-meta">
+                      {template.sessions.length} session{template.sessions.length > 1 ? 's' : ''} ·{' '}
                       {template.sessions.reduce((a, s) => a + s.duree_minutes, 0)} min
                     </div>
                   </motion.button>
@@ -581,7 +525,7 @@ function CreateTimer() {
               <input
                 type="text"
                 className="input"
-                placeholder="Ex: Atelier Design Thinking"
+                placeholder="Ex : Atelier Design Thinking"
                 value={timerName}
                 onChange={(e) => setTimerName(e.target.value)}
               />
@@ -592,12 +536,10 @@ function CreateTimer() {
               <div className="section-header-create">
                 <div>
                   <h2>Sessions</h2>
-                  <p className="section-subtitle">
-                    Glissez-deposez pour reorganiser
-                  </p>
+                  <p className="section-subtitle">Glissez-déposez pour réorganiser</p>
                 </div>
                 <button
-                  className="btn btn-primary"
+                  className="btn btn-primary btn-sm"
                   onClick={() => setShowAddSession(true)}
                   type="button"
                 >
@@ -609,10 +551,11 @@ function CreateTimer() {
               <AnimatePresence>
                 {showAddSession && (
                   <motion.div
-                    className="add-session-card card-glass"
+                    className="add-session-card"
                     initial={{ opacity: 0, height: 0 }}
                     animate={{ opacity: 1, height: 'auto' }}
                     exit={{ opacity: 0, height: 0 }}
+                    transition={{ duration: 0.25 }}
                     style={{ overflow: 'hidden' }}
                   >
                     <div className="add-session-grid">
@@ -621,7 +564,7 @@ function CreateTimer() {
                         <input
                           type="text"
                           className="input"
-                          placeholder="Ex: Brainstorming"
+                          placeholder="Ex : Brainstorming"
                           value={newSession.nom_session}
                           onChange={(e) =>
                             setNewSession({ ...newSession, nom_session: e.target.value })
@@ -632,7 +575,7 @@ function CreateTimer() {
                       </div>
 
                       <div className="form-group-modern">
-                        <label>Duree (minutes)</label>
+                        <label>Durée (minutes)</label>
                         <input
                           type="number"
                           className="input"
@@ -650,7 +593,7 @@ function CreateTimer() {
                       <div className="form-group-modern">
                         <label>Type</label>
                         <select
-                          className="input"
+                          className="select"
                           value={newSession.type}
                           onChange={(e) =>
                             setNewSession({
@@ -668,28 +611,13 @@ function CreateTimer() {
 
                       <div className="form-group-modern">
                         <label>Couleur</label>
-                        <div className="color-picker-fun" style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                        <div className="color-picker-modern">
                           {SESSION_COLORS.map((color) => (
                             <button
                               key={color}
-                              className={`color-bubble ${newSession.couleur === color ? 'selected' : ''}`}
-                              style={{
-                                backgroundColor: color,
-                                width: '36px',
-                                height: '36px',
-                                borderRadius: '50%',
-                                border: newSession.couleur === color
-                                  ? '3px solid var(--text-white)'
-                                  : '3px solid transparent',
-                                cursor: 'pointer',
-                                transition: 'all 0.2s ease',
-                                boxShadow: newSession.couleur === color
-                                  ? `0 0 0 3px ${color}40`
-                                  : 'none',
-                              }}
-                              onClick={() =>
-                                setNewSession({ ...newSession, couleur: color })
-                              }
+                              className={`color-option-modern ${newSession.couleur === color ? 'active' : ''}`}
+                              style={{ backgroundColor: color }}
+                              onClick={() => setNewSession({ ...newSession, couleur: color })}
                               type="button"
                               title={color}
                             />
@@ -698,12 +626,12 @@ function CreateTimer() {
                       </div>
                     </div>
 
-                    <div className="add-session-actions" style={{ display: 'flex', gap: '12px', marginTop: '16px' }}>
-                      <button className="btn btn-success" onClick={handleAddSession} type="button">
+                    <div className="add-session-actions">
+                      <button className="btn btn-primary btn-sm" onClick={handleAddSession} type="button">
                         Ajouter
                       </button>
                       <button
-                        className="btn btn-outline"
+                        className="btn btn-secondary btn-sm"
                         onClick={() => setShowAddSession(false)}
                         type="button"
                       >
@@ -721,11 +649,8 @@ function CreateTimer() {
                   collisionDetection={closestCenter}
                   onDragEnd={handleDragEnd}
                 >
-                  <SortableContext
-                    items={sessions}
-                    strategy={verticalListSortingStrategy}
-                  >
-                    <div className="sessions-list-modern" style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                  <SortableContext items={sessions} strategy={verticalListSortingStrategy}>
+                    <div className="sessions-list-modern">
                       <AnimatePresence>
                         {sessions.map((session, index) => (
                           <SortableSession
@@ -745,21 +670,10 @@ function CreateTimer() {
                   className="empty-state-modern"
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
-                  style={{
-                    textAlign: 'center',
-                    padding: '3rem 2rem',
-                    background: 'rgba(31, 58, 139, 0.08)',
-                    borderRadius: '16px',
-                    border: '2px dashed rgba(59, 130, 246, 0.2)',
-                  }}
                 >
-                  <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>&#9201;</div>
-                  <h3 style={{ color: 'var(--text-white)', marginBottom: '0.5rem' }}>
-                    Aucune session
-                  </h3>
-                  <p style={{ color: 'var(--text-muted)' }}>
-                    Ajoutez votre premiere session pour commencer
-                  </p>
+                  <div className="empty-icon">⏱️</div>
+                  <h3>Aucune session</h3>
+                  <p>Ajoutez votre première session pour commencer</p>
                 </motion.div>
               ) : null}
             </div>
@@ -768,84 +682,33 @@ function CreateTimer() {
             {sessions.length > 0 && (
               <motion.div
                 className="create-footer-modern"
-                initial={{ opacity: 0, y: 10 }}
+                initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
-                style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                  flexWrap: 'wrap',
-                  gap: '16px',
-                  paddingTop: '2rem',
-                  borderTop: '2px solid rgba(59, 130, 246, 0.15)',
-                }}
               >
-                <div
-                  className="summary-info"
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '12px',
-                    fontSize: '1rem',
-                    color: 'var(--text-muted)',
-                    fontWeight: 600,
-                  }}
-                >
+                <div className="summary-info">
                   <span>
                     {sessions.length} session{sessions.length > 1 ? 's' : ''}
                   </span>
-                  <span style={{ opacity: 0.4 }}>&bull;</span>
+                  <span className="dot">·</span>
                   <span>{totalMinutes} minute{totalMinutes > 1 ? 's' : ''} au total</span>
                 </div>
                 <motion.button
-                  className="btn btn-primary btn-xl"
+                  className="btn btn-primary btn-lg"
                   onClick={handleCreateTimer}
                   disabled={isCreating}
                   whileHover={{ scale: isCreating ? 1 : 1.02 }}
                   whileTap={{ scale: isCreating ? 1 : 0.98 }}
-                  style={{
-                    padding: '16px 40px',
-                    fontSize: '1.125rem',
-                    fontWeight: 800,
-                    borderRadius: '12px',
-                    cursor: isCreating ? 'wait' : 'pointer',
-                    opacity: isCreating ? 0.7 : 1,
-                  }}
                 >
-                  {isCreating ? 'Creation en cours...' : 'Creer le timer'}
+                  {isCreating ? 'Création en cours…' : 'Créer le timer'}
                 </motion.button>
               </motion.div>
             )}
           </div>
 
           {/* ---- INSUFFLE Footer ---- */}
-          <div
-            style={{
-              textAlign: 'center',
-              marginTop: '3rem',
-              paddingBottom: '2rem',
-            }}
-          >
-            <p
-              style={{
-                fontSize: '0.75rem',
-                color: 'var(--text-muted)',
-                letterSpacing: '2px',
-                textTransform: 'uppercase',
-              }}
-            >
-              Timer par{' '}
-              <span
-                style={{
-                  fontWeight: 900,
-                  background: 'linear-gradient(135deg, var(--brand-primary-light), var(--brand-accent))',
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent',
-                  backgroundClip: 'text',
-                }}
-              >
-                INSUFFLE
-              </span>
+          <div className="insuffle-footer">
+            <p>
+              Timer par <span className="insuffle-mark">INSUFFLE</span>
             </p>
           </div>
         </motion.div>

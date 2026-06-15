@@ -1,9 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import '../styles/LandingPage.css'
-import '../styles/HeroButtons.css'
-import '../styles/PremiumEffects.css'
 
 function LandingPage() {
   const navigate = useNavigate()
@@ -21,7 +19,7 @@ function LandingPage() {
   useEffect(() => {
     const interval = setInterval(() => {
       setCurrentWordIndex((prev) => (prev + 1) % words.length)
-    }, 2000) // Change word every 2 seconds
+    }, 2200)
 
     return () => clearInterval(interval)
   }, [])
@@ -32,354 +30,294 @@ function LandingPage() {
 
   const handleJoinTimer = () => {
     const trimmed = joinCode.trim()
-    if (trimmed.length >= 6) {
+    const digits = trimmed.replace(/-/g, '')
+    if (digits.length >= 6) {
       // Accept formats: XXX-XXX or XXXXXX
-      const formatted = trimmed.includes('-') ? trimmed : `${trimmed.slice(0, 3)}-${trimmed.slice(3, 6)}`
+      const formatted = trimmed.includes('-')
+        ? trimmed
+        : `${digits.slice(0, 3)}-${digits.slice(3, 6)}`
       navigate(`/timer/${formatted}`)
     }
   }
 
+  const features = [
+    {
+      icon: '⚡',
+      title: 'Synchro temps réel',
+      description: 'Tous les écrans restent parfaitement synchronisés, à la seconde près.'
+    },
+    {
+      icon: '📱',
+      title: 'Télécommande mobile',
+      description: 'Pilotez votre timer depuis votre smartphone, sans rien installer.'
+    },
+    {
+      icon: '🔗',
+      title: 'QR code de partage',
+      description: 'Partagez l’accès en un instant grâce à un QR code dédié.'
+    },
+    {
+      icon: '🗂️',
+      title: 'Modèles prédéfinis',
+      description: 'Démarrez plus vite avec des séquences prêtes à l’emploi.'
+    },
+    {
+      icon: '🎨',
+      title: '3 thèmes d’affichage',
+      description: 'Choisissez le rendu qui s’accorde le mieux à votre scène.'
+    },
+    {
+      icon: '🖥️',
+      title: 'Mode plein écran',
+      description: 'Projetez le timer en grand, lisible depuis le fond de la salle.'
+    }
+  ]
+
+  const steps = [
+    {
+      num: '1',
+      title: 'Créer',
+      desc: 'Composez votre séquence de sessions en quelques clics, sans inscription.'
+    },
+    {
+      num: '2',
+      title: 'Projeter',
+      desc: 'Affichez le timer en plein écran sur l’écran de votre salle.'
+    },
+    {
+      num: '3',
+      title: 'Piloter',
+      desc: 'Lancez, mettez en pause et passez à la suite depuis votre mobile.'
+    }
+  ]
+
   return (
-    <div className="landing-page-modern">
-      {/* Noise overlay INSUFFLE */}
-      <div className="noise-overlay"></div>
-
-      {/* HERO SECTION */}
-      <section className="hero-modern">
-        {/* Premium background effects */}
-        <div className="gradient-mesh"></div>
-        <div className="aurora-bg"></div>
-
-        {/* Floating particles */}
-        <div className="particle particle-1"></div>
-        <div className="particle particle-2"></div>
-        <div className="particle particle-3"></div>
-        <div className="particle particle-4"></div>
-
-        <div className="hero-bg">
-          <div className="gradient-orb orb-1"></div>
-          <div className="gradient-orb orb-2"></div>
-          <div className="gradient-orb orb-3"></div>
+    <div className="lp">
+      {/* TOP NAV */}
+      <header className="lp-nav">
+        <div className="container lp-nav-inner">
+          <div className="lp-wordmark">
+            <span className="lp-wordmark-icon" aria-hidden="true">⏱</span>
+            Timer par <span className="lp-wordmark-brand">INSUFFLE</span>
+          </div>
+          <button className="btn btn-primary" onClick={handleCreateTimer}>
+            Créer un timer
+          </button>
         </div>
+      </header>
 
+      {/* HERO */}
+      <section className="lp-hero">
         <div className="container">
           <motion.div
-            initial={{ opacity: 0, y: 30 }}
+            className="lp-hero-content"
+            initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-            className="hero-content-modern"
+            transition={{ duration: 0.4 }}
           >
-            <motion.div
-              className="badge-hero"
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.2 }}
-            >
-              ⏱️ Timer par INSUFFLE
-            </motion.div>
+            <span className="badge badge-primary lp-hero-badge">
+              Sans inscription · 100% gratuit
+            </span>
 
-            <h1 className="hero-title-modern">
-              Orchestrez le temps de vos
-              <br />
-              <span className="text-shine rotating-word" key={currentWordIndex}>
-                {words[currentWordIndex]}
+            <h1 className="lp-hero-title">
+              Orchestrez le temps de vos{' '}
+              <span className="lp-rotating">
+                <AnimatePresence mode="wait">
+                  <motion.span
+                    key={currentWordIndex}
+                    className="lp-rotating-word"
+                    initial={{ opacity: 0, y: 14 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -14 }}
+                    transition={{ duration: 0.3 }}
+                  >
+                    {words[currentWordIndex]}
+                  </motion.span>
+                </AnimatePresence>
               </span>
             </h1>
 
-            <p className="hero-subtitle-modern">
+            <p className="lp-hero-subtitle">
               Créez des séquences temporelles partagées, contrôlées à distance.
-              <br />
-              Simple, visuel, et terriblement efficace.
+              Simple, visuel et terriblement efficace.
             </p>
 
-            <motion.div
-              className="hero-actions-modern"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.4, duration: 0.8 }}
-            >
-              <motion.button
-                className="btn-cta-hero btn-magnetic glow-insuffle ripple"
+            <div className="lp-hero-actions">
+              <button
+                className="btn btn-primary btn-xl"
                 onClick={handleCreateTimer}
-                whileHover={{ scale: 1.05, boxShadow: "0 25px 70px rgba(31, 58, 139, 0.5)" }}
-                whileTap={{ scale: 0.98 }}
               >
-                <span className="btn-cta-text">Créer mon premier timer</span>
-                <span className="btn-cta-icon">
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-                    <path d="M5 12H19M19 12L12 5M19 12L12 19" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
-                  </svg>
-                </span>
-              </motion.button>
+                Créer un timer
+              </button>
 
-              <div className="divider-or">
-                <span>ou</span>
-              </div>
-
-              <div className="join-input-hero glass-ultra">
+              <div className="lp-join">
                 <input
                   type="text"
+                  className="input lp-join-input"
                   placeholder="XXX-XXX"
-                  maxLength="7"
+                  maxLength={7}
                   value={joinCode}
                   onChange={(e) => {
                     const raw = e.target.value.replace(/[^0-9-]/g, '')
                     setJoinCode(raw)
                   }}
                   onKeyDown={(e) => e.key === 'Enter' && handleJoinTimer()}
-                  className="shimmer"
+                  aria-label="Code du timer à rejoindre"
                 />
-                <motion.button
+                <button
+                  className="btn btn-secondary"
                   onClick={handleJoinTimer}
                   disabled={joinCode.replace(/-/g, '').length < 6}
-                  whileHover={{ scale: 1.03 }}
-                  whileTap={{ scale: 0.97 }}
-                  className="gradient-border"
                 >
-                  Rejoindre un timer →
-                </motion.button>
+                  Rejoindre
+                </button>
               </div>
-            </motion.div>
-
-            {/* Live Stats */}
-            <motion.div
-              className="hero-stats glass-ultra shadow-depth-3"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.6, duration: 0.8 }}
-            >
-              <div className="stat-item">
-                <div className="stat-value">100%</div>
-                <div className="stat-label">Toujours gratuit</div>
-              </div>
-              <div className="stat-divider"></div>
-              <div className="stat-item">
-                <div className="stat-value">&lt; 30s</div>
-                <div className="stat-label">Pour démarrer</div>
-              </div>
-              <div className="stat-divider"></div>
-              <div className="stat-item">
-                <div className="stat-value">∞</div>
-                <div className="stat-label">Timers illimités</div>
-              </div>
-            </motion.div>
+            </div>
           </motion.div>
-        </div>
 
-      </section>
-
-      {/* FEATURES SECTION */}
-      <section className="features-modern">
-        <div className="container">
+          {/* PRODUCT PREVIEW */}
           <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="section-header-modern"
+            className="lp-preview card"
+            initial={{ opacity: 0, y: 24 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, delay: 0.15 }}
           >
-            <h2 className="section-title-modern">
-              Tout ce dont vous avez besoin
-            </h2>
-            <p className="section-subtitle-modern">
-              Une solution complète pour gérer le temps de vos événements
-            </p>
-          </motion.div>
-
-          <div className="features-grid">
-            {[
-              {
-                icon: '🎨',
-                title: 'Interface magnifique',
-                description: 'Un design moderne qui impressionne votre audience',
-                color: '#6366f1'
-              },
-              {
-                icon: '📱',
-                title: 'Télécommande mobile',
-                description: 'Contrôlez tout depuis votre smartphone',
-                color: '#1f3a8b'
-              },
-              {
-                icon: '⚡',
-                title: 'Temps réel',
-                description: 'Synchronisation instantanée sur tous les écrans',
-                color: '#ffde59'
-              },
-              {
-                icon: '🎯',
-                title: 'Super simple',
-                description: 'Prêt en 30 secondes, sans installation',
-                color: '#ec4899'
-              },
-              {
-                icon: '🎭',
-                title: 'Sessions colorées',
-                description: 'Chaque session a sa couleur unique',
-                color: '#8b5cf6'
-              },
-              {
-                icon: '🔄',
-                title: 'Glisser-déposer',
-                description: 'Réorganisez vos sessions en un geste',
-                color: '#10b981'
-              }
-            ].map((feature, idx) => (
-              <motion.div
-                key={idx}
-                className="feature-card card card-3d gradient-border shadow-depth-2 glass-ultra"
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: idx * 0.1 }}
-                whileHover={{ y: -8, boxShadow: '0 30px 60px rgba(31, 58, 139, 0.2)' }}
-              >
-                <div className="feature-icon" style={{ background: `${feature.color}15`, color: feature.color }}>
-                  {feature.icon}
+            <div className="lp-preview-bar">
+              <span className="lp-preview-dot" />
+              <span className="lp-preview-dot" />
+              <span className="lp-preview-dot" />
+            </div>
+            <div className="lp-preview-stage">
+              <div className="lp-ring">
+                <svg viewBox="0 0 240 240" className="lp-ring-svg" aria-hidden="true">
+                  <circle
+                    className="lp-ring-track"
+                    cx="120"
+                    cy="120"
+                    r="104"
+                  />
+                  <circle
+                    className="lp-ring-progress"
+                    cx="120"
+                    cy="120"
+                    r="104"
+                  />
+                </svg>
+                <div className="lp-ring-center">
+                  <div className="lp-ring-time">12:30</div>
+                  <div className="lp-ring-label">Atelier en cours</div>
                 </div>
-                <h3 className="feature-title">{feature.title}</h3>
-                <p className="feature-description">{feature.description}</p>
-              </motion.div>
-            ))}
-          </div>
+              </div>
+            </div>
+          </motion.div>
         </div>
       </section>
 
       {/* HOW IT WORKS */}
-      <section className="how-it-works-modern">
+      <section className="lp-section">
         <div className="container">
           <motion.div
-            initial={{ opacity: 0, y: 30 }}
+            className="lp-section-head"
+            initial={{ opacity: 0, y: 16 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="section-header-modern"
+            transition={{ duration: 0.4 }}
           >
-            <h2 className="section-title-modern">Comment ça marche</h2>
-            <p className="section-subtitle-modern">En 4 étapes simples</p>
+            <h2 className="lp-section-title">Comment ça marche</h2>
+            <p className="lp-section-subtitle">Trois étapes, et c’est parti.</p>
           </motion.div>
 
-          <div className="steps-modern">
-            {[
-              { num: '01', title: 'Créer', desc: 'Créez votre timer en un clic' },
-              { num: '02', title: 'Configurer', desc: 'Ajoutez vos sessions et timing' },
-              { num: '03', title: 'Projeter', desc: 'Affichez le timer en grand' },
-              { num: '04', title: 'Contrôler', desc: 'Pilotez depuis votre mobile' }
-            ].map((step, idx) => (
+          <div className="lp-steps">
+            {steps.map((step, idx) => (
               <motion.div
-                key={idx}
-                className="step-modern"
-                initial={{ opacity: 0, x: -30 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: idx * 0.15 }}
-              >
-                <div className="step-number">{step.num}</div>
-                <div className="step-content">
-                  <h3>{step.title}</h3>
-                  <p>{step.desc}</p>
-                </div>
-                {idx < 3 && <div className="step-arrow">→</div>}
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* USE CASES */}
-      <section className="use-cases-modern">
-        <div className="container">
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="section-header-modern"
-          >
-            <h2 className="section-title-modern">
-              Pensé pour vos temps collectifs
-            </h2>
-          </motion.div>
-
-          <div className="use-cases-grid">
-            {[
-              {
-                title: 'Ateliers & Séminaires',
-                description: 'Gérez vos sessions de travail avec fluidité',
-                icon: '🎯',
-                gradient: 'linear-gradient(135deg, #1f3a8b 0%, #3b82f6 100%)'
-              },
-              {
-                title: 'Cours & Formations',
-                description: 'Respectez vos horaires sans débordement',
-                icon: '📚',
-                gradient: 'linear-gradient(135deg, #3b82f6 0%, #ffde59 100%)'
-              },
-              {
-                title: 'Réunions & Workshops',
-                description: 'Time-boxing efficace pour vos événements',
-                icon: '💼',
-                gradient: 'linear-gradient(135deg, #1f3a8b 0%, #ffde59 100%)'
-              }
-            ].map((useCase, idx) => (
-              <motion.div
-                key={idx}
-                className="use-case-card-modern card-glass glass-ultra shadow-depth-3 gradient-border"
-                initial={{ opacity: 0, y: 30 }}
+                key={step.num}
+                className="card lp-step"
+                initial={{ opacity: 0, y: 16 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                transition={{ delay: idx * 0.1 }}
-                whileHover={{ scale: 1.03, y: -8 }}
-                style={{ background: `${useCase.gradient}, rgba(255,255,255,0.1)` }}
+                transition={{ duration: 0.4, delay: idx * 0.08 }}
               >
-                <div className="use-case-icon-modern">{useCase.icon}</div>
-                <h3>{useCase.title}</h3>
-                <p>{useCase.description}</p>
+                <div className="lp-step-num">{step.num}</div>
+                <h3 className="lp-step-title">{step.title}</h3>
+                <p className="lp-step-desc">{step.desc}</p>
               </motion.div>
             ))}
           </div>
         </div>
       </section>
 
-
-      {/* CTA SECTION */}
-      <section className="cta-modern">
+      {/* FEATURES */}
+      <section className="lp-section lp-section-alt">
         <div className="container">
           <motion.div
-            className="cta-card card-glass glass-ultra shadow-depth-4 gradient-border"
-            initial={{ opacity: 0, scale: 0.9 }}
-            whileInView={{ opacity: 1, scale: 1 }}
+            className="lp-section-head"
+            initial={{ opacity: 0, y: 16 }}
+            whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            whileHover={{ scale: 1.02 }}
+            transition={{ duration: 0.4 }}
           >
-            <h2 className="text-shine">Prêt à orchestrer le temps ?</h2>
-            <p>Créez votre premier timer maintenant</p>
-            <motion.button
-              className="btn btn-primary btn-xl btn-magnetic glow-insuffle ripple"
-              onClick={handleCreateTimer}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              Commencer gratuitement
-            </motion.button>
+            <h2 className="lp-section-title">Fonctionnalités</h2>
+            <p className="lp-section-subtitle">
+              Tout ce qu’il faut pour maîtriser le temps de vos événements.
+            </p>
           </motion.div>
+
+          <div className="lp-features">
+            {features.map((feature, idx) => (
+              <motion.div
+                key={feature.title}
+                className="card lp-feature"
+                initial={{ opacity: 0, y: 16 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.4, delay: idx * 0.06 }}
+              >
+                <div className="lp-feature-icon" aria-hidden="true">
+                  {feature.icon}
+                </div>
+                <h3 className="lp-feature-title">{feature.title}</h3>
+                <p className="lp-feature-desc">{feature.description}</p>
+              </motion.div>
+            ))}
+          </div>
         </div>
       </section>
 
       {/* FOOTER */}
-      <footer className="footer-modern">
-        <div className="container">
-          <div className="footer-content-modern">
-            <div className="footer-brand">
-              <div className="footer-logo">⏱️ Timer par INSUFFLE</div>
-              <p>Orchestrez le temps de vos ateliers</p>
+      <footer className="lp-footer">
+        <div className="container lp-footer-inner">
+          <div className="lp-footer-brand">
+            <div className="lp-footer-wordmark">
+              Timer par <span className="lp-wordmark-brand">INSUFFLE</span>
             </div>
-            <div className="footer-links-modern">
-              <a href="https://www.insuffle.com" target="_blank" rel="noopener noreferrer">Insuffle</a>
-              <a href="#features">Fonctionnalités</a>
-              <a href="#" onClick={(e) => { e.preventDefault(); handleCreateTimer(); }}>Créer un timer</a>
-            </div>
+            <p className="lp-footer-tagline">
+              Orchestrez le temps de vos temps collectifs.
+            </p>
           </div>
-          <div className="footer-copy">
-            © 2025 Timer par INSUFFLE. Créé avec soin par <a href="https://www.insuffle.com" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--brand-primary)', fontWeight: '600', textDecoration: 'none' }}>Insuffle</a> pour les facilitateurs.
-          </div>
+          <nav className="lp-footer-links">
+            <a href="https://www.insuffle.com" target="_blank" rel="noopener noreferrer">
+              insuffle.com
+            </a>
+            <a
+              href="https://www.linkedin.com/company/insuffle/"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              LinkedIn
+            </a>
+            <a
+              href="/create"
+              onClick={(e) => {
+                e.preventDefault()
+                handleCreateTimer()
+              }}
+            >
+              Créer un timer
+            </a>
+          </nav>
+        </div>
+        <div className="container lp-footer-copy">
+          © 2026 Timer par INSUFFLE
         </div>
       </footer>
     </div>
