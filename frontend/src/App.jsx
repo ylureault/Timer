@@ -1,56 +1,57 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
-import { AuthProvider } from './contexts/AuthContext'
-
-// V2 Pages
-import LandingPageV2 from './pages/LandingPageV2'
-import AuthPage from './pages/AuthPage'
-import Dashboard from './pages/Dashboard'
+import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom'
+import LandingPage from './pages/LandingPage'
+import CreateTimer from './pages/CreateTimer'
 import TimerDisplay from './pages/TimerDisplay'
-import RemoteControlV2 from './pages/RemoteControlV2'
-import AdminPanel from './pages/AdminPanel'
-import Marketplace from './pages/Marketplace'
-import Embed from './pages/Embed'
-import ReleaseNotes from './pages/ReleaseNotes'
-import Quiz from './pages/Quiz'
-import Blog from './pages/Blog'
-import ApiDocs from './pages/ApiDocs'
-import ThemeCreator from './pages/ThemeCreator'
-
-// Legacy pages (keep for backward compatibility)
-import CreateSalon from './pages/CreateSalon'
-import SalonDisplay from './pages/SalonDisplay'
 import RemoteControl from './pages/RemoteControl'
+import EditTimer from './pages/EditTimer'
+
+function NotFound() {
+  return (
+    <div style={{
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      justifyContent: 'center',
+      minHeight: '100vh',
+      background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)',
+      color: 'white',
+      textAlign: 'center',
+      padding: '20px'
+    }}>
+      <h1 style={{ fontSize: '6rem', margin: '0', opacity: 0.3 }}>404</h1>
+      <h2 style={{ fontSize: '1.5rem', marginBottom: '8px' }}>Page introuvable</h2>
+      <p style={{ opacity: 0.7, marginBottom: '24px' }}>
+        La page que vous cherchez n'existe pas ou a été déplacée.
+      </p>
+      <Link
+        to="/"
+        style={{
+          padding: '12px 32px',
+          background: 'var(--brand-primary, #1f3a8b)',
+          color: 'white',
+          borderRadius: '8px',
+          textDecoration: 'none',
+          fontWeight: '600'
+        }}
+      >
+        Retour à l'accueil
+      </Link>
+    </div>
+  )
+}
 
 function App() {
   return (
-    <AuthProvider>
-      <Router>
-        <Routes>
-          {/* V2 Routes */}
-          <Route path="/" element={<LandingPageV2 />} />
-          <Route path="/auth" element={<AuthPage />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/admin" element={<AdminPanel />} />
-          <Route path="/marketplace" element={<Marketplace />} />
-          <Route path="/embed" element={<Embed />} />
-          <Route path="/embed/:code" element={<Embed />} />
-          <Route path="/release-notes" element={<ReleaseNotes />} />
-          <Route path="/quiz" element={<Quiz />} />
-          <Route path="/quiz/:code" element={<Quiz />} />
-          <Route path="/blog" element={<Blog />} />
-          <Route path="/blog/:slug" element={<Blog />} />
-          <Route path="/api-docs" element={<ApiDocs />} />
-          <Route path="/theme-creator" element={<ThemeCreator />} />
-          <Route path="/display/:code" element={<TimerDisplay />} />
-          <Route path="/remote/:code" element={<RemoteControlV2 />} />
-
-          {/* Legacy routes (backward compatibility) */}
-          <Route path="/create" element={<CreateSalon />} />
-          <Route path="/salon/:code" element={<SalonDisplay />} />
-          <Route path="/old-remote/:code" element={<RemoteControl />} />
-        </Routes>
-      </Router>
-    </AuthProvider>
+    <Router>
+      <Routes>
+        <Route path="/" element={<LandingPage />} />
+        <Route path="/create" element={<CreateTimer />} />
+        <Route path="/timer/:code" element={<TimerDisplay />} />
+        <Route path="/remote/:code" element={<RemoteControl />} />
+        <Route path="/edit/:token" element={<EditTimer />} />
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+    </Router>
   )
 }
 

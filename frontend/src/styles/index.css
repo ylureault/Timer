@@ -69,8 +69,8 @@
   --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
   --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
   --shadow-2xl: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-  --shadow-teal: 0 20px 25px -5px rgba(20, 184, 166, 0.3);
-  --shadow-glow: 0 0 40px rgba(20, 184, 166, 0.4);
+  --shadow-teal: 0 20px 25px -5px rgba(31, 58, 139, 0.3);
+  --shadow-glow: 0 0 40px rgba(31, 58, 139, 0.4);
   --shadow-inner: inset 0 2px 4px 0 rgba(0, 0, 0, 0.05);
 
   /* Spacing - Boussole 4C */
@@ -413,12 +413,12 @@ body {
 }
 
 .btn-ghost {
-  background: rgba(20, 184, 166, 0.1);
+  background: rgba(31, 58, 139, 0.1);
   color: var(--primary);
 }
 
 .btn-ghost:hover {
-  background: rgba(20, 184, 166, 0.2);
+  background: rgba(31, 58, 139, 0.2);
 }
 
 .btn-lg {

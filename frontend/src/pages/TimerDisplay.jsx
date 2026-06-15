@@ -98,68 +98,31 @@ export const TIMER_FORMATS = {
 // Default format - will be updated from server via WebSocket
 const getDefaultFormat = () => 'circle';
 
-// Visual themes configuration
+// Visual themes configuration - 3 themes: luxe, aplat, aurora
 const VISUAL_THEMES = {
-  light: {
-    id: 'light',
-    background: '#ffffff',
-    textColor: '#1a1a2e',
-    particleColors: ['#6C5CE7', '#00CEC9', '#FF6B6B', '#FDCB6E', '#00B894'],
-    isLight: true
-  },
-  cinematic: {
-    id: 'cinematic',
+  luxe: {
+    id: 'luxe',
     background: 'linear-gradient(180deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)',
     textColor: '#ffffff',
-    particleColors: ['#FF6B6B', '#4ECDC4', '#FFE66D', '#95E1D3', '#F38181']
+    particleColors: ['#FFE66D', '#4ECDC4', '#FF6B6B', '#95E1D3', '#F38181']
   },
-  neon: {
-    id: 'neon',
-    background: 'linear-gradient(135deg, #0a0a0a 0%, #1a0a2e 100%)',
-    textColor: '#00ffff',
-    particleColors: ['#00ffff', '#ff00ff', '#00ff00', '#ffff00', '#ff6600']
-  },
-  minimal: {
-    id: 'minimal',
+  aplat: {
+    id: 'aplat',
     background: 'linear-gradient(180deg, #f8fafc 0%, #e2e8f0 100%)',
     textColor: '#1e293b',
     particleColors: ['#6366f1', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'],
     isLight: true
   },
-  nature: {
-    id: 'nature',
-    background: 'linear-gradient(135deg, #134e4a 0%, #065f46 50%, #064e3b 100%)',
-    textColor: '#ecfdf5',
-    particleColors: ['#34d399', '#a7f3d0', '#6ee7b7', '#10b981', '#059669']
-  },
-  sunset: {
-    id: 'sunset',
+  aurora: {
+    id: 'aurora',
     background: 'linear-gradient(135deg, #1e1b4b 0%, #4c1d95 50%, #831843 100%)',
     textColor: '#fef3c7',
     particleColors: ['#f59e0b', '#ec4899', '#f472b6', '#fbbf24', '#fb7185']
-  },
-  ocean: {
-    id: 'ocean',
-    background: 'linear-gradient(180deg, #0c4a6e 0%, #075985 50%, #0369a1 100%)',
-    textColor: '#e0f2fe',
-    particleColors: ['#38bdf8', '#06b6d4', '#22d3ee', '#0ea5e9', '#0284c7']
-  },
-  fire: {
-    id: 'fire',
-    background: 'linear-gradient(180deg, #1a0a0a 0%, #450a0a 50%, #7f1d1d 100%)',
-    textColor: '#fef2f2',
-    particleColors: ['#ef4444', '#f97316', '#fbbf24', '#dc2626', '#ea580c']
-  },
-  corporate: {
-    id: 'corporate',
-    background: 'linear-gradient(180deg, #1e293b 0%, #334155 100%)',
-    textColor: '#f1f5f9',
-    particleColors: ['#3b82f6', '#8b5cf6', '#6366f1', '#2563eb', '#7c3aed']
   }
 };
 
 // Default theme - will be updated from server via WebSocket
-const getDefaultTheme = () => VISUAL_THEMES.cinematic;
+const getDefaultTheme = () => VISUAL_THEMES.luxe;
 const getWsUrl = () => {
   if (import.meta.env.VITE_WS_URL) return import.meta.env.VITE_WS_URL;
   const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
@@ -928,7 +891,7 @@ export default function TimerDisplay() {
     toggleUI: () => setShowUI(prev => !prev),
     cycleTheme: () => {
       const themeIds = Object.keys(VISUAL_THEMES);
-      const currentIndex = themeIds.indexOf(activeTheme?.id || 'cinematic');
+      const currentIndex = themeIds.indexOf(activeTheme?.id || 'luxe');
       const nextIndex = (currentIndex + 1) % themeIds.length;
       setActiveTheme(VISUAL_THEMES[themeIds[nextIndex]]);
     },
@@ -940,9 +903,9 @@ export default function TimerDisplay() {
     },
     toggleDarkMode: () => {
       if (activeTheme?.isLight) {
-        setActiveTheme(VISUAL_THEMES.cinematic);
+        setActiveTheme(VISUAL_THEMES.luxe);
       } else {
-        setActiveTheme(VISUAL_THEMES.light);
+        setActiveTheme(VISUAL_THEMES.aplat);
       }
     },
     toggleAnnotations: () => updateOption('showFacilitatorName', !displayOptions.showFacilitatorName),
@@ -993,12 +956,9 @@ export default function TimerDisplay() {
             setLocalTime(data.temps_restant);
             setLoading(false);
 
-            // Sync visual theme and display format from server
-            if (data.visual_theme && VISUAL_THEMES[data.visual_theme]) {
-              setActiveTheme(VISUAL_THEMES[data.visual_theme]);
-            }
-            if (data.display_format) {
-              setActiveFormat(data.display_format);
+            // Sync theme from server state
+            if (data.theme && VISUAL_THEMES[data.theme]) {
+              setActiveTheme(VISUAL_THEMES[data.theme]);
             }
           }
         } catch (err) {
@@ -1314,8 +1274,8 @@ export default function TimerDisplay() {
         </div>
         <div className="footer-center">
           <a href="https://insuffle.com" target="_blank" rel="noopener noreferrer" className="insuffle-link">
-            <span>Propulsé par</span>
-            <strong>Insuffle</strong>
+            <span>Timer par</span>
+            <strong>INSUFFLE</strong>
           </a>
         </div>
         <div className="footer-right">
@@ -1354,12 +1314,12 @@ export default function TimerDisplay() {
               <h3>Scannez pour suivre sur mobile</h3>
               <div className="qr-code-container">
                 <img
-                  src={getQRCodeUrl(`${window.location.origin}/display/${code}`, 250)}
+                  src={getQRCodeUrl(`${window.location.origin}/remote/${code}`, 250)}
                   alt="QR Code pour rejoindre le timer"
                 />
               </div>
               <p className="qr-code-text">Code: <strong>{code}</strong></p>
-              <p className="qr-url">{window.location.origin}/display/{code}</p>
+              <p className="qr-url">{window.location.origin}/remote/{code}</p>
             </motion.div>
           </motion.div>
         )}

@@ -26,13 +26,16 @@ function LandingPage() {
     return () => clearInterval(interval)
   }, [])
 
-  const handleCreateSalon = () => {
+  const handleCreateTimer = () => {
     navigate('/create')
   }
 
-  const handleJoinSalon = () => {
-    if (joinCode.trim().length === 4) {
-      navigate(`/salon/${joinCode}`)
+  const handleJoinTimer = () => {
+    const trimmed = joinCode.trim()
+    if (trimmed.length >= 6) {
+      // Accept formats: XXX-XXX or XXXXXX
+      const formatted = trimmed.includes('-') ? trimmed : `${trimmed.slice(0, 3)}-${trimmed.slice(3, 6)}`
+      navigate(`/timer/${formatted}`)
     }
   }
 
@@ -72,7 +75,7 @@ function LandingPage() {
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: 0.2 }}
             >
-              ⏱️ Timer Salon • Nouvelle génération
+              ⏱️ Timer par INSUFFLE
             </motion.div>
 
             <h1 className="hero-title-modern">
@@ -97,11 +100,11 @@ function LandingPage() {
             >
               <motion.button
                 className="btn-cta-hero btn-magnetic glow-insuffle ripple"
-                onClick={handleCreateSalon}
+                onClick={handleCreateTimer}
                 whileHover={{ scale: 1.05, boxShadow: "0 25px 70px rgba(31, 58, 139, 0.5)" }}
                 whileTap={{ scale: 0.98 }}
               >
-                <span className="btn-cta-text">Créer mon premier salon</span>
+                <span className="btn-cta-text">Créer mon premier timer</span>
                 <span className="btn-cta-icon">
                   <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
                     <path d="M5 12H19M19 12L12 5M19 12L12 19" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
@@ -116,21 +119,24 @@ function LandingPage() {
               <div className="join-input-hero glass-ultra">
                 <input
                   type="text"
-                  placeholder="1234"
-                  maxLength="4"
+                  placeholder="XXX-XXX"
+                  maxLength="7"
                   value={joinCode}
-                  onChange={(e) => setJoinCode(e.target.value.replace(/\D/g, ''))}
-                  onKeyPress={(e) => e.key === 'Enter' && handleJoinSalon()}
+                  onChange={(e) => {
+                    const raw = e.target.value.replace(/[^0-9-]/g, '')
+                    setJoinCode(raw)
+                  }}
+                  onKeyDown={(e) => e.key === 'Enter' && handleJoinTimer()}
                   className="shimmer"
                 />
                 <motion.button
-                  onClick={handleJoinSalon}
-                  disabled={joinCode.length !== 4}
+                  onClick={handleJoinTimer}
+                  disabled={joinCode.replace(/-/g, '').length < 6}
                   whileHover={{ scale: 1.03 }}
                   whileTap={{ scale: 0.97 }}
                   className="gradient-border"
                 >
-                  Rejoindre un salon →
+                  Rejoindre un timer →
                 </motion.button>
               </div>
             </motion.div>
@@ -144,7 +150,7 @@ function LandingPage() {
             >
               <div className="stat-item">
                 <div className="stat-value">100%</div>
-                <div className="stat-label">Gratuit Forever</div>
+                <div className="stat-label">Toujours gratuit</div>
               </div>
               <div className="stat-divider"></div>
               <div className="stat-item">
@@ -154,7 +160,7 @@ function LandingPage() {
               <div className="stat-divider"></div>
               <div className="stat-item">
                 <div className="stat-value">∞</div>
-                <div className="stat-label">Salons illimités</div>
+                <div className="stat-label">Timers illimités</div>
               </div>
             </motion.div>
           </motion.div>
@@ -253,7 +259,7 @@ function LandingPage() {
 
           <div className="steps-modern">
             {[
-              { num: '01', title: 'Créer', desc: 'Créez votre salon en un clic' },
+              { num: '01', title: 'Créer', desc: 'Créez votre timer en un clic' },
               { num: '02', title: 'Configurer', desc: 'Ajoutez vos sessions et timing' },
               { num: '03', title: 'Projeter', desc: 'Affichez le timer en grand' },
               { num: '04', title: 'Contrôler', desc: 'Pilotez depuis votre mobile' }
@@ -344,10 +350,10 @@ function LandingPage() {
             whileHover={{ scale: 1.02 }}
           >
             <h2 className="text-shine">Prêt à orchestrer le temps ?</h2>
-            <p>Créez votre premier salon maintenant</p>
+            <p>Créez votre premier timer maintenant</p>
             <motion.button
               className="btn btn-primary btn-xl btn-magnetic glow-insuffle ripple"
-              onClick={handleCreateSalon}
+              onClick={handleCreateTimer}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >
@@ -362,17 +368,17 @@ function LandingPage() {
         <div className="container">
           <div className="footer-content-modern">
             <div className="footer-brand">
-              <div className="footer-logo">⏱️ Timer Salon</div>
+              <div className="footer-logo">⏱️ Timer par INSUFFLE</div>
               <p>Orchestrez le temps de vos ateliers</p>
             </div>
             <div className="footer-links-modern">
               <a href="https://www.insuffle.com" target="_blank" rel="noopener noreferrer">Insuffle</a>
               <a href="#features">Fonctionnalités</a>
-              <a href="#" onClick={(e) => { e.preventDefault(); handleCreateSalon(); }}>Créer un salon</a>
+              <a href="#" onClick={(e) => { e.preventDefault(); handleCreateTimer(); }}>Créer un timer</a>
             </div>
           </div>
           <div className="footer-copy">
-            © 2025 Timer Salon. Créé avec ❤️ par <a href="https://www.insuffle.com" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--brand-primary)', fontWeight: '600', textDecoration: 'none' }}>Insuffle</a> pour les facilitateurs.
+            © 2025 Timer par INSUFFLE. Créé avec soin par <a href="https://www.insuffle.com" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--brand-primary)', fontWeight: '600', textDecoration: 'none' }}>Insuffle</a> pour les facilitateurs.
           </div>
         </div>
       </footer>
