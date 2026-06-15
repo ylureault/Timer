@@ -28,6 +28,9 @@ function RemoteControl() {
   const [newSession, setNewSession] = useState({ nom_session: '', duree_minutes: 5, couleur: '#3B82F6', type: 'session' })
   const [editingSession, setEditingSession] = useState(null)
   const [confirmReset, setConfirmReset] = useState(false)
+  const [showTimeAdjust, setShowTimeAdjust] = useState(true)
+  const [showTheme, setShowTheme] = useState(false)
+  const [showMessage, setShowMessage] = useState(false)
 
   const initSoundEnabled = () => {
     const stored = localStorage.getItem('sound_enabled')
@@ -610,102 +613,22 @@ function RemoteControl() {
         {/* Time adjust */}
         {!isCompleted && (
           <section className="card rc-block">
-            <h3 className="rc-block-title">Ajuster le temps</h3>
-            <div className="rc-time-grid">
-              <button className="rc-time-btn rc-time-neg" onClick={() => handleAddTime(-60)}>−1 min</button>
-              <button className="rc-time-btn rc-time-neg" onClick={() => handleAddTime(-30)}>−30 s</button>
-              <button className="rc-time-btn rc-time-pos" onClick={() => handleAddTime(30)}>+30 s</button>
-              <button className="rc-time-btn rc-time-pos" onClick={() => handleAddTime(60)}>+1 min</button>
-            </div>
-          </section>
-        )}
-
-        {/* Theme */}
-        <section className="card rc-block">
-          <h3 className="rc-block-title">Thème</h3>
-          <div className="rc-theme-grid">
-            {themes.map(theme => (
-              <button
-                key={theme.id}
-                onClick={() => handleThemeChange(theme.id)}
-                className={`rc-theme-btn ${currentTheme === theme.id ? 'is-selected' : ''}`}
-              >
-                {theme.name}
-              </button>
-            ))}
-          </div>
-        </section>
-
-        {/* Message */}
-        <section className="card rc-block">
-          <h3 className="rc-block-title">Message à l'écran</h3>
-          <div className="rc-message-row">
-            <input
-              className="input"
-              type="text"
-              placeholder="Message sur l'écran principal..."
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
-            />
-            <button
-              className="btn btn-primary"
-              onClick={handleSendMessage}
-              disabled={!message.trim()}
-            >
-              Envoyer
+            <button className="rc-collapse-head" onClick={() => setShowTimeAdjust(!showTimeAdjust)}>
+              <span className="rc-block-title">Ajuster le temps</span>
+              <span className="rc-chevron">{showTimeAdjust ? '▼' : '▶'}</span>
             </button>
-          </div>
-          {state.message_actuel && (
-            <div className="rc-message-active">
-              <span className="rc-message-text">📢 {state.message_actuel}</span>
-              <button className="rc-message-clear" onClick={handleClearMessage} aria-label="Effacer">✕</button>
-            </div>
-          )}
-        </section>
-
-        {/* Stats */}
-        {stats && (
-          <section className="card rc-block">
-            <button className="rc-collapse-head" onClick={() => setShowStats(!showStats)}>
-              <span className="rc-block-title">Statistiques</span>
-              <span className="rc-collapse-right">
-                <span className="rc-stat-pct">{stats.progress_percentage}%</span>
-                <span className="rc-chevron">{showStats ? '▼' : '▶'}</span>
-              </span>
-            </button>
-            {showStats && (
-              <div className="rc-stats-grid">
-                <div className="rc-stat-cell">
-                  <div className="rc-stat-label">Sessions</div>
-                  <div className="rc-stat-value">{stats.completed_sessions}/{stats.total_sessions}</div>
-                </div>
-                <div className="rc-stat-cell">
-                  <div className="rc-stat-label">Temps écoulé</div>
-                  <div className="rc-stat-value">{stats.completed_duration_minutes}/{stats.total_duration_minutes} min</div>
-                </div>
+            {showTimeAdjust && (
+              <div className="rc-time-grid">
+                <button className="rc-time-btn rc-time-neg" onClick={() => handleAddTime(-60)}>−1 min</button>
+                <button className="rc-time-btn rc-time-neg" onClick={() => handleAddTime(-30)}>−30 s</button>
+                <button className="rc-time-btn rc-time-pos" onClick={() => handleAddTime(30)}>+30 s</button>
+                <button className="rc-time-btn rc-time-pos" onClick={() => handleAddTime(60)}>+1 min</button>
               </div>
             )}
           </section>
         )}
 
-        {/* Notes */}
-        <section className="card rc-block">
-          <button className="rc-collapse-head" onClick={() => setShowNotes(!showNotes)}>
-            <span className="rc-block-title">Notes de session</span>
-            <span className="rc-chevron">{showNotes ? '▼' : '▶'}</span>
-          </button>
-          {showNotes && (
-            <textarea
-              className="textarea rc-notes"
-              value={notes}
-              onChange={handleNotesChange}
-              placeholder="Prenez des notes pour cette session..."
-            />
-          )}
-        </section>
-
-        {/* Sessions */}
+        {/* Sessions — high priority, right after controls */}
         <section className="card rc-block">
           <div className="rc-sessions-head">
             <h3 className="rc-block-title">Sessions</h3>
@@ -977,6 +900,106 @@ function RemoteControl() {
                 )
               })}
             </div>
+          )}
+        </section>
+
+        {/* Theme */}
+        <section className="card rc-block">
+          <button className="rc-collapse-head" onClick={() => setShowTheme(!showTheme)}>
+            <span className="rc-block-title">Thème</span>
+            <span className="rc-chevron">{showTheme ? '▼' : '▶'}</span>
+          </button>
+          {showTheme && (
+            <div className="rc-theme-grid">
+              {themes.map(theme => (
+                <button
+                  key={theme.id}
+                  onClick={() => handleThemeChange(theme.id)}
+                  className={`rc-theme-btn ${currentTheme === theme.id ? 'is-selected' : ''}`}
+                >
+                  {theme.name}
+                </button>
+              ))}
+            </div>
+          )}
+        </section>
+
+        {/* Message */}
+        <section className="card rc-block">
+          <button className="rc-collapse-head" onClick={() => setShowMessage(!showMessage)}>
+            <span className="rc-block-title">Message à l'écran</span>
+            <span className="rc-collapse-right">
+              {state.message_actuel && <span className="rc-tag">Actif</span>}
+              <span className="rc-chevron">{showMessage ? '▼' : '▶'}</span>
+            </span>
+          </button>
+          {showMessage && (
+            <>
+              <div className="rc-message-row">
+                <input
+                  className="input"
+                  type="text"
+                  placeholder="Message sur l'écran principal..."
+                  value={message}
+                  onChange={(e) => setMessage(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
+                />
+                <button
+                  className="btn btn-primary"
+                  onClick={handleSendMessage}
+                  disabled={!message.trim()}
+                >
+                  Envoyer
+                </button>
+              </div>
+              {state.message_actuel && (
+                <div className="rc-message-active">
+                  <span className="rc-message-text">📢 {state.message_actuel}</span>
+                  <button className="rc-message-clear" onClick={handleClearMessage} aria-label="Effacer">✕</button>
+                </div>
+              )}
+            </>
+          )}
+        </section>
+
+        {/* Stats */}
+        {stats && (
+          <section className="card rc-block">
+            <button className="rc-collapse-head" onClick={() => setShowStats(!showStats)}>
+              <span className="rc-block-title">Statistiques</span>
+              <span className="rc-collapse-right">
+                <span className="rc-stat-pct">{stats.progress_percentage}%</span>
+                <span className="rc-chevron">{showStats ? '▼' : '▶'}</span>
+              </span>
+            </button>
+            {showStats && (
+              <div className="rc-stats-grid">
+                <div className="rc-stat-cell">
+                  <div className="rc-stat-label">Sessions</div>
+                  <div className="rc-stat-value">{stats.completed_sessions}/{stats.total_sessions}</div>
+                </div>
+                <div className="rc-stat-cell">
+                  <div className="rc-stat-label">Temps écoulé</div>
+                  <div className="rc-stat-value">{stats.completed_duration_minutes}/{stats.total_duration_minutes} min</div>
+                </div>
+              </div>
+            )}
+          </section>
+        )}
+
+        {/* Notes */}
+        <section className="card rc-block">
+          <button className="rc-collapse-head" onClick={() => setShowNotes(!showNotes)}>
+            <span className="rc-block-title">Notes de session</span>
+            <span className="rc-chevron">{showNotes ? '▼' : '▶'}</span>
+          </button>
+          {showNotes && (
+            <textarea
+              className="textarea rc-notes"
+              value={notes}
+              onChange={handleNotesChange}
+              placeholder="Prenez des notes pour cette session..."
+            />
           )}
         </section>
 

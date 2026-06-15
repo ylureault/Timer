@@ -977,9 +977,81 @@
   gap: 8px;
 }
 
-/* ===== Small phones ===== */
+/* ===== Tablet ===== */
+@media (min-width: 600px) {
+  .rc-shell { max-width: 540px; padding: 24px 20px 64px; }
+  .rc-ring { width: 260px; }
+  .rc-ring-time { font-size: 3rem; }
+  .rc-session-card { padding: 28px 24px 24px; }
+}
+
+/* ===== Compact phones (≤ 410px) ===== */
+@media (max-width: 410px) {
+  .rc-shell { padding: 14px 12px 56px; gap: 12px; }
+  .rc-header { gap: 8px; }
+  .rc-title h1 { font-size: 1.35rem; }
+  .rc-icon-btn { width: 38px; height: 38px; font-size: 1rem; }
+  .rc-header-actions { gap: 6px; }
+  .rc-session-card { padding: 16px 14px 14px; gap: 14px; }
+  .rc-ring { width: 190px; }
+  .rc-ring-time { font-size: 2.3rem; }
+  .rc-ring-label { font-size: 0.75rem; }
+  .rc-playpause { min-height: 52px; font-size: 1.05rem; }
+  .rc-bell { min-width: 52px; min-height: 52px; font-size: 1.3rem; }
+  .rc-nav .btn { min-height: 44px; font-size: 0.9rem; }
+  .rc-block { padding: 14px 12px; }
+  .rc-sessions-head { gap: 6px; flex-wrap: wrap; }
+  .rc-view-btn { padding: 5px 10px; font-size: 0.8rem; }
+  .rc-edit-toggle { padding: 5px 10px; font-size: 0.78rem; }
+  .rc-agenda-num { width: 36px; height: 36px; font-size: 0.95rem; }
+  .rc-agenda-name { font-size: 0.92rem; }
+  .rc-agenda-time-val { font-size: 1.25rem; }
+  .rc-agenda-time-pct { font-size: 0.68rem; }
+}
+
+/* ===== Very small phones (≤ 360px) ===== */
 @media (max-width: 360px) {
+  .rc-shell { padding: 12px 10px 48px; gap: 10px; }
+  .rc-title h1 { font-size: 1.2rem; }
+  .rc-code { font-size: 0.78rem; }
+  .rc-icon-btn { width: 34px; height: 34px; font-size: 0.9rem; border-radius: 8px; }
+  .rc-header-actions { gap: 4px; }
+  .rc-session-card { padding: 14px 12px 12px; gap: 12px; }
+  .rc-session-dot { width: 36px; height: 36px; font-size: 1.05rem; }
+  .rc-session-meta h2 { font-size: 1.05rem; }
+  .rc-session-meta p { font-size: 0.78rem; }
+  .rc-ring { width: 170px; }
+  .rc-ring-time { font-size: 2rem; }
+  .rc-progress-pct { font-size: 0.82rem; }
+  .rc-playpause { min-height: 48px; font-size: 1rem; padding: 0 14px; }
+  .rc-bell { min-width: 48px; min-height: 48px; font-size: 1.2rem; }
+  .rc-nav { gap: 8px; }
+  .rc-nav .btn { min-height: 40px; font-size: 0.85rem; }
   .rc-time-grid { grid-template-columns: repeat(2, 1fr); }
-  .rc-ring-time { font-size: 2.2rem; }
+  .rc-time-btn { min-height: 42px; font-size: 0.82rem; }
+  .rc-theme-btn { min-height: 42px; font-size: 0.85rem; }
+  .rc-block-title { font-size: 0.88rem; }
+  .rc-message-row { gap: 6px; }
+  .rc-sessions-head { gap: 4px; flex-wrap: wrap; }
+  .rc-view-btn { padding: 4px 8px; font-size: 0.75rem; }
+  .rc-edit-toggle { padding: 4px 8px; font-size: 0.75rem; }
+  .rc-agenda-item { padding: 10px; }
+  .rc-agenda-num { width: 32px; height: 32px; font-size: 0.85rem; }
+  .rc-agenda-row { gap: 8px; }
+  .rc-agenda-name { font-size: 0.88rem; }
+  .rc-agenda-sub { font-size: 0.72rem; }
+  .rc-agenda-time-val { font-size: 1.1rem; }
+  .rc-list-item { padding: 8px 10px; gap: 8px; }
+  .rc-list-num { width: 26px; height: 26px; font-size: 0.8rem; }
+  .rc-list-name { font-size: 0.88rem; }
+  .rc-list-dur { font-size: 0.72rem; }
   .rc-add-row { flex-direction: column; }
+  .rc-edit-item-head { padding: 10px 12px; gap: 8px; }
+  .rc-edit-form { padding: 0 12px 12px; padding-top: 12px; gap: 10px; }
+  .rc-color-dot { width: 26px; height: 26px; }
+  .rc-confirm-card { padding: 22px 18px; }
+  .rc-footer .btn-block { min-height: 42px; }
+  .rc-sticky { padding: 8px 12px; gap: 8px; }
+  .rc-sticky-time { font-size: 1.1rem; }
+  .rc-sticky-name { font-size: 0.78rem; }
 }
