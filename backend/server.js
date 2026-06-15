@@ -322,13 +322,15 @@ app.get('/api/timer/:code/state', (req, res) => {
       }
     }
 
-    const progress = currentSession ? 1 - (actualRemaining / currentSession.duree_secondes) : 0;
+    const effectiveTotal = Math.max(currentSession?.duree_secondes || 1, timerState.temps_restant);
+    const progress = effectiveTotal > 0 ? 1 - (actualRemaining / effectiveTotal) : 0;
 
     res.json({
       success: true,
       mode: timerState.mode,
       session_en_cours: timerState.session_en_cours,
       temps_restant: actualRemaining,
+      effective_total: effectiveTotal,
       temps_ecoule: currentSession ? currentSession.duree_secondes - actualRemaining : 0,
       progress: Math.max(0, Math.min(1, progress)),
       current_session: currentSession,
@@ -553,7 +555,11 @@ app.post('/api/timer/:code/addtime', (req, res) => {
 app.post('/api/timer/:code/goto', (req, res) => {
   try {
     const { code } = req.params;
-    const { sessionIndex } = req.body;
+    const sessionIndex = parseInt(req.body.sessionIndex, 10);
+
+    if (!Number.isFinite(sessionIndex)) {
+      return res.status(400).json({ success: false, error: 'Index de session invalide' });
+    }
 
     const timer = findTimerByCode(code);
     if (!timer) {
@@ -659,6 +665,153 @@ app.post('/api/timer/:code/auto-mode', (req, res) => {
 });
 
 // ============================
+// SESSION CRUD (live management from remote control)
+// ============================
+
+app.post('/api/timer/:code/sessions', (req, res) => {
+  try {
+    const { code } = req.params;
+    const { nom_session, duree_secondes, couleur, type } = req.body;
+
+    const timer = findTimerByCode(code);
+    if (!timer) {
+      return res.status(404).json({ success: false, error: 'Timer non trouve' });
+    }
+
+    const sessions = db.prepare('SELECT * FROM sessions WHERE timer_id = ? ORDER BY ordre').all(timer.id);
+    const newOrdre = sessions.length;
+
+    db.prepare(`
+      INSERT INTO sessions (timer_id, ordre, nom_session, duree_secondes, couleur, type)
+      VALUES (?, ?, ?, ?, ?, ?)
+    `).run(
+      timer.id,
+      newOrdre,
+      nom_session || 'Nouvelle session',
+      duree_secondes || 300,
+      couleur || '#6366f1',
+      type || 'session'
+    );
+
+    updateLastActivity(timer.id);
+    broadcastTimerUpdate(code);
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Add session error:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+app.put('/api/timer/:code/sessions/:index', (req, res) => {
+  try {
+    const { code } = req.params;
+    const index = parseInt(req.params.index, 10);
+    const { nom_session, duree_secondes, couleur, type } = req.body;
+
+    const timer = findTimerByCode(code);
+    if (!timer) {
+      return res.status(404).json({ success: false, error: 'Timer non trouve' });
+    }
+
+    const sessions = db.prepare('SELECT * FROM sessions WHERE timer_id = ? ORDER BY ordre').all(timer.id);
+    if (index < 0 || index >= sessions.length) {
+      return res.status(400).json({ success: false, error: 'Index de session invalide' });
+    }
+
+    const session = sessions[index];
+    db.prepare(`
+      UPDATE sessions
+      SET nom_session = ?, duree_secondes = ?, couleur = ?, type = ?
+      WHERE id = ?
+    `).run(
+      nom_session ?? session.nom_session,
+      duree_secondes ?? session.duree_secondes,
+      couleur ?? session.couleur,
+      type ?? session.type,
+      session.id
+    );
+
+    // If editing the current session's duration while paused, update remaining time
+    const timerState = db.prepare('SELECT * FROM timer_states WHERE timer_id = ?').get(timer.id);
+    if (timerState && timerState.session_en_cours === index && timerState.mode === 'pause' && duree_secondes) {
+      db.prepare(`
+        UPDATE timer_states SET temps_restant = ?, timestamp_dernier_update = ? WHERE timer_id = ?
+      `).run(duree_secondes, Date.now(), timer.id);
+    }
+
+    updateLastActivity(timer.id);
+    broadcastTimerUpdate(code);
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Update session error:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+app.delete('/api/timer/:code/sessions/:index', (req, res) => {
+  try {
+    const { code } = req.params;
+    const index = parseInt(req.params.index, 10);
+
+    const timer = findTimerByCode(code);
+    if (!timer) {
+      return res.status(404).json({ success: false, error: 'Timer non trouve' });
+    }
+
+    const sessions = db.prepare('SELECT * FROM sessions WHERE timer_id = ? ORDER BY ordre').all(timer.id);
+    if (sessions.length <= 1) {
+      return res.status(400).json({ success: false, error: 'Impossible de supprimer la derniere session' });
+    }
+    if (index < 0 || index >= sessions.length) {
+      return res.status(400).json({ success: false, error: 'Index de session invalide' });
+    }
+
+    const deleteTx = db.transaction(() => {
+      db.prepare('DELETE FROM sessions WHERE id = ?').run(sessions[index].id);
+
+      // Reindex remaining sessions
+      const remaining = db.prepare('SELECT id FROM sessions WHERE timer_id = ? ORDER BY ordre').all(timer.id);
+      remaining.forEach((s, i) => {
+        db.prepare('UPDATE sessions SET ordre = ? WHERE id = ?').run(i, s.id);
+      });
+
+      // Adjust timer state if needed
+      const timerState = db.prepare('SELECT * FROM timer_states WHERE timer_id = ?').get(timer.id);
+      if (timerState) {
+        const newSessions = db.prepare('SELECT * FROM sessions WHERE timer_id = ? ORDER BY ordre').all(timer.id);
+        let newSessionIndex = timerState.session_en_cours;
+
+        if (newSessionIndex >= newSessions.length) {
+          newSessionIndex = newSessions.length - 1;
+        }
+        if (index < timerState.session_en_cours) {
+          newSessionIndex = Math.max(0, timerState.session_en_cours - 1);
+        }
+        if (index === timerState.session_en_cours) {
+          const newCurrent = newSessions[newSessionIndex];
+          db.prepare(`
+            UPDATE timer_states
+            SET session_en_cours = ?, temps_restant = ?, mode = 'pause', timestamp_dernier_update = ?
+            WHERE timer_id = ?
+          `).run(newSessionIndex, newCurrent.duree_secondes, Date.now(), timer.id);
+        } else if (newSessionIndex !== timerState.session_en_cours) {
+          db.prepare('UPDATE timer_states SET session_en_cours = ? WHERE timer_id = ?')
+            .run(newSessionIndex, timer.id);
+        }
+      }
+    });
+
+    deleteTx();
+    updateLastActivity(timer.id);
+    broadcastTimerUpdate(code);
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Delete session error:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// ============================
 // LEGACY REDIRECT
 // ============================
 
@@ -742,13 +895,15 @@ function sendTimerState(ws, code) {
 
     const currentSession = sessions[timerState.session_en_cours] || sessions[0];
     const actualRemaining = calculateTimeRemaining(timerState, currentSession);
-    const progress = currentSession ? 1 - (actualRemaining / currentSession.duree_secondes) : 0;
+    const effectiveTotal = Math.max(currentSession?.duree_secondes || 1, timerState.temps_restant);
+    const progress = effectiveTotal > 0 ? 1 - (actualRemaining / effectiveTotal) : 0;
 
     const state = {
       type: 'state',
       mode: timerState.mode,
       session_en_cours: timerState.session_en_cours,
       temps_restant: actualRemaining,
+      effective_total: effectiveTotal,
       progress: Math.max(0, Math.min(1, progress)),
       current_session: currentSession,
       sessions,

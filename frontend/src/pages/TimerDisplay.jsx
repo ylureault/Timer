@@ -315,7 +315,7 @@ export default function TimerDisplay() {
   // ---- derived ----
   const currentSession = state?.current_session;
   const sessionColor = currentSession?.couleur || '#3b82f6';
-  const total = currentSession?.duree_secondes || 1;
+  const total = state?.effective_total || Math.max(currentSession?.duree_secondes || 1, localTime);
   const progress = Math.max(0, Math.min(1, localTime / total));
   const time = formatTime(localTime);
   const isCritical = state?.mode === 'play' && localTime <= 5 && localTime > 0;

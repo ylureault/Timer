@@ -3,6 +3,11 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { saveSessionNotes, getSessionNotes, calculateStats } from '../utils/features'
 import '../styles/RemoteControl.css'
 
+const SESSION_COLORS = [
+  '#3B82F6', '#10B981', '#F59E0B', '#8B5CF6', '#EC4899',
+  '#EF4444', '#6366F1', '#14B8A6', '#64748B',
+]
+
 function RemoteControl() {
   const { code } = useParams()
   const navigate = useNavigate()
@@ -18,6 +23,11 @@ function RemoteControl() {
   const [message, setMessage] = useState('')
   const [viewMode, setViewMode] = useState('agenda')
   const [autoMode, setAutoMode] = useState(false)
+  const [editMode, setEditMode] = useState(false)
+  const [showAddSession, setShowAddSession] = useState(false)
+  const [newSession, setNewSession] = useState({ nom_session: '', duree_minutes: 5, couleur: '#3B82F6', type: 'session' })
+  const [editingSession, setEditingSession] = useState(null)
+  const [confirmReset, setConfirmReset] = useState(false)
 
   const initSoundEnabled = () => {
     const stored = localStorage.getItem('sound_enabled')
@@ -96,8 +106,6 @@ function RemoteControl() {
     if (newValue) setTimeout(playBeep, 100)
   }
 
-  // Audible countdown: a short beep on each of the final 5 seconds while running.
-  // (Previously beeped on every tick — far too noisy.)
   useEffect(() => {
     if (!state) return
     const t = state.temps_restant
@@ -161,8 +169,6 @@ function RemoteControl() {
           setAutoMode(data.auto_mode)
         }
       } else {
-        // Real "not found": surface immediately if we have nothing, else after a
-        // few consecutive failures (avoids flicker on a transient hiccup).
         failCountRef.current += 1
         if (!state || failCountRef.current >= 3) {
           setError(data.error || 'Timer introuvable')
@@ -239,11 +245,16 @@ function RemoteControl() {
   const handleNext = () => handleAction('next')
   const handlePrevious = () => handleAction('previous')
   const handleReset = () => {
-    if (confirm('Réinitialiser le timer ?')) handleAction('reset')
+    setConfirmReset(true)
+  }
+  const confirmDoReset = () => {
+    setConfirmReset(false)
+    handleAction('reset')
   }
   const handleAddTime = (seconds) => handleAction('addtime', { seconds })
 
   const handleJumpToSession = async (sessionIndex) => {
+    if (editMode) return
     try {
       await fetch(`/api/timer/${code}/goto`, {
         method: 'POST',
@@ -314,9 +325,85 @@ function RemoteControl() {
     }
   }
 
+  // ---- Session CRUD ----
+  const handleAddNewSession = async () => {
+    if (!newSession.nom_session.trim()) {
+      showFeedback('Nom requis')
+      return
+    }
+    try {
+      const response = await fetch(`/api/timer/${code}/sessions`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          nom_session: newSession.nom_session.trim(),
+          duree_secondes: (parseInt(newSession.duree_minutes, 10) || 5) * 60,
+          couleur: newSession.couleur,
+          type: newSession.type,
+        })
+      })
+      const data = await response.json()
+      if (data.success) {
+        showFeedback('Session ajoutée')
+        setShowAddSession(false)
+        setNewSession({ nom_session: '', duree_minutes: 5, couleur: SESSION_COLORS[(state?.sessions?.length || 0) % SESSION_COLORS.length], type: 'session' })
+        fetchState()
+      } else {
+        showFeedback(data.error || 'Erreur')
+      }
+    } catch (err) {
+      console.error('Error adding session:', err)
+      showFeedback('Erreur')
+    }
+  }
+
+  const handleUpdateSession = async (index, updates) => {
+    try {
+      const response = await fetch(`/api/timer/${code}/sessions/${index}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updates)
+      })
+      const data = await response.json()
+      if (data.success) {
+        showFeedback('Session modifiée')
+        fetchState()
+      } else {
+        showFeedback(data.error || 'Erreur')
+      }
+    } catch (err) {
+      console.error('Error updating session:', err)
+      showFeedback('Erreur')
+    }
+  }
+
+  const handleDeleteSession = async (index) => {
+    if (state.sessions.length <= 1) {
+      showFeedback('Au moins 1 session requise')
+      return
+    }
+    try {
+      const response = await fetch(`/api/timer/${code}/sessions/${index}`, {
+        method: 'DELETE',
+      })
+      const data = await response.json()
+      if (data.success) {
+        showFeedback('Session supprimée')
+        setEditingSession(null)
+        fetchState()
+      } else {
+        showFeedback(data.error || 'Erreur')
+      }
+    } catch (err) {
+      console.error('Error deleting session:', err)
+      showFeedback('Erreur')
+    }
+  }
+
   const formatTime = (seconds) => {
-    const mins = Math.floor(seconds / 60)
-    const secs = seconds % 60
+    const s = Math.max(0, Math.floor(seconds))
+    const mins = Math.floor(s / 60)
+    const secs = s % 60
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`
   }
 
@@ -354,9 +441,11 @@ function RemoteControl() {
     )
   }
 
-  const { current_session, mode, temps_restant, session_en_cours, total_sessions, progress } = state
-
-  const progressPercentage = Math.max(0, Math.min(100, progress * 100))
+  const { current_session, mode, temps_restant, session_en_cours, total_sessions } = state
+  const effectiveTotal = state.effective_total || Math.max(current_session.duree_secondes, temps_restant)
+  const progressValue = effectiveTotal > 0 ? 1 - (temps_restant / effectiveTotal) : 0
+  const clampedProgress = Math.max(0, Math.min(1, progressValue))
+  const progressPercentage = Math.round(clampedProgress * 100)
   const isPlaying = mode === 'play'
   const isPaused = mode === 'pause'
   const isCompleted = mode === 'termine'
@@ -369,6 +458,20 @@ function RemoteControl() {
     <div className="rc" style={{ '--session-color': sessionColor }}>
       {actionFeedback && (
         <div className="rc-feedback">{actionFeedback}</div>
+      )}
+
+      {/* Confirm reset overlay */}
+      {confirmReset && (
+        <div className="rc-confirm-overlay" onClick={() => setConfirmReset(false)}>
+          <div className="rc-confirm-card card" onClick={e => e.stopPropagation()}>
+            <h3>Réinitialiser le timer ?</h3>
+            <p>Le timer reviendra à la première session.</p>
+            <div className="rc-confirm-actions">
+              <button className="btn btn-danger" onClick={confirmDoReset}>Réinitialiser</button>
+              <button className="btn btn-secondary" onClick={() => setConfirmReset(false)}>Annuler</button>
+            </div>
+          </div>
+        </div>
       )}
 
       {isScrolled && (
@@ -444,7 +547,7 @@ function RemoteControl() {
               <circle
                 cx="100" cy="100" r={RADIUS} fill="none" stroke={sessionColor}
                 strokeWidth="12" strokeLinecap="round"
-                strokeDasharray={CIRCUMFERENCE} strokeDashoffset={CIRCUMFERENCE * (1 - progress)}
+                strokeDasharray={CIRCUMFERENCE} strokeDashoffset={CIRCUMFERENCE * (1 - (1 - clampedProgress))}
                 transform="rotate(-90 100 100)"
                 style={{ transition: isPlaying ? 'stroke-dashoffset 1s linear' : 'none' }}
               />
@@ -457,7 +560,7 @@ function RemoteControl() {
             </div>
           </div>
 
-          <div className="rc-progress-pct">{Math.round(progressPercentage)}%</div>
+          <div className="rc-progress-pct">{progressPercentage}% écoulé</div>
         </section>
 
         {/* Primary controls */}
@@ -606,23 +709,185 @@ function RemoteControl() {
         <section className="card rc-block">
           <div className="rc-sessions-head">
             <h3 className="rc-block-title">Sessions</h3>
-            <div className="rc-view-toggle">
+            <div className="rc-sessions-actions">
               <button
-                className={`rc-view-btn ${viewMode === 'agenda' ? 'is-active' : ''}`}
-                onClick={() => setViewMode('agenda')}
+                className={`rc-edit-toggle ${editMode ? 'is-active' : ''}`}
+                onClick={() => { setEditMode(!editMode); setEditingSession(null); setShowAddSession(false) }}
               >
-                Agenda
+                {editMode ? '✓ Terminé' : '✎ Modifier'}
               </button>
-              <button
-                className={`rc-view-btn ${viewMode === 'normal' ? 'is-active' : ''}`}
-                onClick={() => setViewMode('normal')}
-              >
-                Liste
-              </button>
+              {!editMode && (
+                <div className="rc-view-toggle">
+                  <button
+                    className={`rc-view-btn ${viewMode === 'agenda' ? 'is-active' : ''}`}
+                    onClick={() => setViewMode('agenda')}
+                  >
+                    Agenda
+                  </button>
+                  <button
+                    className={`rc-view-btn ${viewMode === 'normal' ? 'is-active' : ''}`}
+                    onClick={() => setViewMode('normal')}
+                  >
+                    Liste
+                  </button>
+                </div>
+              )}
             </div>
           </div>
 
-          {viewMode === 'normal' ? (
+          {/* Edit mode */}
+          {editMode ? (
+            <div className="rc-edit-list">
+              {state.sessions.map((session, idx) => {
+                const isEditing = editingSession === idx
+                return (
+                  <div
+                    key={idx}
+                    className={`rc-edit-item ${isEditing ? 'is-editing' : ''}`}
+                    style={{ borderLeftColor: session.couleur }}
+                  >
+                    <div className="rc-edit-item-head" onClick={() => setEditingSession(isEditing ? null : idx)}>
+                      <span className="rc-edit-color" style={{ backgroundColor: session.couleur }} />
+                      <span className="rc-edit-name">{session.nom_session}</span>
+                      <span className="rc-edit-dur">{Math.floor(session.duree_secondes / 60)} min</span>
+                      <span className="rc-edit-chevron">{isEditing ? '▼' : '▶'}</span>
+                    </div>
+
+                    {isEditing && (
+                      <div className="rc-edit-form">
+                        <div className="rc-edit-field">
+                          <label>Nom</label>
+                          <input
+                            className="input"
+                            type="text"
+                            defaultValue={session.nom_session}
+                            onBlur={(e) => {
+                              if (e.target.value.trim() && e.target.value !== session.nom_session) {
+                                handleUpdateSession(idx, { nom_session: e.target.value.trim() })
+                              }
+                            }}
+                            onKeyDown={(e) => { if (e.key === 'Enter') e.target.blur() }}
+                          />
+                        </div>
+                        <div className="rc-edit-field">
+                          <label>Durée (minutes)</label>
+                          <input
+                            className="input"
+                            type="number"
+                            min="1"
+                            defaultValue={Math.floor(session.duree_secondes / 60)}
+                            onBlur={(e) => {
+                              const mins = parseInt(e.target.value, 10) || 1
+                              if (mins * 60 !== session.duree_secondes) {
+                                handleUpdateSession(idx, { duree_secondes: mins * 60 })
+                              }
+                            }}
+                            onKeyDown={(e) => { if (e.key === 'Enter') e.target.blur() }}
+                          />
+                        </div>
+                        <div className="rc-edit-field">
+                          <label>Type</label>
+                          <select
+                            className="select"
+                            defaultValue={session.type}
+                            onChange={(e) => handleUpdateSession(idx, { type: e.target.value })}
+                          >
+                            <option value="session">Session</option>
+                            <option value="pause">Pause</option>
+                          </select>
+                        </div>
+                        <div className="rc-edit-field">
+                          <label>Couleur</label>
+                          <div className="rc-color-grid">
+                            {SESSION_COLORS.map(c => (
+                              <button
+                                key={c}
+                                className={`rc-color-dot ${session.couleur === c ? 'is-selected' : ''}`}
+                                style={{ backgroundColor: c }}
+                                onClick={() => handleUpdateSession(idx, { couleur: c })}
+                              />
+                            ))}
+                          </div>
+                        </div>
+                        <button
+                          className="btn btn-danger btn-sm rc-edit-delete"
+                          onClick={() => handleDeleteSession(idx)}
+                          disabled={state.sessions.length <= 1}
+                        >
+                          Supprimer cette session
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )
+              })}
+
+              {/* Add session */}
+              {showAddSession ? (
+                <div className="rc-add-session-form">
+                  <div className="rc-edit-field">
+                    <label>Nom</label>
+                    <input
+                      className="input"
+                      type="text"
+                      placeholder="Ex : Brainstorming"
+                      value={newSession.nom_session}
+                      onChange={(e) => setNewSession({ ...newSession, nom_session: e.target.value })}
+                      onKeyDown={(e) => { if (e.key === 'Enter') handleAddNewSession() }}
+                      autoFocus
+                    />
+                  </div>
+                  <div className="rc-add-row">
+                    <div className="rc-edit-field" style={{ flex: 1 }}>
+                      <label>Durée (min)</label>
+                      <input
+                        className="input"
+                        type="number"
+                        min="1"
+                        value={newSession.duree_minutes}
+                        onChange={(e) => setNewSession({ ...newSession, duree_minutes: parseInt(e.target.value, 10) || 1 })}
+                      />
+                    </div>
+                    <div className="rc-edit-field" style={{ flex: 1 }}>
+                      <label>Type</label>
+                      <select
+                        className="select"
+                        value={newSession.type}
+                        onChange={(e) => setNewSession({ ...newSession, type: e.target.value, couleur: e.target.value === 'pause' ? '#64748B' : newSession.couleur })}
+                      >
+                        <option value="session">Session</option>
+                        <option value="pause">Pause</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div className="rc-edit-field">
+                    <label>Couleur</label>
+                    <div className="rc-color-grid">
+                      {SESSION_COLORS.map(c => (
+                        <button
+                          key={c}
+                          className={`rc-color-dot ${newSession.couleur === c ? 'is-selected' : ''}`}
+                          style={{ backgroundColor: c }}
+                          onClick={() => setNewSession({ ...newSession, couleur: c })}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                  <div className="rc-add-actions">
+                    <button className="btn btn-primary btn-sm" onClick={handleAddNewSession}>Ajouter</button>
+                    <button className="btn btn-secondary btn-sm" onClick={() => setShowAddSession(false)}>Annuler</button>
+                  </div>
+                </div>
+              ) : (
+                <button
+                  className="rc-add-session-btn"
+                  onClick={() => setShowAddSession(true)}
+                >
+                  + Ajouter une session
+                </button>
+              )}
+            </div>
+          ) : viewMode === 'normal' ? (
             <div className="rc-list">
               {state.sessions.map((session, idx) => {
                 const done = idx < session_en_cours
@@ -656,8 +921,9 @@ function RemoteControl() {
                 const isUpcoming = idx > session_en_cours
                 let progressPercent = 0
                 if (isCurrent && state.current_session) {
-                  const elapsed = state.current_session.duree_secondes - temps_restant
-                  progressPercent = (elapsed / state.current_session.duree_secondes) * 100
+                  const et = state.effective_total || Math.max(state.current_session.duree_secondes, temps_restant)
+                  const elapsed = et - temps_restant
+                  progressPercent = Math.max(0, Math.min(100, (elapsed / et) * 100))
                 }
 
                 return (

@@ -774,8 +774,212 @@
 
 .rc-credit:hover { color: var(--text-secondary); }
 
+/* ===== Confirm overlay ===== */
+.rc-confirm-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  background: rgba(0,0,0,0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  animation: fadeUp 0.2s var(--ease);
+}
+
+.rc-confirm-card {
+  width: 100%;
+  max-width: 340px;
+  padding: 28px 24px;
+  text-align: center;
+}
+
+.rc-confirm-card h3 { font-size: 1.15rem; font-weight: 700; margin-bottom: 6px; }
+.rc-confirm-card p { font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 18px; }
+
+.rc-confirm-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+}
+
+.rc-confirm-actions .btn { min-width: 120px; }
+
+/* ===== Sessions header with edit toggle ===== */
+.rc-sessions-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.rc-edit-toggle {
+  padding: 6px 14px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--text-secondary);
+  font-family: inherit;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background var(--t-fast), color var(--t-fast), border-color var(--t-fast);
+}
+
+.rc-edit-toggle:hover { border-color: var(--brand-light); color: var(--brand); }
+.rc-edit-toggle.is-active { background: var(--brand); color: #fff; border-color: var(--brand); }
+
+/* ===== Edit mode session list ===== */
+.rc-edit-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.rc-edit-item {
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--border-strong);
+  border-radius: var(--radius);
+  background: var(--surface);
+  overflow: hidden;
+  transition: box-shadow var(--t-fast);
+}
+
+.rc-edit-item.is-editing { box-shadow: var(--shadow); }
+
+.rc-edit-item-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  cursor: pointer;
+  transition: background var(--t-fast);
+}
+
+.rc-edit-item-head:hover { background: var(--surface-2); }
+
+.rc-edit-color {
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+  border-radius: 50%;
+}
+
+.rc-edit-name {
+  flex: 1;
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.rc-edit-dur {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+.rc-edit-chevron {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+.rc-edit-form {
+  padding: 0 14px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  border-top: 1px solid var(--border);
+  padding-top: 14px;
+}
+
+.rc-edit-field label {
+  display: block;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  margin-bottom: 4px;
+}
+
+.rc-edit-field .input,
+.rc-edit-field .select {
+  width: 100%;
+}
+
+.rc-edit-delete {
+  align-self: flex-start;
+}
+
+.rc-add-row {
+  display: flex;
+  gap: 10px;
+}
+
+/* ===== Color picker ===== */
+.rc-color-grid {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.rc-color-dot {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  cursor: pointer;
+  transition: transform var(--t-fast), border-color var(--t-fast);
+}
+
+.rc-color-dot:hover { transform: scale(1.15); }
+
+.rc-color-dot.is-selected {
+  border-color: var(--text);
+  box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px var(--text);
+}
+
+/* ===== Add session button / form ===== */
+.rc-add-session-btn {
+  width: 100%;
+  padding: 14px;
+  border: 2px dashed var(--border-strong);
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--text-secondary);
+  font-family: inherit;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color var(--t-fast), color var(--t-fast), background var(--t-fast);
+}
+
+.rc-add-session-btn:hover {
+  border-color: var(--brand-light);
+  color: var(--brand);
+  background: var(--brand-soft);
+}
+
+.rc-add-session-form {
+  border: 1px solid var(--brand-light);
+  border-radius: var(--radius);
+  background: var(--brand-soft);
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.rc-add-actions {
+  display: flex;
+  gap: 8px;
+}
+
 /* ===== Small phones ===== */
 @media (max-width: 360px) {
   .rc-time-grid { grid-template-columns: repeat(2, 1fr); }
   .rc-ring-time { font-size: 2.2rem; }
+  .rc-add-row { flex-direction: column; }
 }
