@@ -501,8 +501,11 @@ function RemoteControl() {
         {/* Main header */}
         <header className="rc-header">
           <div className="rc-title">
-            <h1>Télécommande</h1>
-            <p className="rc-code">Code: {state.timer?.code || code}</p>
+            <svg className="rc-logo-icon" width="22" height="22" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="#dbe4f7" strokeWidth="2.5"/><path d="M12 3a9 9 0 0 1 9 9" stroke="#1f3a8b" strokeWidth="2.5" strokeLinecap="round"/><circle cx="12" cy="12" r="2.4" fill="#1f3a8b"/></svg>
+            <div>
+              <h1>Télécommande</h1>
+              <p className="rc-code">Code: {state.timer?.code || code}</p>
+            </div>
           </div>
           <div className="rc-header-actions">
             <button
@@ -544,11 +547,11 @@ function RemoteControl() {
             </div>
           </div>
 
-          <div className="rc-ring">
+          <div className="rc-ring anim-breathe">
             <svg viewBox="0 0 200 200">
-              <circle cx="100" cy="100" r={RADIUS} fill="none" stroke="var(--surface-2)" strokeWidth="12" />
+              <circle cx="100" cy="100" r={RADIUS} fill="none" stroke="#e7ebf3" strokeWidth="12" />
               <circle
-                cx="100" cy="100" r={RADIUS} fill="none" stroke={sessionColor}
+                cx="100" cy="100" r={RADIUS} fill="none" stroke="#1f3a8b"
                 strokeWidth="12" strokeLinecap="round"
                 strokeDasharray={CIRCUMFERENCE} strokeDashoffset={CIRCUMFERENCE * (1 - (1 - clampedProgress))}
                 transform="rotate(-90 100 100)"
@@ -572,12 +575,11 @@ function RemoteControl() {
             <button
               className="rc-playpause"
               onClick={isPlaying ? handlePause : handleStart}
-              style={{ backgroundColor: isPlaying ? 'var(--brand)' : sessionColor }}
             >
               {isPlaying ? (
-                <><span className="rc-pp-icon">⏸</span><span>Pause</span></>
+                <><span className="rc-pp-icon"><svg viewBox="0 0 24 24"><rect x="6" y="4" width="4" height="16" rx="1" /><rect x="14" y="4" width="4" height="16" rx="1" /></svg></span><span>Pause</span></>
               ) : (
-                <><span className="rc-pp-icon">▶</span><span>Démarrer</span></>
+                <><span className="rc-pp-icon"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg></span><span>Démarrer</span></>
               )}
             </button>
           ) : (
@@ -619,10 +621,18 @@ function RemoteControl() {
             </button>
             {showTimeAdjust && (
               <div className="rc-time-grid">
-                <button className="rc-time-btn rc-time-neg" onClick={() => handleAddTime(-60)}>−1 min</button>
-                <button className="rc-time-btn rc-time-neg" onClick={() => handleAddTime(-30)}>−30 s</button>
-                <button className="rc-time-btn rc-time-pos" onClick={() => handleAddTime(30)}>+30 s</button>
-                <button className="rc-time-btn rc-time-pos" onClick={() => handleAddTime(60)}>+1 min</button>
+                <button className="rc-time-btn rc-time-neg" onClick={() => handleAddTime(-60)}>
+                  <span className="rc-time-btn-icon"><svg viewBox="0 0 24 24"><path d="M5 11h14v2H5z"/></svg></span>1 min
+                </button>
+                <button className="rc-time-btn rc-time-neg" onClick={() => handleAddTime(-30)}>
+                  <span className="rc-time-btn-icon"><svg viewBox="0 0 24 24"><path d="M5 11h14v2H5z"/></svg></span>30 s
+                </button>
+                <button className="rc-time-btn rc-time-pos" onClick={() => handleAddTime(30)}>
+                  <span className="rc-time-btn-icon"><svg viewBox="0 0 24 24"><path d="M11 5h2v6h6v2h-6v6h-2v-6H5v-2h6z"/></svg></span>30 s
+                </button>
+                <button className="rc-time-btn rc-time-pos" onClick={() => handleAddTime(60)}>
+                  <span className="rc-time-btn-icon"><svg viewBox="0 0 24 24"><path d="M11 5h2v6h6v2h-6v6h-2v-6H5v-2h6z"/></svg></span>1 min
+                </button>
               </div>
             )}
           </section>

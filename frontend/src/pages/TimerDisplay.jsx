@@ -64,7 +64,7 @@ const LuxeTimer = ({ time, progress, state, currentSession, sessionColor }) => {
 
   return (
     <div className="luxe-wrap">
-      <div className="luxe-ring" style={{ width: size, height: size }}>
+      <div className="luxe-ring anim-breathe" style={{ width: size, height: size }}>
         <svg viewBox={`0 0 ${size} ${size}`} className="luxe-svg">
           {ticks}
           <circle cx={size / 2} cy={size / 2} r={r} fill="none"
@@ -318,7 +318,7 @@ export default function TimerDisplay() {
   const total = state?.effective_total || Math.max(currentSession?.duree_secondes || 1, localTime);
   const progress = Math.max(0, Math.min(1, localTime / total));
   const time = formatTime(localTime);
-  const isCritical = state?.mode === 'play' && localTime <= 5 && localTime > 0;
+  const isCritical = state?.mode === 'play' && localTime <= 10 && localTime > 0;
   const Renderer = THEME_RENDERERS[theme];
 
   if (loading) {

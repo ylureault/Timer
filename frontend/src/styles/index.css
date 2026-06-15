@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap');
 
 * {
   margin: 0;
@@ -9,23 +9,29 @@
 :root {
   /* ===== INSUFFLE Brand ===== */
   --brand: #1f3a8b;
-  --brand-light: #3b82f6;
-  --brand-soft: #eef2fb;
+  --brand-light: #2546a8;
+  --brand-soft: #dbe4f7;
+  --brand-hover: #1a3178;
   --accent: #ffde59;
   --accent-dark: #f5c518;
 
-  /* ===== Surfaces (light, minimalist) ===== */
-  --bg: #f7f8fa;
+  /* ===== Surfaces ===== */
+  --bg: #eaedf2;
   --surface: #ffffff;
-  --surface-2: #f1f3f7;
-  --border: #e7e9ef;
-  --border-strong: #d3d8e2;
+  --surface-2: #f8fafc;
+  --surface-alt: #f1f5f9;
+  --border: #e2e8f0;
+  --border-strong: #d7deea;
+  --border-light: #eef1f5;
 
   /* ===== Text ===== */
-  --text: #0f1729;
-  --text-secondary: #56607a;
-  --text-muted: #6b7385; /* WCAG AA (>=4.5:1 on white) */
+  --text: #0f172a;
+  --text-secondary: #475569;
+  --text-muted: #94a3b8;
   --text-on-brand: #ffffff;
+
+  /* ===== Timer font ===== */
+  --font-timer: 'Space Grotesk', monospace;
 
   /* ===== Semantic ===== */
   --success: #16a34a;
@@ -68,7 +74,7 @@ html {
 }
 
 body {
-  font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-family: 'Manrope', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   background: var(--bg);
@@ -76,6 +82,19 @@ body {
   line-height: 1.55;
   font-size: 16px;
 }
+
+/* ===== Design system animations ===== */
+@keyframes breathe { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.025); } }
+@keyframes glow { 0%, 100% { filter: drop-shadow(0 0 0 rgba(31,58,139,0)); } 50% { filter: drop-shadow(0 0 16px rgba(31,58,139,.4)); } }
+@keyframes urgentPulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: .5; transform: scale(.96); } }
+@keyframes softPulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(31,58,139,.28); } 50% { box-shadow: 0 0 0 14px rgba(31,58,139,0); } }
+@keyframes floatIn { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+
+.anim-breathe { animation: breathe 5s ease-in-out infinite; }
+.anim-glow { animation: glow 4.5s ease-in-out infinite; }
+.anim-urgent { animation: urgentPulse 1.2s ease-in-out infinite; }
+.anim-soft { animation: softPulse 2.6s ease-in-out infinite; }
+.anim-float { animation: floatIn .6s ease both; }
 
 h1, h2, h3, h4 {
   line-height: 1.15;

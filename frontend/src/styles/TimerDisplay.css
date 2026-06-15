@@ -120,8 +120,9 @@
   gap: 14px;
 }
 .luxe-time {
+  font-family: 'Space Grotesk', monospace;
   font-size: clamp(3.4rem, 13vmin, 9rem);
-  font-weight: 300;
+  font-weight: 700;
   letter-spacing: -0.02em;
   font-variant-numeric: tabular-nums;
   line-height: 1;
@@ -138,8 +139,9 @@
   gap: 30px;
 }
 .aplat-time {
+  font-family: 'Space Grotesk', monospace;
   font-size: clamp(4.5rem, 22vw, 16rem);
-  font-weight: 800;
+  font-weight: 700;
   letter-spacing: -0.04em;
   font-variant-numeric: tabular-nums;
   line-height: 0.9;
@@ -183,6 +185,7 @@
   gap: 16px;
 }
 .aurora-time {
+  font-family: 'Space Grotesk', monospace;
   font-size: clamp(4rem, 17vmin, 12rem);
   font-weight: 700;
   letter-spacing: -0.03em;
@@ -191,13 +194,16 @@
   text-shadow: 0 0 40px rgba(255, 255, 255, 0.25);
 }
 
-/* ---------- Critical (last 5s) ---------- */
+/* ---------- Critical (last 10s) — urgency pulse ---------- */
 .tdisplay.is-critical .luxe-time,
 .tdisplay.is-critical .aplat-time,
 .tdisplay.is-critical .aurora-time {
-  animation: tdCritical 1s ease-in-out infinite;
+  animation: urgentPulse 1.2s ease-in-out infinite;
 }
-@keyframes tdCritical { 0%,100%{ transform: scale(1) } 50%{ transform: scale(1.04) } }
+.tdisplay.is-critical .luxe-ring,
+.tdisplay.is-critical .aurora-orb {
+  animation: urgentPulse 1.2s ease-in-out infinite;
+}
 
 /* ---------- Live message ---------- */
 .td-message {
