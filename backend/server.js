@@ -1,391 +1,279 @@
 import express from 'express';
 import cors from 'cors';
+import { WebSocketServer } from 'ws';
+import { createServer } from 'http';
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
+import { existsSync } from 'fs';
 import db from './database.js';
-import {
-  generate4DigitCode,
-  generateUniqueId,
-  generateAdminToken,
-  calculateTimeRemaining
-} from './utils.js';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+const WS_PORT = process.env.WS_PORT || 3001;
 
+// Middleware
 app.use(cors());
 app.use(express.json());
 
+// Serve static files from frontend build in production
+const frontendDistPath = join(__dirname, '../frontend/dist');
+if (existsSync(frontendDistPath)) {
+  app.use(express.static(frontendDistPath));
+}
+
 // ============================
-// SALON CREATION
+// UTILITY FUNCTIONS
 // ============================
 
-app.post('/api/salon/create', (req, res) => {
+const generateCode = () => {
+  const p1 = Math.floor(100 + Math.random() * 900).toString();
+  const p2 = Math.floor(100 + Math.random() * 900).toString();
+  return `${p1}-${p2}`;
+};
+
+const generateEditToken = () => {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  let token = '';
+  for (let i = 0; i < 12; i++) token += chars.charAt(Math.floor(Math.random() * chars.length));
+  return token;
+};
+
+const calculateTimeRemaining = (timerState, currentSession) => {
+  if (!timerState || !currentSession) return 0;
+
+  if (timerState.mode === 'pause' || timerState.mode === 'termine') {
+    return Math.max(0, timerState.temps_restant);
+  }
+
+  const elapsed = Math.floor((Date.now() - timerState.timestamp_dernier_update) / 1000);
+  return Math.max(0, timerState.temps_restant - elapsed);
+};
+
+const findTimerByCode = (code) => {
+  return db.prepare('SELECT * FROM timers WHERE code = ?').get(code);
+};
+
+const updateLastActivity = (timerId) => {
+  db.prepare('UPDATE timers SET last_activity = CURRENT_TIMESTAMP WHERE id = ?').run(timerId);
+};
+
+// ============================
+// TIMER CREATION (public, no auth)
+// ============================
+
+app.post('/api/timer/create', (req, res) => {
   try {
-    const { nom } = req.body;
+    const { name, sessions } = req.body;
 
-    // Generate unique identifiers
-    let code4chiffres, urlUnique;
+    if (!name) {
+      return res.status(400).json({ success: false, error: 'Nom du timer requis' });
+    }
+
+    if (!sessions || !Array.isArray(sessions) || sessions.length === 0) {
+      return res.status(400).json({ success: false, error: 'Au moins une session requise' });
+    }
+
+    // Generate unique code (up to 100 attempts)
+    let code;
     let attempts = 0;
-
-    // Ensure unique code
-    while (attempts < 10) {
-      code4chiffres = generate4DigitCode();
-      const existing = db.prepare('SELECT id FROM salons WHERE code_4chiffres = ?').get(code4chiffres);
+    while (attempts < 100) {
+      code = generateCode();
+      const existing = db.prepare('SELECT id FROM timers WHERE code = ?').get(code);
       if (!existing) break;
       attempts++;
     }
+    if (attempts >= 100) {
+      return res.status(500).json({ success: false, error: 'Impossible de generer un code unique' });
+    }
 
-    urlUnique = generateUniqueId();
-    const tokenAdmin = generateAdminToken();
+    const editToken = generateEditToken();
 
-    // Insert salon
+    // Insert timer
     const result = db.prepare(`
-      INSERT INTO salons (code_4chiffres, url_unique, token_admin, nom)
-      VALUES (?, ?, ?, ?)
-    `).run(code4chiffres, urlUnique, tokenAdmin, nom || null);
+      INSERT INTO timers (name, code, edit_token)
+      VALUES (?, ?, ?)
+    `).run(name, code, editToken);
 
-    const salonId = result.lastInsertRowid;
+    const timerId = result.lastInsertRowid;
+
+    // Insert sessions
+    const insertSession = db.prepare(`
+      INSERT INTO sessions (timer_id, ordre, nom_session, duree_secondes, couleur, type)
+      VALUES (?, ?, ?, ?, ?, ?)
+    `);
+
+    sessions.forEach((session, index) => {
+      insertSession.run(
+        timerId,
+        index,
+        session.nom_session || 'Session',
+        session.duree_secondes || 300,
+        session.couleur || '#6366f1',
+        session.type || 'session'
+      );
+    });
 
     // Initialize timer state
+    const firstDuration = sessions[0].duree_secondes || 300;
     db.prepare(`
-      INSERT INTO timer_states (salon_id, session_en_cours, temps_restant, mode)
-      VALUES (?, 0, 0, 'pause')
-    `).run(salonId);
+      INSERT INTO timer_states (timer_id, session_en_cours, temps_restant, mode, timestamp_dernier_update)
+      VALUES (?, 0, ?, 'pause', ?)
+    `).run(timerId, firstDuration, Date.now());
 
     res.json({
       success: true,
-      code_4chiffres: code4chiffres,
-      url: urlUnique,
-      token_admin: tokenAdmin,
-      salon_id: salonId
+      code,
+      edit_token: editToken
     });
   } catch (error) {
-    console.error('Error creating salon:', error);
+    console.error('Create timer error:', error);
     res.status(500).json({ success: false, error: error.message });
   }
 });
 
 // ============================
-// SESSION MANAGEMENT
+// TIMER INFO (public)
 // ============================
 
-app.post('/api/salon/:code/sessions/add', (req, res) => {
+app.get('/api/timer/edit/:token', (req, res) => {
   try {
-    const { code } = req.params;
-    const { nom_session, duree_secondes, couleur, type } = req.body;
+    const { token } = req.params;
 
-    const salon = db.prepare('SELECT id FROM salons WHERE code_4chiffres = ? OR url_unique = ?').get(code, code);
-    if (!salon) {
-      return res.status(404).json({ success: false, error: 'Salon not found' });
+    const timer = db.prepare('SELECT * FROM timers WHERE edit_token = ?').get(token);
+    if (!timer) {
+      return res.status(404).json({ success: false, error: 'Timer non trouve' });
     }
 
-    // Get next order
-    const maxOrder = db.prepare('SELECT MAX(ordre) as max FROM sessions WHERE salon_id = ?').get(salon.id);
-    const nextOrder = (maxOrder.max || -1) + 1;
+    const sessions = db.prepare('SELECT * FROM sessions WHERE timer_id = ? ORDER BY ordre').all(timer.id);
+    const state = db.prepare('SELECT * FROM timer_states WHERE timer_id = ?').get(timer.id);
 
-    const result = db.prepare(`
-      INSERT INTO sessions (salon_id, ordre, nom_session, duree_secondes, couleur, type)
-      VALUES (?, ?, ?, ?, ?, ?)
-    `).run(salon.id, nextOrder, nom_session, duree_secondes, couleur, type || 'session');
-
-    res.json({ success: true, session_id: result.lastInsertRowid });
+    res.json({
+      success: true,
+      timer: {
+        id: timer.id,
+        name: timer.name,
+        code: timer.code,
+        edit_token: timer.edit_token,
+        created_at: timer.created_at
+      },
+      sessions,
+      state
+    });
   } catch (error) {
-    console.error('Error adding session:', error);
+    console.error('Get timer by edit token error:', error);
     res.status(500).json({ success: false, error: error.message });
   }
 });
 
-app.post('/api/salon/:code/sessions/update', (req, res) => {
+app.put('/api/timer/edit/:token', (req, res) => {
   try {
-    const { code } = req.params;
-    const { session_id, nom_session, duree_secondes, couleur } = req.body;
+    const { token } = req.params;
+    const { name, sessions } = req.body;
 
-    const salon = db.prepare('SELECT id FROM salons WHERE code_4chiffres = ? OR url_unique = ?').get(code, code);
-    if (!salon) {
-      return res.status(404).json({ success: false, error: 'Salon not found' });
+    const timer = db.prepare('SELECT * FROM timers WHERE edit_token = ?').get(token);
+    if (!timer) {
+      return res.status(404).json({ success: false, error: 'Timer non trouve' });
     }
 
-    db.prepare(`
-      UPDATE sessions
-      SET nom_session = COALESCE(?, nom_session),
-          duree_secondes = COALESCE(?, duree_secondes),
-          couleur = COALESCE(?, couleur)
-      WHERE id = ? AND salon_id = ?
-    `).run(nom_session, duree_secondes, couleur, session_id, salon.id);
+    const updateTimer = db.transaction(() => {
+      // Update name if provided
+      if (name) {
+        db.prepare('UPDATE timers SET name = ? WHERE id = ?').run(name, timer.id);
+      }
 
-    res.json({ success: true });
-  } catch (error) {
-    console.error('Error updating session:', error);
-    res.status(500).json({ success: false, error: error.message });
-  }
-});
+      // Replace sessions if provided
+      if (sessions && Array.isArray(sessions)) {
+        db.prepare('DELETE FROM sessions WHERE timer_id = ?').run(timer.id);
 
-app.post('/api/salon/:code/sessions/reorder', (req, res) => {
-  try {
-    const { code } = req.params;
-    const { session_ids } = req.body; // Array of session IDs in new order
+        const insertSession = db.prepare(`
+          INSERT INTO sessions (timer_id, ordre, nom_session, duree_secondes, couleur, type)
+          VALUES (?, ?, ?, ?, ?, ?)
+        `);
 
-    const salon = db.prepare('SELECT id FROM salons WHERE code_4chiffres = ? OR url_unique = ?').get(code, code);
-    if (!salon) {
-      return res.status(404).json({ success: false, error: 'Salon not found' });
-    }
+        sessions.forEach((session, index) => {
+          insertSession.run(
+            timer.id,
+            index,
+            session.nom_session || 'Session',
+            session.duree_secondes || 300,
+            session.couleur || '#6366f1',
+            session.type || 'session'
+          );
+        });
 
-    const updateStmt = db.prepare('UPDATE sessions SET ordre = ? WHERE id = ? AND salon_id = ?');
+        // Reset timer state to first session
+        if (sessions.length > 0) {
+          db.prepare(`
+            UPDATE timer_states
+            SET session_en_cours = 0, temps_restant = ?, mode = 'pause', timestamp_dernier_update = ?
+            WHERE timer_id = ?
+          `).run(sessions[0].duree_secondes || 300, Date.now(), timer.id);
+        }
+      }
 
-    session_ids.forEach((sessionId, index) => {
-      updateStmt.run(index, sessionId, salon.id);
+      updateLastActivity(timer.id);
     });
 
+    updateTimer();
+
+    broadcastTimerUpdate(timer.code);
     res.json({ success: true });
   } catch (error) {
-    console.error('Error reordering sessions:', error);
+    console.error('Update timer error:', error);
     res.status(500).json({ success: false, error: error.message });
   }
 });
 
-app.delete('/api/salon/:code/sessions/remove', (req, res) => {
+app.get('/api/timer/:code', (req, res) => {
   try {
     const { code } = req.params;
-    const { session_id } = req.body;
 
-    const salon = db.prepare('SELECT id FROM salons WHERE code_4chiffres = ? OR url_unique = ?').get(code, code);
-    if (!salon) {
-      return res.status(404).json({ success: false, error: 'Salon not found' });
+    const timer = findTimerByCode(code);
+    if (!timer) {
+      return res.status(404).json({ success: false, error: 'Timer non trouve' });
     }
 
-    db.prepare('DELETE FROM sessions WHERE id = ? AND salon_id = ?').run(session_id, salon.id);
+    const sessions = db.prepare('SELECT * FROM sessions WHERE timer_id = ? ORDER BY ordre').all(timer.id);
+    const state = db.prepare('SELECT * FROM timer_states WHERE timer_id = ?').get(timer.id);
 
-    res.json({ success: true });
+    res.json({
+      success: true,
+      timer: {
+        id: timer.id,
+        name: timer.name,
+        code: timer.code,
+        created_at: timer.created_at
+      },
+      sessions,
+      state
+    });
   } catch (error) {
-    console.error('Error removing session:', error);
+    console.error('Get public timer error:', error);
     res.status(500).json({ success: false, error: error.message });
   }
 });
 
 // ============================
-// TIMER CONTROL
+// TIMER STATE (polling fallback)
 // ============================
 
-app.post('/api/salon/:code/timer/start', (req, res) => {
+app.get('/api/timer/:code/state', (req, res) => {
   try {
     const { code } = req.params;
 
-    const salon = db.prepare('SELECT id FROM salons WHERE code_4chiffres = ? OR url_unique = ?').get(code, code);
-    if (!salon) {
-      return res.status(404).json({ success: false, error: 'Salon not found' });
+    const timer = findTimerByCode(code);
+    if (!timer) {
+      return res.status(404).json({ success: false, error: 'Timer non trouve' });
     }
 
-    const timerState = db.prepare('SELECT * FROM timer_states WHERE salon_id = ?').get(salon.id);
-    const sessions = db.prepare('SELECT * FROM sessions WHERE salon_id = ? ORDER BY ordre').all(salon.id);
+    // Update last activity on every state poll
+    updateLastActivity(timer.id);
 
-    if (sessions.length === 0) {
-      return res.status(400).json({ success: false, error: 'No sessions available' });
-    }
-
-    // If starting fresh or no time remaining, start first session
-    if (!timerState || timerState.temps_restant === 0) {
-      const firstSession = sessions[0];
-      db.prepare(`
-        UPDATE timer_states
-        SET session_en_cours = 0,
-            temps_restant = ?,
-            mode = 'play',
-            timestamp_dernier_update = ?
-        WHERE salon_id = ?
-      `).run(firstSession.duree_secondes, Date.now(), salon.id);
-    } else {
-      // Resume current session
-      db.prepare(`
-        UPDATE timer_states
-        SET mode = 'play',
-            timestamp_dernier_update = ?
-        WHERE salon_id = ?
-      `).run(Date.now(), salon.id);
-    }
-
-    res.json({ success: true });
-  } catch (error) {
-    console.error('Error starting timer:', error);
-    res.status(500).json({ success: false, error: error.message });
-  }
-});
-
-app.post('/api/salon/:code/timer/pause', (req, res) => {
-  try {
-    const { code } = req.params;
-
-    const salon = db.prepare('SELECT id FROM salons WHERE code_4chiffres = ? OR url_unique = ?').get(code, code);
-    if (!salon) {
-      return res.status(404).json({ success: false, error: 'Salon not found' });
-    }
-
-    const timerState = db.prepare('SELECT * FROM timer_states WHERE salon_id = ?').get(salon.id);
-    const sessions = db.prepare('SELECT * FROM sessions WHERE salon_id = ? ORDER BY ordre').all(salon.id);
-    const currentSession = sessions[timerState.session_en_cours];
-
-    // Calculate actual remaining time
-    const actualRemaining = calculateTimeRemaining(timerState, currentSession);
-
-    db.prepare(`
-      UPDATE timer_states
-      SET mode = 'pause',
-          temps_restant = ?,
-          timestamp_dernier_update = ?
-      WHERE salon_id = ?
-    `).run(actualRemaining, Date.now(), salon.id);
-
-    res.json({ success: true });
-  } catch (error) {
-    console.error('Error pausing timer:', error);
-    res.status(500).json({ success: false, error: error.message });
-  }
-});
-
-app.post('/api/salon/:code/timer/addtime', (req, res) => {
-  try {
-    const { code } = req.params;
-    const { seconds } = req.body;
-
-    const salon = db.prepare('SELECT id FROM salons WHERE code_4chiffres = ? OR url_unique = ?').get(code, code);
-    if (!salon) {
-      return res.status(404).json({ success: false, error: 'Salon not found' });
-    }
-
-    const timerState = db.prepare('SELECT * FROM timer_states WHERE salon_id = ?').get(salon.id);
-    const sessions = db.prepare('SELECT * FROM sessions WHERE salon_id = ? ORDER BY ordre').all(salon.id);
-    const currentSession = sessions[timerState.session_en_cours];
-
-    // Calculate actual remaining time and add seconds
-    const actualRemaining = calculateTimeRemaining(timerState, currentSession);
-    const newRemaining = actualRemaining + seconds;
-
-    db.prepare(`
-      UPDATE timer_states
-      SET temps_restant = ?,
-          timestamp_dernier_update = ?
-      WHERE salon_id = ?
-    `).run(newRemaining, Date.now(), salon.id);
-
-    res.json({ success: true });
-  } catch (error) {
-    console.error('Error adding time:', error);
-    res.status(500).json({ success: false, error: error.message });
-  }
-});
-
-app.post('/api/salon/:code/timer/next', (req, res) => {
-  try {
-    const { code } = req.params;
-
-    const salon = db.prepare('SELECT id FROM salons WHERE code_4chiffres = ? OR url_unique = ?').get(code, code);
-    if (!salon) {
-      return res.status(404).json({ success: false, error: 'Salon not found' });
-    }
-
-    const timerState = db.prepare('SELECT * FROM timer_states WHERE salon_id = ?').get(salon.id);
-    const sessions = db.prepare('SELECT * FROM sessions WHERE salon_id = ? ORDER BY ordre').all(salon.id);
-
-    if (timerState.session_en_cours + 1 < sessions.length) {
-      const nextSession = sessions[timerState.session_en_cours + 1];
-      db.prepare(`
-        UPDATE timer_states
-        SET session_en_cours = ?,
-            temps_restant = ?,
-            mode = 'pause',
-            timestamp_dernier_update = ?
-        WHERE salon_id = ?
-      `).run(timerState.session_en_cours + 1, nextSession.duree_secondes, Date.now(), salon.id);
-
-      res.json({ success: true });
-    } else {
-      // End of sessions
-      db.prepare(`
-        UPDATE timer_states
-        SET mode = 'termine',
-            temps_restant = 0,
-            timestamp_dernier_update = ?
-        WHERE salon_id = ?
-      `).run(Date.now(), salon.id);
-
-      res.json({ success: true, completed: true });
-    }
-  } catch (error) {
-    console.error('Error moving to next session:', error);
-    res.status(500).json({ success: false, error: error.message });
-  }
-});
-
-app.post('/api/salon/:code/timer/previous', (req, res) => {
-  try {
-    const { code } = req.params;
-
-    const salon = db.prepare('SELECT id FROM salons WHERE code_4chiffres = ? OR url_unique = ?').get(code, code);
-    if (!salon) {
-      return res.status(404).json({ success: false, error: 'Salon not found' });
-    }
-
-    const timerState = db.prepare('SELECT * FROM timer_states WHERE salon_id = ?').get(salon.id);
-    const sessions = db.prepare('SELECT * FROM sessions WHERE salon_id = ? ORDER BY ordre').all(salon.id);
-
-    if (timerState.session_en_cours > 0) {
-      const prevSession = sessions[timerState.session_en_cours - 1];
-      db.prepare(`
-        UPDATE timer_states
-        SET session_en_cours = ?,
-            temps_restant = ?,
-            mode = 'pause',
-            timestamp_dernier_update = ?
-        WHERE salon_id = ?
-      `).run(timerState.session_en_cours - 1, prevSession.duree_secondes, Date.now(), salon.id);
-
-      res.json({ success: true });
-    } else {
-      res.json({ success: false, error: 'Already at first session' });
-    }
-  } catch (error) {
-    console.error('Error moving to previous session:', error);
-    res.status(500).json({ success: false, error: error.message });
-  }
-});
-
-app.post('/api/salon/:code/timer/stop', (req, res) => {
-  try {
-    const { code } = req.params;
-
-    const salon = db.prepare('SELECT id FROM salons WHERE code_4chiffres = ? OR url_unique = ?').get(code, code);
-    if (!salon) {
-      return res.status(404).json({ success: false, error: 'Salon not found' });
-    }
-
-    db.prepare(`
-      UPDATE timer_states
-      SET mode = 'termine',
-          temps_restant = 0,
-          timestamp_dernier_update = ?
-      WHERE salon_id = ?
-    `).run(Date.now(), salon.id);
-
-    res.json({ success: true });
-  } catch (error) {
-    console.error('Error stopping timer:', error);
-    res.status(500).json({ success: false, error: error.message });
-  }
-});
-
-// ============================
-// STATE POLLING
-// ============================
-
-app.get('/api/salon/:code/state', (req, res) => {
-  try {
-    const { code } = req.params;
-
-    const salon = db.prepare('SELECT * FROM salons WHERE code_4chiffres = ? OR url_unique = ?').get(code, code);
-    if (!salon) {
-      return res.status(404).json({ success: false, error: 'Salon not found' });
-    }
-
-    const timerState = db.prepare('SELECT * FROM timer_states WHERE salon_id = ?').get(salon.id);
-    const sessions = db.prepare('SELECT * FROM sessions WHERE salon_id = ? ORDER BY ordre').all(salon.id);
+    const timerState = db.prepare('SELECT * FROM timer_states WHERE timer_id = ?').get(timer.id);
+    const sessions = db.prepare('SELECT * FROM sessions WHERE timer_id = ? ORDER BY ordre').all(timer.id);
 
     if (!timerState || sessions.length === 0) {
       return res.json({
@@ -393,20 +281,48 @@ app.get('/api/salon/:code/state', (req, res) => {
         mode: 'pause',
         session_en_cours: 0,
         temps_restant: 0,
-        sessions: sessions,
-        salon: {
-          code: salon.code_4chiffres,
-          nom: salon.nom
-        }
+        sessions,
+        timer: { code: timer.code, name: timer.name }
       });
     }
 
     const currentSession = sessions[timerState.session_en_cours] || sessions[0];
-    const actualRemaining = calculateTimeRemaining(timerState, currentSession);
+    let actualRemaining = calculateTimeRemaining(timerState, currentSession);
 
-    // Calculate progress (0 to 1)
-    const progress = currentSession ?
-      1 - (actualRemaining / currentSession.duree_secondes) : 0;
+    // Auto-advance if needed
+    if (timerState.auto_mode === 1 && timerState.mode === 'play' && actualRemaining <= 0) {
+      if (timerState.session_en_cours + 1 < sessions.length) {
+        const nextSession = sessions[timerState.session_en_cours + 1];
+        db.prepare(`
+          UPDATE timer_states
+          SET session_en_cours = ?, temps_restant = ?, mode = 'play', timestamp_dernier_update = ?
+          WHERE timer_id = ?
+        `).run(timerState.session_en_cours + 1, nextSession.duree_secondes, Date.now(), timer.id);
+
+        broadcastTimerUpdate(code);
+
+        return res.json({
+          success: true,
+          mode: 'play',
+          session_en_cours: timerState.session_en_cours + 1,
+          temps_restant: nextSession.duree_secondes,
+          current_session: nextSession,
+          sessions,
+          total_sessions: sessions.length,
+          message_actuel: timerState.message_actuel,
+          theme: timerState.theme || 'luxe',
+          auto_mode: true,
+          timer: { code: timer.code, name: timer.name }
+        });
+      } else {
+        db.prepare(`
+          UPDATE timer_states SET mode = 'termine', temps_restant = 0 WHERE timer_id = ?
+        `).run(timer.id);
+        broadcastTimerUpdate(code);
+      }
+    }
+
+    const progress = currentSession ? 1 - (actualRemaining / currentSession.duree_secondes) : 0;
 
     res.json({
       success: true,
@@ -416,133 +332,532 @@ app.get('/api/salon/:code/state', (req, res) => {
       temps_ecoule: currentSession ? currentSession.duree_secondes - actualRemaining : 0,
       progress: Math.max(0, Math.min(1, progress)),
       current_session: currentSession,
-      sessions: sessions,
+      sessions,
       total_sessions: sessions.length,
-      salon: {
-        code: salon.code_4chiffres,
-        nom: salon.nom
-      }
+      message_actuel: timerState.message_actuel,
+      message_timestamp: timerState.message_timestamp,
+      theme: timerState.theme || 'luxe',
+      auto_mode: timerState.auto_mode === 1,
+      timer: { code: timer.code, name: timer.name }
     });
   } catch (error) {
-    console.error('Error fetching state:', error);
-    res.status(500).json({ success: false, error: error.message });
-  }
-});
-
-// Get all sessions for a salon
-app.get('/api/salon/:code/sessions', (req, res) => {
-  try {
-    const { code } = req.params;
-
-    const salon = db.prepare('SELECT id FROM salons WHERE code_4chiffres = ? OR url_unique = ?').get(code, code);
-    if (!salon) {
-      return res.status(404).json({ success: false, error: 'Salon not found' });
-    }
-
-    const sessions = db.prepare('SELECT * FROM sessions WHERE salon_id = ? ORDER BY ordre').all(salon.id);
-
-    res.json({ success: true, sessions });
-  } catch (error) {
-    console.error('Error fetching sessions:', error);
+    console.error('Get state error:', error);
     res.status(500).json({ success: false, error: error.message });
   }
 });
 
 // ============================
-// SALON ADMIN (GET/UPDATE)
+// TIMER CONTROL (all public, by code)
 // ============================
 
-// Get salon details with all sessions
-app.get('/api/salon/:code', (req, res) => {
+app.post('/api/timer/:code/start', (req, res) => {
   try {
     const { code } = req.params;
 
-    const salon = db.prepare('SELECT * FROM salons WHERE code_4chiffres = ? OR url_unique = ?').get(code, code);
-    if (!salon) {
-      return res.status(404).json({ success: false, error: 'Salon not found' });
+    const timer = findTimerByCode(code);
+    if (!timer) {
+      return res.status(404).json({ success: false, error: 'Timer non trouve' });
     }
 
-    const sessions = db.prepare('SELECT * FROM sessions WHERE salon_id = ? ORDER BY ordre').all(salon.id);
+    const timerState = db.prepare('SELECT * FROM timer_states WHERE timer_id = ?').get(timer.id);
+    const sessions = db.prepare('SELECT * FROM sessions WHERE timer_id = ? ORDER BY ordre').all(timer.id);
 
-    res.json({
-      success: true,
-      salon: {
-        code: salon.code_4chiffres,
-        url: salon.url_unique,
-        nom: salon.nom
-      },
-      sessions: sessions
-    });
-  } catch (error) {
-    console.error('Error getting salon:', error);
-    res.status(500).json({ success: false, error: error.message });
-  }
-});
-
-// Update salon (name and sessions)
-app.put('/api/salon/:code', (req, res) => {
-  try {
-    const { code } = req.params;
-    const { nom, sessions } = req.body;
-
-    const salon = db.prepare('SELECT id FROM salons WHERE code_4chiffres = ? OR url_unique = ?').get(code, code);
-    if (!salon) {
-      return res.status(404).json({ success: false, error: 'Salon not found' });
+    if (sessions.length === 0) {
+      return res.status(400).json({ success: false, error: 'Aucune session disponible' });
     }
 
-    // Update salon name
-    if (nom !== undefined) {
-      db.prepare('UPDATE salons SET nom = ? WHERE id = ?').run(nom || null, salon.id);
-    }
-
-    // Update sessions if provided
-    if (sessions && Array.isArray(sessions)) {
-      // Delete all existing sessions
-      db.prepare('DELETE FROM sessions WHERE salon_id = ?').run(salon.id);
-
-      // Insert new sessions
-      const insertStmt = db.prepare(`
-        INSERT INTO sessions (salon_id, ordre, nom_session, duree_secondes, couleur, type)
-        VALUES (?, ?, ?, ?, ?, ?)
-      `);
-
-      sessions.forEach((session, index) => {
-        insertStmt.run(
-          salon.id,
-          session.ordre !== undefined ? session.ordre : index,
-          session.nom_session,
-          session.duree_secondes,
-          session.couleur,
-          session.type || 'session'
-        );
-      });
-
-      // Reset timer state to first session
+    if (!timerState || timerState.temps_restant === 0) {
       const firstSession = sessions[0];
-      if (firstSession) {
-        db.prepare(`
-          UPDATE timer_states
-          SET session_en_cours = 0,
-              temps_restant = ?,
-              mode = 'pause',
-              timestamp_dernier_update = ?
-          WHERE salon_id = ?
-        `).run(firstSession.duree_secondes, Date.now(), salon.id);
-      }
+      db.prepare(`
+        UPDATE timer_states
+        SET session_en_cours = 0, temps_restant = ?, mode = 'play', timestamp_dernier_update = ?
+        WHERE timer_id = ?
+      `).run(firstSession.duree_secondes, Date.now(), timer.id);
+    } else {
+      db.prepare(`
+        UPDATE timer_states
+        SET mode = 'play', timestamp_dernier_update = ?
+        WHERE timer_id = ?
+      `).run(Date.now(), timer.id);
     }
 
+    updateLastActivity(timer.id);
+    broadcastTimerUpdate(code);
     res.json({ success: true });
   } catch (error) {
-    console.error('Error updating salon:', error);
+    console.error('Start timer error:', error);
     res.status(500).json({ success: false, error: error.message });
   }
 });
 
-// Health check
-app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', timestamp: Date.now() });
+app.post('/api/timer/:code/pause', (req, res) => {
+  try {
+    const { code } = req.params;
+
+    const timer = findTimerByCode(code);
+    if (!timer) {
+      return res.status(404).json({ success: false, error: 'Timer non trouve' });
+    }
+
+    const timerState = db.prepare('SELECT * FROM timer_states WHERE timer_id = ?').get(timer.id);
+    const sessions = db.prepare('SELECT * FROM sessions WHERE timer_id = ? ORDER BY ordre').all(timer.id);
+    const currentSession = sessions[timerState.session_en_cours];
+
+    const actualRemaining = calculateTimeRemaining(timerState, currentSession);
+
+    db.prepare(`
+      UPDATE timer_states
+      SET mode = 'pause', temps_restant = ?, timestamp_dernier_update = ?
+      WHERE timer_id = ?
+    `).run(actualRemaining, Date.now(), timer.id);
+
+    updateLastActivity(timer.id);
+    broadcastTimerUpdate(code);
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Pause timer error:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
 });
 
-app.listen(PORT, () => {
-  console.log(`🚀 Timer Salon API running on http://localhost:${PORT}`);
+app.post('/api/timer/:code/next', (req, res) => {
+  try {
+    const { code } = req.params;
+
+    const timer = findTimerByCode(code);
+    if (!timer) {
+      return res.status(404).json({ success: false, error: 'Timer non trouve' });
+    }
+
+    const timerState = db.prepare('SELECT * FROM timer_states WHERE timer_id = ?').get(timer.id);
+    const sessions = db.prepare('SELECT * FROM sessions WHERE timer_id = ? ORDER BY ordre').all(timer.id);
+
+    if (timerState.session_en_cours + 1 < sessions.length) {
+      const nextSession = sessions[timerState.session_en_cours + 1];
+      db.prepare(`
+        UPDATE timer_states
+        SET session_en_cours = ?, temps_restant = ?, mode = 'pause', timestamp_dernier_update = ?
+        WHERE timer_id = ?
+      `).run(timerState.session_en_cours + 1, nextSession.duree_secondes, Date.now(), timer.id);
+
+      updateLastActivity(timer.id);
+      broadcastTimerUpdate(code);
+      res.json({ success: true });
+    } else {
+      db.prepare(`
+        UPDATE timer_states
+        SET mode = 'termine', temps_restant = 0, timestamp_dernier_update = ?
+        WHERE timer_id = ?
+      `).run(Date.now(), timer.id);
+
+      updateLastActivity(timer.id);
+      broadcastTimerUpdate(code);
+      res.json({ success: true, completed: true });
+    }
+  } catch (error) {
+    console.error('Next session error:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+app.post('/api/timer/:code/previous', (req, res) => {
+  try {
+    const { code } = req.params;
+
+    const timer = findTimerByCode(code);
+    if (!timer) {
+      return res.status(404).json({ success: false, error: 'Timer non trouve' });
+    }
+
+    const timerState = db.prepare('SELECT * FROM timer_states WHERE timer_id = ?').get(timer.id);
+    const sessions = db.prepare('SELECT * FROM sessions WHERE timer_id = ? ORDER BY ordre').all(timer.id);
+
+    if (timerState.session_en_cours > 0) {
+      const prevSession = sessions[timerState.session_en_cours - 1];
+      db.prepare(`
+        UPDATE timer_states
+        SET session_en_cours = ?, temps_restant = ?, mode = 'pause', timestamp_dernier_update = ?
+        WHERE timer_id = ?
+      `).run(timerState.session_en_cours - 1, prevSession.duree_secondes, Date.now(), timer.id);
+
+      updateLastActivity(timer.id);
+      broadcastTimerUpdate(code);
+      res.json({ success: true });
+    } else {
+      res.json({ success: false, error: 'Deja a la premiere session' });
+    }
+  } catch (error) {
+    console.error('Previous session error:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+app.post('/api/timer/:code/reset', (req, res) => {
+  try {
+    const { code } = req.params;
+
+    const timer = findTimerByCode(code);
+    if (!timer) {
+      return res.status(404).json({ success: false, error: 'Timer non trouve' });
+    }
+
+    const sessions = db.prepare('SELECT * FROM sessions WHERE timer_id = ? ORDER BY ordre').all(timer.id);
+
+    db.prepare(`
+      UPDATE timer_states
+      SET session_en_cours = 0, temps_restant = ?, mode = 'pause', timestamp_dernier_update = ?
+      WHERE timer_id = ?
+    `).run(sessions[0]?.duree_secondes || 0, Date.now(), timer.id);
+
+    updateLastActivity(timer.id);
+    broadcastTimerUpdate(code);
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Reset timer error:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+app.post('/api/timer/:code/addtime', (req, res) => {
+  try {
+    const { code } = req.params;
+    const { seconds } = req.body;
+
+    const timer = findTimerByCode(code);
+    if (!timer) {
+      return res.status(404).json({ success: false, error: 'Timer non trouve' });
+    }
+
+    const timerState = db.prepare('SELECT * FROM timer_states WHERE timer_id = ?').get(timer.id);
+    const sessions = db.prepare('SELECT * FROM sessions WHERE timer_id = ? ORDER BY ordre').all(timer.id);
+    const currentSession = sessions[timerState.session_en_cours];
+
+    const actualRemaining = calculateTimeRemaining(timerState, currentSession);
+    const newRemaining = Math.max(0, actualRemaining + (seconds || 0));
+
+    db.prepare(`
+      UPDATE timer_states
+      SET temps_restant = ?, timestamp_dernier_update = ?
+      WHERE timer_id = ?
+    `).run(newRemaining, Date.now(), timer.id);
+
+    updateLastActivity(timer.id);
+    broadcastTimerUpdate(code);
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Add time error:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+app.post('/api/timer/:code/goto', (req, res) => {
+  try {
+    const { code } = req.params;
+    const { sessionIndex } = req.body;
+
+    const timer = findTimerByCode(code);
+    if (!timer) {
+      return res.status(404).json({ success: false, error: 'Timer non trouve' });
+    }
+
+    const sessions = db.prepare('SELECT * FROM sessions WHERE timer_id = ? ORDER BY ordre').all(timer.id);
+
+    if (sessionIndex < 0 || sessionIndex >= sessions.length) {
+      return res.status(400).json({ success: false, error: 'Index de session invalide' });
+    }
+
+    const targetSession = sessions[sessionIndex];
+    db.prepare(`
+      UPDATE timer_states
+      SET session_en_cours = ?, temps_restant = ?, mode = 'pause', timestamp_dernier_update = ?
+      WHERE timer_id = ?
+    `).run(sessionIndex, targetSession.duree_secondes, Date.now(), timer.id);
+
+    updateLastActivity(timer.id);
+    broadcastTimerUpdate(code);
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Go to session error:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+app.post('/api/timer/:code/message', (req, res) => {
+  try {
+    const { code } = req.params;
+    const { message } = req.body;
+
+    const timer = findTimerByCode(code);
+    if (!timer) {
+      return res.status(404).json({ success: false, error: 'Timer non trouve' });
+    }
+
+    db.prepare(`
+      UPDATE timer_states
+      SET message_actuel = ?, message_timestamp = ?
+      WHERE timer_id = ?
+    `).run(message?.trim() || null, message ? Date.now() : null, timer.id);
+
+    updateLastActivity(timer.id);
+    broadcastTimerUpdate(code);
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Message error:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+app.post('/api/timer/:code/theme', (req, res) => {
+  try {
+    const { code } = req.params;
+    const { theme } = req.body;
+
+    const validThemes = ['luxe', 'aplat', 'aurora'];
+    if (!validThemes.includes(theme)) {
+      return res.status(400).json({ success: false, error: 'Theme invalide. Themes disponibles: luxe, aplat, aurora' });
+    }
+
+    const timer = findTimerByCode(code);
+    if (!timer) {
+      return res.status(404).json({ success: false, error: 'Timer non trouve' });
+    }
+
+    db.prepare(`
+      UPDATE timer_states SET theme = ? WHERE timer_id = ?
+    `).run(theme, timer.id);
+
+    updateLastActivity(timer.id);
+    broadcastTimerUpdate(code);
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Theme error:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+app.post('/api/timer/:code/auto-mode', (req, res) => {
+  try {
+    const { code } = req.params;
+    const { auto_mode } = req.body;
+
+    const timer = findTimerByCode(code);
+    if (!timer) {
+      return res.status(404).json({ success: false, error: 'Timer non trouve' });
+    }
+
+    db.prepare(`
+      UPDATE timer_states SET auto_mode = ? WHERE timer_id = ?
+    `).run(auto_mode ? 1 : 0, timer.id);
+
+    updateLastActivity(timer.id);
+    broadcastTimerUpdate(code);
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Auto mode error:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// ============================
+// LEGACY REDIRECT
+// ============================
+
+app.get('/api/salon/:code/state', (req, res) => {
+  return res.redirect(307, `/api/timer/${req.params.code}/state`);
+});
+
+// ============================
+// HEALTH CHECK
+// ============================
+
+app.get('/api/health', (req, res) => {
+  res.json({ status: 'ok', version: '3.0.0', timestamp: Date.now() });
+});
+
+// ============================
+// SPA FALLBACK
+// ============================
+
+if (existsSync(frontendDistPath)) {
+  app.get('*', (req, res) => {
+    res.sendFile(join(frontendDistPath, 'index.html'));
+  });
+}
+
+// ============================
+// WEBSOCKET SERVER
+// ============================
+
+const server = createServer(app);
+const wss = new WebSocketServer({ port: WS_PORT });
+
+// Store connections by timer code
+const timerConnections = new Map();
+
+wss.on('connection', (ws, req) => {
+  const url = new URL(req.url, `http://localhost:${WS_PORT}`);
+  const timerCode = url.searchParams.get('code');
+
+  if (!timerCode) {
+    ws.close(1008, 'Timer code required');
+    return;
+  }
+
+  // Add to connections
+  if (!timerConnections.has(timerCode)) {
+    timerConnections.set(timerCode, new Set());
+  }
+  timerConnections.get(timerCode).add(ws);
+
+  console.log(`WebSocket connected for timer: ${timerCode}`);
+
+  // Send initial state
+  sendTimerState(ws, timerCode);
+
+  ws.on('close', () => {
+    const connections = timerConnections.get(timerCode);
+    if (connections) {
+      connections.delete(ws);
+      if (connections.size === 0) {
+        timerConnections.delete(timerCode);
+      }
+    }
+    console.log(`WebSocket disconnected for timer: ${timerCode}`);
+  });
+
+  ws.on('error', (error) => {
+    console.error('WebSocket error:', error);
+  });
+});
+
+function sendTimerState(ws, code) {
+  try {
+    const timer = db.prepare('SELECT * FROM timers WHERE code = ?').get(code);
+    if (!timer) return;
+
+    const timerState = db.prepare('SELECT * FROM timer_states WHERE timer_id = ?').get(timer.id);
+    const sessions = db.prepare('SELECT * FROM sessions WHERE timer_id = ? ORDER BY ordre').all(timer.id);
+
+    if (!timerState) return;
+
+    const currentSession = sessions[timerState.session_en_cours] || sessions[0];
+    const actualRemaining = calculateTimeRemaining(timerState, currentSession);
+    const progress = currentSession ? 1 - (actualRemaining / currentSession.duree_secondes) : 0;
+
+    const state = {
+      type: 'state',
+      mode: timerState.mode,
+      session_en_cours: timerState.session_en_cours,
+      temps_restant: actualRemaining,
+      progress: Math.max(0, Math.min(1, progress)),
+      current_session: currentSession,
+      sessions,
+      total_sessions: sessions.length,
+      message_actuel: timerState.message_actuel,
+      theme: timerState.theme || 'luxe',
+      auto_mode: timerState.auto_mode === 1,
+      timer: { code: timer.code, name: timer.name }
+    };
+
+    if (ws.readyState === ws.OPEN) {
+      ws.send(JSON.stringify(state));
+    }
+  } catch (error) {
+    console.error('Send state error:', error);
+  }
+}
+
+function broadcastTimerUpdate(code) {
+  const connections = timerConnections.get(code);
+  if (!connections) return;
+
+  connections.forEach(ws => {
+    sendTimerState(ws, code);
+  });
+}
+
+// ============================
+// AUTO-ADVANCE CHECK
+// ============================
+
+function checkAutoAdvance() {
+  try {
+    const runningTimers = db.prepare(`
+      SELECT ts.*, t.code
+      FROM timer_states ts
+      JOIN timers t ON t.id = ts.timer_id
+      WHERE ts.mode = 'play' AND ts.auto_mode = 1
+    `).all();
+
+    const now = Date.now();
+
+    for (const timerState of runningTimers) {
+      const elapsed = Math.floor((now - timerState.timestamp_dernier_update) / 1000);
+      const actualRemaining = Math.max(0, timerState.temps_restant - elapsed);
+
+      if (actualRemaining <= 0) {
+        const sessions = db.prepare('SELECT * FROM sessions WHERE timer_id = ? ORDER BY ordre').all(timerState.timer_id);
+
+        if (timerState.session_en_cours + 1 < sessions.length) {
+          const nextSession = sessions[timerState.session_en_cours + 1];
+          db.prepare(`
+            UPDATE timer_states
+            SET session_en_cours = ?, temps_restant = ?, timestamp_dernier_update = ?
+            WHERE timer_id = ?
+          `).run(timerState.session_en_cours + 1, nextSession.duree_secondes, now, timerState.timer_id);
+
+          console.log(`Auto-advance: Timer ${timerState.code} -> Session ${timerState.session_en_cours + 2}`);
+          broadcastTimerUpdate(timerState.code);
+        } else {
+          db.prepare(`
+            UPDATE timer_states SET mode = 'termine', temps_restant = 0 WHERE timer_id = ?
+          `).run(timerState.timer_id);
+
+          console.log(`Auto-advance: Timer ${timerState.code} -> Complete`);
+          broadcastTimerUpdate(timerState.code);
+        }
+      }
+    }
+  } catch (error) {
+    console.error('Auto-advance check error:', error);
+  }
+}
+
+// Run auto-advance check every second
+setInterval(checkAutoAdvance, 1000);
+
+// ============================
+// CLEANUP JOB (every hour, delete timers inactive > 7 days)
+// ============================
+
+function cleanupOldTimers() {
+  try {
+    const result = db.prepare(`
+      DELETE FROM timers
+      WHERE last_activity < datetime('now', '-7 days')
+    `).run();
+
+    if (result.changes > 0) {
+      console.log(`Cleanup: deleted ${result.changes} inactive timer(s)`);
+    }
+  } catch (error) {
+    console.error('Cleanup error:', error);
+  }
+}
+
+// Run cleanup every hour
+setInterval(cleanupOldTimers, 60 * 60 * 1000);
+
+// Run cleanup once on startup
+cleanupOldTimers();
+
+// ============================
+// START SERVER
+// ============================
+
+server.listen(PORT, '0.0.0.0', () => {
+  console.log(`Timer API running on http://0.0.0.0:${PORT}`);
+  console.log(`WebSocket server running on ws://0.0.0.0:${WS_PORT}`);
+  console.log(`Auto-advance check running every second`);
+  console.log(`Cleanup job running every hour (removes timers inactive > 7 days)`);
 });

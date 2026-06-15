@@ -12,84 +12,181 @@ function RemoteControl() {
   const [actionFeedback, setActionFeedback] = useState(null)
   const [notes, setNotes] = useState('')
   const [showNotes, setShowNotes] = useState(false)
+  const [showStats, setShowStats] = useState(false)
   const [stats, setStats] = useState(null)
-  const [currentTheme, setCurrentTheme] = useState(localStorage.getItem('display_theme') || 'luxe')
+  const [currentTheme, setCurrentTheme] = useState('luxe')
+  const [message, setMessage] = useState('')
+  const [viewMode, setViewMode] = useState('agenda')
+  const [autoMode, setAutoMode] = useState(false)
+
+  const initSoundEnabled = () => {
+    const stored = localStorage.getItem('sound_enabled')
+    if (stored === null || stored === undefined) {
+      localStorage.setItem('sound_enabled', 'true')
+      return true
+    }
+    return stored === 'true'
+  }
+
+  const [soundEnabled, setSoundEnabled] = useState(initSoundEnabled())
+  const [isScrolled, setIsScrolled] = useState(false)
   const pollingInterval = useRef(null)
-  const themeChannel = useRef(null)
+  const previousTimeRef = useRef(null)
+  const audioContextRef = useRef(null)
+  const failCountRef = useRef(0)
 
-  // Initialize BroadcastChannel for reliable cross-tab communication
+  const getAudioContext = () => {
+    if (!audioContextRef.current) {
+      audioContextRef.current = new (window.AudioContext || window.webkitAudioContext)()
+    }
+    return audioContextRef.current
+  }
+
+  const playBeep = async () => {
+    if (!soundEnabled) return
+    try {
+      const audioContext = getAudioContext()
+      if (audioContext.state === 'suspended') await audioContext.resume()
+      const oscillator = audioContext.createOscillator()
+      const gainNode = audioContext.createGain()
+      oscillator.connect(gainNode)
+      gainNode.connect(audioContext.destination)
+      oscillator.frequency.value = 800
+      oscillator.type = 'sine'
+      gainNode.gain.setValueAtTime(0.1, audioContext.currentTime)
+      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1)
+      oscillator.start(audioContext.currentTime)
+      oscillator.stop(audioContext.currentTime + 0.1)
+    } catch (err) {
+      console.error('Error playing beep:', err)
+    }
+  }
+
+  const playBell = async () => {
+    try {
+      const audioContext = getAudioContext()
+      if (audioContext.state === 'suspended') await audioContext.resume()
+      const frequencies = [800, 1000, 1200]
+      const duration = 0.8
+      frequencies.forEach((freq, index) => {
+        const oscillator = audioContext.createOscillator()
+        const gainNode = audioContext.createGain()
+        oscillator.connect(gainNode)
+        gainNode.connect(audioContext.destination)
+        oscillator.frequency.value = freq
+        oscillator.type = 'sine'
+        const startTime = audioContext.currentTime + (index * 0.05)
+        gainNode.gain.setValueAtTime(0.15, startTime)
+        gainNode.gain.exponentialRampToValueAtTime(0.01, startTime + duration)
+        oscillator.start(startTime)
+        oscillator.stop(startTime + duration)
+      })
+      showFeedback('Ding!')
+    } catch (err) {
+      console.error('Error playing bell:', err)
+      showFeedback('Erreur son')
+    }
+  }
+
+  const toggleSound = () => {
+    const newValue = !soundEnabled
+    setSoundEnabled(newValue)
+    localStorage.setItem('sound_enabled', newValue.toString())
+    showFeedback(newValue ? 'Sons activés' : 'Sons désactivés')
+    if (newValue) setTimeout(playBeep, 100)
+  }
+
+  // Audible countdown: a short beep on each of the final 5 seconds while running.
+  // (Previously beeped on every tick — far too noisy.)
   useEffect(() => {
-    themeChannel.current = new BroadcastChannel('salon-theme-channel')
-
-    // Listen for theme changes from other tabs
-    themeChannel.current.onmessage = (event) => {
-      if (event.data.type === 'theme-change') {
-        setCurrentTheme(event.data.theme)
-        console.log('Theme received via BroadcastChannel:', event.data.theme)
-      }
+    if (!state) return
+    const t = state.temps_restant
+    const prev = previousTimeRef.current
+    if (
+      soundEnabled &&
+      state.mode === 'play' &&
+      prev !== null && t < prev &&
+      t <= 5 && t > 0
+    ) {
+      playBeep()
     }
+    previousTimeRef.current = t
+  }, [state?.temps_restant, state?.mode, soundEnabled])
 
-    return () => {
-      if (themeChannel.current) {
-        themeChannel.current.close()
-      }
-    }
+  useEffect(() => {
+    const handleScroll = () => setIsScrolled(window.scrollY > 100)
+    window.addEventListener('scroll', handleScroll)
+    return () => window.removeEventListener('scroll', handleScroll)
   }, [])
 
-  const handleThemeChange = (newTheme) => {
-    console.log('Changing theme to:', newTheme)
+  const handleThemeChange = async (newTheme) => {
     setCurrentTheme(newTheme)
-    localStorage.setItem('display_theme', newTheme)
-
-    // Broadcast to all tabs/windows using BroadcastChannel
-    if (themeChannel.current) {
-      themeChannel.current.postMessage({ type: 'theme-change', theme: newTheme })
+    try {
+      const response = await fetch(`/api/timer/${code}/theme`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ theme: newTheme })
+      })
+      if (response.ok) {
+        showFeedback('Thème changé')
+        fetchState()
+      } else {
+        showFeedback('Erreur')
+      }
+    } catch (err) {
+      console.error('Error changing theme:', err)
+      showFeedback('Erreur')
     }
-
-    // Also trigger custom event for same-window communication (fallback)
-    window.dispatchEvent(new CustomEvent('theme-change', { detail: { theme: newTheme } }))
-
-    console.log('Theme change broadcasted:', newTheme)
   }
 
   const themes = [
-    { id: 'applat', name: 'Applat', desc: 'Design minimaliste', emoji: '⬜', color: '#3B82F6' },
-    { id: 'luxe', name: 'Luxe', desc: 'Timer circulaire premium', emoji: '⌚', color: '#0d9488' },
-    { id: 'neon', name: 'Néon', desc: 'Futuriste cyber', emoji: '🌐', color: '#00ffff' },
-    { id: 'aurora', name: 'Aurora', desc: 'Dégradés colorés', emoji: '🌈', color: '#ec4899' }
+    { id: 'luxe', name: 'Luxe' },
+    { id: 'aplat', name: 'Aplat' },
+    { id: 'aurora', name: 'Aurora' }
   ]
 
   const fetchState = async () => {
     try {
-      const response = await fetch(`/api/salon/${code}/state`)
+      const response = await fetch(`/api/timer/${code}/state`)
       const data = await response.json()
 
       if (data.success) {
         setState(data)
         setError(null)
+        failCountRef.current = 0
+        if (data.theme && data.theme !== currentTheme) {
+          setCurrentTheme(data.theme)
+        }
+        if (data.auto_mode !== undefined) {
+          setAutoMode(data.auto_mode)
+        }
       } else {
-        setError(data.error || 'Salon non trouvé')
+        // Real "not found": surface immediately if we have nothing, else after a
+        // few consecutive failures (avoids flicker on a transient hiccup).
+        failCountRef.current += 1
+        if (!state || failCountRef.current >= 3) {
+          setError(data.error || 'Timer introuvable')
+        }
       }
       setLoading(false)
     } catch (err) {
       console.error('Error fetching state:', err)
-      setError('Erreur de connexion')
+      failCountRef.current += 1
+      if (!state || failCountRef.current >= 3) {
+        setError('Erreur de connexion')
+      }
       setLoading(false)
     }
   }
 
   useEffect(() => {
     fetchState()
-    pollingInterval.current = setInterval(fetchState, 500) // 500ms for remote control
-
+    pollingInterval.current = setInterval(fetchState, 500)
     return () => {
-      if (pollingInterval.current) {
-        clearInterval(pollingInterval.current)
-      }
+      if (pollingInterval.current) clearInterval(pollingInterval.current)
     }
   }, [code])
 
-  // Load notes when session changes
   useEffect(() => {
     if (state && state.current_session) {
       const sessionId = state.session_en_cours
@@ -98,7 +195,6 @@ function RemoteControl() {
     }
   }, [state?.session_en_cours, code])
 
-  // Calculate statistics
   useEffect(() => {
     if (state && state.sessions) {
       const completedSessions = state.sessions.slice(0, state.session_en_cours)
@@ -107,32 +203,27 @@ function RemoteControl() {
     }
   }, [state])
 
-  // Handle notes save
   const handleNotesChange = (e) => {
     const newNotes = e.target.value
     setNotes(newNotes)
-    if (state) {
-      saveSessionNotes(code, state.session_en_cours, newNotes)
-    }
+    if (state) saveSessionNotes(code, state.session_en_cours, newNotes)
   }
 
-  const showFeedback = (message) => {
-    setActionFeedback(message)
+  const showFeedback = (msg) => {
+    setActionFeedback(msg)
     setTimeout(() => setActionFeedback(null), 1500)
   }
 
   const handleAction = async (action, body = {}) => {
     try {
-      const response = await fetch(`/api/salon/${code}/timer/${action}`, {
+      const response = await fetch(`/api/timer/${code}/${action}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body)
       })
-
       const data = await response.json()
-
       if (data.success) {
-        fetchState() // Immediate update
+        fetchState()
         showFeedback('✓')
       } else {
         showFeedback('✗')
@@ -147,12 +238,81 @@ function RemoteControl() {
   const handlePause = () => handleAction('pause')
   const handleNext = () => handleAction('next')
   const handlePrevious = () => handleAction('previous')
-  const handleStop = () => {
-    if (confirm('Êtes-vous sûr de vouloir arrêter le cycle ?')) {
-      handleAction('stop')
-    }
+  const handleReset = () => {
+    if (confirm('Réinitialiser le timer ?')) handleAction('reset')
   }
   const handleAddTime = (seconds) => handleAction('addtime', { seconds })
+
+  const handleJumpToSession = async (sessionIndex) => {
+    try {
+      await fetch(`/api/timer/${code}/goto`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sessionIndex })
+      })
+      fetchState()
+      showFeedback(`Session ${sessionIndex + 1}`)
+    } catch (err) {
+      console.error('Error jumping to session:', err)
+      showFeedback('Erreur')
+    }
+  }
+
+  const handleSendMessage = async () => {
+    if (!message.trim()) return
+    try {
+      const response = await fetch(`/api/timer/${code}/message`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: message.trim() })
+      })
+      if (response.ok) {
+        setMessage('')
+        showFeedback('Message envoyé')
+      } else {
+        showFeedback('Erreur')
+      }
+    } catch (err) {
+      console.error('Error sending message:', err)
+      showFeedback('Erreur')
+    }
+  }
+
+  const handleClearMessage = async () => {
+    try {
+      await fetch(`/api/timer/${code}/message`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: null })
+      })
+      showFeedback('Message effacé')
+    } catch (err) {
+      console.error('Error clearing message:', err)
+      showFeedback('Erreur')
+    }
+  }
+
+  const handleAutoModeToggle = async () => {
+    const newAutoMode = !autoMode
+    setAutoMode(newAutoMode)
+    try {
+      const response = await fetch(`/api/timer/${code}/auto-mode`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ auto_mode: newAutoMode })
+      })
+      if (response.ok) {
+        showFeedback(newAutoMode ? 'Mode AUTO activé' : 'Mode AUTO désactivé')
+      } else {
+        showFeedback('Erreur')
+        setAutoMode(!newAutoMode)
+      }
+    } catch (err) {
+      console.error('Error toggling auto mode:', err)
+      showFeedback('Erreur')
+      setAutoMode(!newAutoMode)
+    }
+  }
 
   const formatTime = (seconds) => {
     const mins = Math.floor(seconds / 60)
@@ -162,21 +322,21 @@ function RemoteControl() {
 
   if (loading) {
     return (
-      <div className="remote-control loading">
+      <div className="rc-state">
         <div className="loader"></div>
-        <p>Connexion à la télécommande...</p>
+        <p>Connexion au timer...</p>
       </div>
     )
   }
 
   if (error) {
     return (
-      <div className="remote-control error">
-        <div className="error-content">
-          <h1>😕</h1>
-          <h2>{error}</h2>
-          <button className="btn btn-primary" onClick={() => navigate('/')}>
-            Retour à l'accueil
+      <div className="rc-state">
+        <div className="rc-state-card card">
+          <h1>Timer introuvable</h1>
+          <p>{error}</p>
+          <button className="btn btn-primary btn-lg" onClick={() => navigate('/')}>
+            Retour
           </button>
         </div>
       </div>
@@ -185,11 +345,10 @@ function RemoteControl() {
 
   if (!state || !state.current_session) {
     return (
-      <div className="remote-control error">
-        <div className="error-content">
-          <h1>⏱️</h1>
-          <h2>Aucune session disponible</h2>
-          <p>Configurez des sessions pour ce salon</p>
+      <div className="rc-state">
+        <div className="rc-state-card card">
+          <h1>Aucune session</h1>
+          <p>Configurez des sessions pour ce timer.</p>
         </div>
       </div>
     )
@@ -202,326 +361,381 @@ function RemoteControl() {
   const isPaused = mode === 'pause'
   const isCompleted = mode === 'termine'
 
+  const sessionColor = current_session.couleur || 'var(--brand)'
+  const RADIUS = 90
+  const CIRCUMFERENCE = 2 * Math.PI * RADIUS
+
   return (
-    <div className="remote-control" style={{ '--session-color': current_session.couleur }}>
-      {/* Feedback Toast */}
+    <div className="rc" style={{ '--session-color': sessionColor }}>
       {actionFeedback && (
-        <div className="action-feedback">{actionFeedback}</div>
+        <div className="rc-feedback">{actionFeedback}</div>
       )}
 
-      {/* Header */}
-      <div className="remote-header">
-        <div className="salon-info">
-          <h3>Télécommande</h3>
-          <p>Code: {state.salon.code}</p>
-        </div>
-        <div style={{ display: 'flex', gap: '8px' }}>
-          <button
-            className="btn-icon"
-            onClick={() => navigate(`/admin/${state.salon.code}`)}
-            title="Modifier le salon"
-          >
-            ✏️
-          </button>
-          <button className="btn-icon" onClick={() => window.location.reload()}>
-            🔄
-          </button>
-        </div>
-      </div>
-
-      {/* Current Session Display */}
-      <div className="current-session-card" style={{ borderColor: current_session.couleur }}>
-        <div className="session-header">
-          <span className="session-badge" style={{ backgroundColor: current_session.couleur }}>
-            {current_session.type === 'pause' ? '☕' : '🎯'}
-          </span>
-          <div className="session-details">
-            <h2>{current_session.nom_session}</h2>
-            <p>Session {session_en_cours + 1} / {total_sessions}</p>
+      {isScrolled && (
+        <div className="rc-sticky">
+          <div className="rc-sticky-left">
+            <span className="rc-sticky-time">{formatTime(temps_restant)}</span>
+            <span className="rc-sticky-name">{current_session.nom_session}</span>
           </div>
-        </div>
-
-        <div className="timer-circle">
-          <svg viewBox="0 0 200 200">
-            <circle
-              cx="100"
-              cy="100"
-              r="90"
-              fill="none"
-              stroke="#E5E7EB"
-              strokeWidth="12"
-            />
-            <circle
-              cx="100"
-              cy="100"
-              r="90"
-              fill="none"
-              stroke={current_session.couleur}
-              strokeWidth="12"
-              strokeLinecap="round"
-              strokeDasharray={565.48}
-              strokeDashoffset={565.48 * (1 - progress)}
-              transform="rotate(-90 100 100)"
-              style={{ transition: isPlaying ? 'stroke-dashoffset 1s linear' : 'none' }}
-            />
-          </svg>
-          <div className="timer-text">
-            <div className="timer-time">{formatTime(temps_restant)}</div>
-            <div className="timer-label">{isPlaying ? 'en cours' : isPaused ? 'en pause' : 'terminé'}</div>
-          </div>
-        </div>
-
-        <div className="progress-info">
-          <span>{Math.round(progressPercentage)}%</span>
-        </div>
-      </div>
-
-      {/* Main Controls */}
-      <div className="main-controls">
-        {!isCompleted && (
-          <button
-            className={`btn-control btn-play-pause ${isPlaying ? 'playing' : ''}`}
-            onClick={isPlaying ? handlePause : handleStart}
-            style={{ backgroundColor: current_session.couleur }}
-          >
-            {isPlaying ? (
-              <>
-                <span className="control-icon">⏸</span>
-                <span>Pause</span>
-              </>
-            ) : (
-              <>
-                <span className="control-icon">▶</span>
-                <span>Démarrer</span>
-              </>
+          <div className="rc-sticky-right">
+            <span className="rc-sticky-count">{session_en_cours + 1}/{total_sessions}</span>
+            {!isCompleted && (
+              <button
+                className="btn btn-sm btn-primary"
+                onClick={isPlaying ? handlePause : handleStart}
+              >
+                {isPlaying ? 'Pause' : 'Démarrer'}
+              </button>
             )}
-          </button>
-        )}
-
-        {isCompleted && (
-          <div className="completed-message">
-            <span className="completed-icon">✓</span>
-            <span>Toutes les sessions terminées</span>
-          </div>
-        )}
-      </div>
-
-      {/* Navigation Controls */}
-      <div className="nav-controls">
-        <button
-          className="btn-nav"
-          onClick={handlePrevious}
-          disabled={session_en_cours === 0}
-        >
-          <span className="nav-icon">◀</span>
-          <span>Précédent</span>
-        </button>
-
-        <button
-          className="btn-nav"
-          onClick={handleNext}
-          disabled={session_en_cours >= total_sessions - 1}
-        >
-          <span>Suivant</span>
-          <span className="nav-icon">▶</span>
-        </button>
-      </div>
-
-      {/* Time Adjustment Controls */}
-      {!isCompleted && (
-        <div className="time-controls">
-          <h4>Ajuster le temps</h4>
-          <div className="time-buttons">
-            <button className="btn-time" onClick={() => handleAddTime(-60)}>
-              -1 min
-            </button>
-            <button className="btn-time" onClick={() => handleAddTime(-30)}>
-              -30 sec
-            </button>
-            <button className="btn-time" onClick={() => handleAddTime(30)}>
-              +30 sec
-            </button>
-            <button className="btn-time" onClick={() => handleAddTime(60)}>
-              +1 min
-            </button>
-            <button className="btn-time" onClick={() => handleAddTime(300)}>
-              +5 min
-            </button>
           </div>
         </div>
       )}
 
-      {/* Theme Selector */}
-      <div className="theme-selector-section" style={{
-        background: 'white',
-        borderRadius: '12px',
-        padding: '20px',
-        marginBottom: '20px',
-        boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
-      }}>
-        <h4 style={{ marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <span>🎨</span>
-          <span>Thème d'affichage</span>
-        </h4>
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(3, 1fr)',
-          gap: '12px'
-        }}>
-          {themes.map(theme => (
+      <div className="rc-shell">
+        {/* Main header */}
+        <header className="rc-header">
+          <div className="rc-title">
+            <h1>Télécommande</h1>
+            <p className="rc-code">Code: {state.timer?.code || code}</p>
+          </div>
+          <div className="rc-header-actions">
             <button
-              key={theme.id}
-              onClick={() => handleThemeChange(theme.id)}
-              style={{
-                padding: '16px 12px',
-                background: currentTheme === theme.id ? 'var(--primary)' : 'var(--gray-50)',
-                color: currentTheme === theme.id ? 'white' : 'var(--gray-700)',
-                border: '2px solid',
-                borderColor: currentTheme === theme.id ? 'var(--primary)' : 'var(--gray-200)',
-                borderRadius: '12px',
-                cursor: 'pointer',
-                transition: 'all 0.2s',
-                textAlign: 'center',
-                fontSize: '0.9375rem',
-                fontWeight: '600',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '4px'
-              }}
+              onClick={handleAutoModeToggle}
+              className={`rc-icon-btn ${autoMode ? 'is-active' : ''}`}
+              title={autoMode ? 'Mode AUTO activé' : 'Mode AUTO désactivé'}
+              aria-label="Mode automatique"
             >
-              <span style={{ fontSize: '2rem' }}>{theme.emoji}</span>
-              <span>{theme.name}</span>
-              <span style={{ fontSize: '0.75rem', opacity: 0.8 }}>{theme.desc}</span>
+              {autoMode ? '⚡' : '🔘'}
             </button>
-          ))}
-        </div>
-      </div>
+            <button
+              onClick={toggleSound}
+              className={`rc-icon-btn ${soundEnabled ? 'is-active' : ''}`}
+              title={soundEnabled ? 'Sons activés' : 'Sons désactivés'}
+              aria-label="Son"
+            >
+              {soundEnabled ? '🔊' : '🔇'}
+            </button>
+            <button
+              className="rc-icon-btn"
+              onClick={() => window.location.reload()}
+              title="Rafraîchir"
+              aria-label="Rafraîchir"
+            >
+              🔄
+            </button>
+          </div>
+        </header>
 
-      {/* Statistics Section */}
-      {stats && (
-        <div className="stats-section" style={{
-          background: 'white',
-          borderRadius: '12px',
-          padding: '20px',
-          marginBottom: '20px',
-          boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
-        }}>
-          <h4 style={{ marginBottom: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span>Statistiques</span>
-            <span style={{
-              fontSize: '2rem',
-              fontWeight: '900',
-              color: 'var(--primary)'
-            }}>
-              {stats.progress_percentage}%
+        {/* Current session card */}
+        <section className="card rc-session-card">
+          <div className="rc-session-head">
+            <span className="rc-session-dot" style={{ backgroundColor: sessionColor }}>
+              {current_session.type === 'pause' ? '☕' : '🎯'}
             </span>
-          </h4>
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(2, 1fr)',
-            gap: '12px'
-          }}>
-            <div style={{
-              padding: '12px',
-              background: 'var(--gray-50)',
-              borderRadius: '8px'
-            }}>
-              <div style={{ fontSize: '0.75rem', color: 'var(--gray-600)', marginBottom: '4px' }}>
-                Sessions
-              </div>
-              <div style={{ fontSize: '1.5rem', fontWeight: '700', color: 'var(--gray-900)' }}>
-                {stats.completed_sessions}/{stats.total_sessions}
-              </div>
+            <div className="rc-session-meta">
+              <h2>{current_session.nom_session}</h2>
+              <p>Session {session_en_cours + 1} / {total_sessions}</p>
             </div>
-            <div style={{
-              padding: '12px',
-              background: 'var(--gray-50)',
-              borderRadius: '8px'
-            }}>
-              <div style={{ fontSize: '0.75rem', color: 'var(--gray-600)', marginBottom: '4px' }}>
-                Temps écoulé
-              </div>
-              <div style={{ fontSize: '1.5rem', fontWeight: '700', color: 'var(--gray-900)' }}>
-                {stats.completed_duration_minutes}/{stats.total_duration_minutes} min
+          </div>
+
+          <div className="rc-ring">
+            <svg viewBox="0 0 200 200">
+              <circle cx="100" cy="100" r={RADIUS} fill="none" stroke="var(--surface-2)" strokeWidth="12" />
+              <circle
+                cx="100" cy="100" r={RADIUS} fill="none" stroke={sessionColor}
+                strokeWidth="12" strokeLinecap="round"
+                strokeDasharray={CIRCUMFERENCE} strokeDashoffset={CIRCUMFERENCE * (1 - progress)}
+                transform="rotate(-90 100 100)"
+                style={{ transition: isPlaying ? 'stroke-dashoffset 1s linear' : 'none' }}
+              />
+            </svg>
+            <div className="rc-ring-text">
+              <div className="rc-ring-time">{formatTime(temps_restant)}</div>
+              <div className="rc-ring-label">
+                {isPlaying ? 'en cours' : isPaused ? 'en pause' : 'terminé'}
               </div>
             </div>
           </div>
-        </div>
-      )}
 
-      {/* Notes Section */}
-      <div className="notes-section" style={{
-        background: 'white',
-        borderRadius: '12px',
-        padding: '20px',
-        marginBottom: '20px',
-        boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
-      }}>
-        <h4 style={{
-          marginBottom: '12px',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          cursor: 'pointer'
-        }} onClick={() => setShowNotes(!showNotes)}>
-          <span>📝 Notes de session</span>
-          <span style={{ fontSize: '1.5rem' }}>{showNotes ? '▼' : '▶'}</span>
-        </h4>
-        {showNotes && (
-          <textarea
-            value={notes}
-            onChange={handleNotesChange}
-            placeholder="Prenez des notes pour cette session..."
-            style={{
-              width: '100%',
-              minHeight: '120px',
-              padding: '12px',
-              border: '2px solid var(--gray-200)',
-              borderRadius: '8px',
-              fontSize: '0.9375rem',
-              fontFamily: 'inherit',
-              resize: 'vertical'
-            }}
-          />
-        )}
-      </div>
+          <div className="rc-progress-pct">{Math.round(progressPercentage)}%</div>
+        </section>
 
-      {/* Sessions List */}
-      <div className="sessions-list-remote">
-        <h4>Toutes les sessions</h4>
-        <div className="sessions-scroll">
-          {state.sessions.map((session, idx) => (
-            <div
-              key={idx}
-              className={`session-item-remote ${idx === session_en_cours ? 'active' : ''} ${idx < session_en_cours ? 'completed' : ''}`}
-              style={{ borderLeftColor: session.couleur }}
+        {/* Primary controls */}
+        <div className="rc-primary">
+          {!isCompleted ? (
+            <button
+              className="rc-playpause"
+              onClick={isPlaying ? handlePause : handleStart}
+              style={{ backgroundColor: isPlaying ? 'var(--brand)' : sessionColor }}
             >
-              <div className="session-item-number">
-                {idx < session_en_cours ? '✓' : idx + 1}
-              </div>
-              <div className="session-item-info">
-                <div className="session-item-name">{session.nom_session}</div>
-                <div className="session-item-duration">
-                  {Math.floor(session.duree_secondes / 60)} min
+              {isPlaying ? (
+                <><span className="rc-pp-icon">⏸</span><span>Pause</span></>
+              ) : (
+                <><span className="rc-pp-icon">▶</span><span>Démarrer</span></>
+              )}
+            </button>
+          ) : (
+            <div className="rc-completed">
+              <span className="rc-completed-icon">✓</span>
+              <span>Toutes les sessions terminées</span>
+            </div>
+          )}
+
+          <button onClick={playBell} className="rc-bell" title="Sonnerie" aria-label="Sonnerie">
+            🔔
+          </button>
+        </div>
+
+        {/* Navigation */}
+        <div className="rc-nav">
+          <button
+            className="btn btn-secondary btn-lg"
+            onClick={handlePrevious}
+            disabled={session_en_cours === 0}
+          >
+            ◀ Précédent
+          </button>
+          <button
+            className="btn btn-secondary btn-lg"
+            onClick={handleNext}
+            disabled={session_en_cours >= total_sessions - 1}
+          >
+            Suivant ▶
+          </button>
+        </div>
+
+        {/* Time adjust */}
+        {!isCompleted && (
+          <section className="card rc-block">
+            <h3 className="rc-block-title">Ajuster le temps</h3>
+            <div className="rc-time-grid">
+              <button className="rc-time-btn rc-time-neg" onClick={() => handleAddTime(-60)}>−1 min</button>
+              <button className="rc-time-btn rc-time-neg" onClick={() => handleAddTime(-30)}>−30 s</button>
+              <button className="rc-time-btn rc-time-pos" onClick={() => handleAddTime(30)}>+30 s</button>
+              <button className="rc-time-btn rc-time-pos" onClick={() => handleAddTime(60)}>+1 min</button>
+            </div>
+          </section>
+        )}
+
+        {/* Theme */}
+        <section className="card rc-block">
+          <h3 className="rc-block-title">Thème</h3>
+          <div className="rc-theme-grid">
+            {themes.map(theme => (
+              <button
+                key={theme.id}
+                onClick={() => handleThemeChange(theme.id)}
+                className={`rc-theme-btn ${currentTheme === theme.id ? 'is-selected' : ''}`}
+              >
+                {theme.name}
+              </button>
+            ))}
+          </div>
+        </section>
+
+        {/* Message */}
+        <section className="card rc-block">
+          <h3 className="rc-block-title">Message à l'écran</h3>
+          <div className="rc-message-row">
+            <input
+              className="input"
+              type="text"
+              placeholder="Message sur l'écran principal..."
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
+            />
+            <button
+              className="btn btn-primary"
+              onClick={handleSendMessage}
+              disabled={!message.trim()}
+            >
+              Envoyer
+            </button>
+          </div>
+          {state.message_actuel && (
+            <div className="rc-message-active">
+              <span className="rc-message-text">📢 {state.message_actuel}</span>
+              <button className="rc-message-clear" onClick={handleClearMessage} aria-label="Effacer">✕</button>
+            </div>
+          )}
+        </section>
+
+        {/* Stats */}
+        {stats && (
+          <section className="card rc-block">
+            <button className="rc-collapse-head" onClick={() => setShowStats(!showStats)}>
+              <span className="rc-block-title">Statistiques</span>
+              <span className="rc-collapse-right">
+                <span className="rc-stat-pct">{stats.progress_percentage}%</span>
+                <span className="rc-chevron">{showStats ? '▼' : '▶'}</span>
+              </span>
+            </button>
+            {showStats && (
+              <div className="rc-stats-grid">
+                <div className="rc-stat-cell">
+                  <div className="rc-stat-label">Sessions</div>
+                  <div className="rc-stat-value">{stats.completed_sessions}/{stats.total_sessions}</div>
+                </div>
+                <div className="rc-stat-cell">
+                  <div className="rc-stat-label">Temps écoulé</div>
+                  <div className="rc-stat-value">{stats.completed_duration_minutes}/{stats.total_duration_minutes} min</div>
                 </div>
               </div>
+            )}
+          </section>
+        )}
+
+        {/* Notes */}
+        <section className="card rc-block">
+          <button className="rc-collapse-head" onClick={() => setShowNotes(!showNotes)}>
+            <span className="rc-block-title">Notes de session</span>
+            <span className="rc-chevron">{showNotes ? '▼' : '▶'}</span>
+          </button>
+          {showNotes && (
+            <textarea
+              className="textarea rc-notes"
+              value={notes}
+              onChange={handleNotesChange}
+              placeholder="Prenez des notes pour cette session..."
+            />
+          )}
+        </section>
+
+        {/* Sessions */}
+        <section className="card rc-block">
+          <div className="rc-sessions-head">
+            <h3 className="rc-block-title">Sessions</h3>
+            <div className="rc-view-toggle">
+              <button
+                className={`rc-view-btn ${viewMode === 'agenda' ? 'is-active' : ''}`}
+                onClick={() => setViewMode('agenda')}
+              >
+                Agenda
+              </button>
+              <button
+                className={`rc-view-btn ${viewMode === 'normal' ? 'is-active' : ''}`}
+                onClick={() => setViewMode('normal')}
+              >
+                Liste
+              </button>
             </div>
-          ))}
+          </div>
+
+          {viewMode === 'normal' ? (
+            <div className="rc-list">
+              {state.sessions.map((session, idx) => {
+                const done = idx < session_en_cours
+                const current = idx === session_en_cours
+                return (
+                  <button
+                    key={idx}
+                    onClick={() => handleJumpToSession(idx)}
+                    className={`rc-list-item ${current ? 'is-current' : ''} ${done ? 'is-done' : ''}`}
+                    style={{ borderLeftColor: session.couleur }}
+                  >
+                    <span
+                      className="rc-list-num"
+                      style={current ? { background: session.couleur, color: '#fff' } : undefined}
+                    >
+                      {done ? '✓' : idx + 1}
+                    </span>
+                    <span className="rc-list-info">
+                      <span className="rc-list-name">{session.nom_session}</span>
+                      <span className="rc-list-dur">{Math.floor(session.duree_secondes / 60)} min</span>
+                    </span>
+                  </button>
+                )
+              })}
+            </div>
+          ) : (
+            <div className="rc-agenda">
+              {state.sessions.map((session, idx) => {
+                const isSessionCompleted = idx < session_en_cours
+                const isCurrent = idx === session_en_cours
+                const isUpcoming = idx > session_en_cours
+                let progressPercent = 0
+                if (isCurrent && state.current_session) {
+                  const elapsed = state.current_session.duree_secondes - temps_restant
+                  progressPercent = (elapsed / state.current_session.duree_secondes) * 100
+                }
+
+                return (
+                  <button
+                    key={idx}
+                    onClick={() => handleJumpToSession(idx)}
+                    className={`rc-agenda-item ${isCurrent ? 'is-current' : ''} ${isSessionCompleted ? 'is-done' : ''}`}
+                    style={isCurrent ? { borderColor: session.couleur } : undefined}
+                  >
+                    {isCurrent && (
+                      <span
+                        className="rc-agenda-fill"
+                        style={{
+                          width: `${progressPercent}%`,
+                          background: `${session.couleur}22`
+                        }}
+                      />
+                    )}
+                    <span className="rc-agenda-row">
+                      <span
+                        className="rc-agenda-num"
+                        style={
+                          isCurrent
+                            ? { background: session.couleur, color: '#fff' }
+                            : isSessionCompleted
+                              ? { background: 'var(--success)', color: '#fff' }
+                              : undefined
+                        }
+                      >
+                        {isSessionCompleted ? '✓' : isUpcoming ? '○' : '▶'}
+                      </span>
+                      <span className="rc-agenda-info">
+                        <span className="rc-agenda-name">
+                          {session.nom_session}
+                          {session.type === 'pause' && <span> ☕</span>}
+                        </span>
+                        <span className="rc-agenda-sub">
+                          <span>{Math.floor(session.duree_secondes / 60)} min</span>
+                          {isSessionCompleted && <span className="rc-tag rc-tag-done">Terminée</span>}
+                          {isUpcoming && <span className="rc-tag">À venir</span>}
+                        </span>
+                      </span>
+                      {isCurrent && (
+                        <span className="rc-agenda-time">
+                          <span className="rc-agenda-time-val">{formatTime(temps_restant)}</span>
+                          <span className="rc-agenda-time-pct">{Math.round(progressPercent)}% écoulé</span>
+                        </span>
+                      )}
+                    </span>
+                  </button>
+                )
+              })}
+            </div>
+          )}
+        </section>
+
+        {/* Footer */}
+        <div className="rc-footer">
+          <button className="btn btn-danger btn-lg btn-block" onClick={handleReset}>
+            ⏹ Réinitialiser
+          </button>
+          <a
+            className="rc-display-link"
+            href={`/timer/${code}`}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Voir l'affichage ↗
+          </a>
+          <a
+            className="rc-credit"
+            href="https://www.insuffle.com"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Timer par INSUFFLE
+          </a>
         </div>
-      </div>
-
-      {/* Danger Zone */}
-      <div className="danger-zone">
-        <button className="btn-stop" onClick={handleStop}>
-          ⏹ Arrêter le cycle
-        </button>
-      </div>
-
-      {/* Footer */}
-      <div className="remote-footer">
-        <a href={`/salon/${state.salon.code}`} target="_blank" rel="noopener noreferrer">
-          Voir l'affichage principal ↗
-        </a>
       </div>
     </div>
   )
