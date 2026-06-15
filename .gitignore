@@ -32,3 +32,8 @@ Thumbs.db
 # Logs
 logs/
 *.log
+
+# SQLite runtime DB
+backend/timer_v2.db
+backend/timer_v2.db-wal
+backend/timer_v2.db-shm

@@ -87,7 +87,11 @@ function SortableSession({ session, onEdit, onRemove }) {
           type="number"
           min="1"
           value={session.duree_minutes}
-          onChange={(e) => onEdit(session.id, 'duree_minutes', parseInt(e.target.value) || 1)}
+          onChange={(e) => {
+            const v = e.target.value
+            onEdit(session.id, 'duree_minutes', v === '' ? '' : (parseInt(v, 10) || 1))
+          }}
+          onBlur={(e) => { if (e.target.value === '') onEdit(session.id, 'duree_minutes', 1) }}
         />
         <span>min</span>
       </div>
@@ -118,6 +122,7 @@ function EditTimer() {
   const [error, setError] = useState(null)
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
+  const [copyFeedback, setCopyFeedback] = useState('')
   const [showAddSession, setShowAddSession] = useState(false)
   const [newSession, setNewSession] = useState({
     nom_session: '',
@@ -279,7 +284,7 @@ function EditTimer() {
           name: timerName || 'Mon Timer',
           sessions: sessions.map((s) => ({
             nom_session: s.nom_session,
-            duree_secondes: s.duree_minutes * 60,
+            duree_secondes: (parseInt(s.duree_minutes, 10) || 1) * 60,
             couleur: s.couleur,
             type: s.type,
           })),
@@ -305,11 +310,22 @@ function EditTimer() {
     }
   }
 
-  const copyToClipboard = (text) => {
-    navigator.clipboard.writeText(text)
+  const copyToClipboard = async (text) => {
+    try {
+      await navigator.clipboard.writeText(text)
+    } catch {
+      const ta = document.createElement('textarea')
+      ta.value = text
+      document.body.appendChild(ta)
+      ta.select()
+      try { document.execCommand('copy') } catch { /* ignore */ }
+      document.body.removeChild(ta)
+    }
+    setCopyFeedback('Copié !')
+    setTimeout(() => setCopyFeedback(''), 1800)
   }
 
-  const totalMinutes = sessions.reduce((acc, s) => acc + s.duree_minutes, 0)
+  const totalMinutes = sessions.reduce((acc, s) => acc + (parseInt(s.duree_minutes, 10) || 0), 0)
 
   if (loading) {
     return (
@@ -373,6 +389,26 @@ function EditTimer() {
               <path d="M6 10l3 3 5-5" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
             Enregistré !
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Copy toast */}
+      <AnimatePresence>
+        {copyFeedback && (
+          <motion.div
+            initial={{ opacity: 0, y: -24 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -24 }}
+            transition={{ duration: 0.2 }}
+            style={{
+              position: 'fixed', top: '24px', left: '50%', transform: 'translateX(-50%)',
+              zIndex: 1000, background: 'var(--text)', color: '#fff',
+              padding: '0.6rem 1.25rem', borderRadius: 'var(--radius)', fontWeight: 600,
+              fontSize: '0.9rem', boxShadow: 'var(--shadow-md)',
+            }}
+          >
+            {copyFeedback}
           </motion.div>
         )}
       </AnimatePresence>

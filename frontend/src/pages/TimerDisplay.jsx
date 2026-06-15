@@ -229,6 +229,13 @@ export default function TimerDisplay() {
     };
   }, [code, applyState, pollOnce]);
 
+  // ---- periodic resync (corrects drift in backgrounded tabs; server only
+  //      broadcasts on actions, so the local countdown can drift) ----
+  useEffect(() => {
+    const id = setInterval(() => { pollOnce(); }, 15000);
+    return () => clearInterval(id);
+  }, [pollOnce]);
+
   // ---- local countdown ----
   useEffect(() => {
     if (state?.mode === 'play') {
@@ -405,7 +412,7 @@ export default function TimerDisplay() {
       <footer className="td-footer">
         <div className="td-foot-left">
           <span className="td-code">Code&nbsp;<strong>{state?.timer?.code || code}</strong></span>
-          <button className="td-icon-btn" onClick={() => setShowQRCode(true)} title="QR code (Q)">
+          <button className="td-icon-btn" onClick={() => setShowQRCode(true)} title="QR code (Q)" aria-label="Afficher le QR code de la télécommande">
             <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2">
               <rect x="3" y="3" width="7" height="7" /><rect x="14" y="3" width="7" height="7" />
               <rect x="3" y="14" width="7" height="7" /><rect x="14" y="14" width="3" height="3" />
@@ -420,10 +427,10 @@ export default function TimerDisplay() {
         </a>
 
         <div className="td-foot-right">
-          <button className="td-icon-btn" onClick={() => setSoundEnabled((s) => !s)} title="Son (M)">
+          <button className="td-icon-btn" onClick={() => setSoundEnabled((s) => !s)} title="Son (M)" aria-label={soundEnabled ? 'Couper le son' : 'Activer le son'}>
             {soundEnabled ? '🔊' : '🔇'}
           </button>
-          <button className="td-icon-btn" onClick={toggleFullscreen} title="Plein écran (F)">
+          <button className="td-icon-btn" onClick={toggleFullscreen} title="Plein écran (F)" aria-label="Basculer le plein écran">
             {isFullscreen ? (
               <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3" />

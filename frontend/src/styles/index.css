@@ -24,7 +24,7 @@
   /* ===== Text ===== */
   --text: #0f1729;
   --text-secondary: #56607a;
-  --text-muted: #8b94a8;
+  --text-muted: #6b7385; /* WCAG AA (>=4.5:1 on white) */
   --text-on-brand: #ffffff;
 
   /* ===== Semantic ===== */
@@ -87,6 +87,25 @@ h1, h2, h3, h4 {
 a {
   color: var(--brand);
   text-decoration: none;
+}
+
+/* Keyboard focus visibility (a11y) */
+:focus-visible {
+  outline: 2px solid var(--brand-light);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+.btn:focus-visible {
+  outline: 2px solid var(--brand-light);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
 
 ::selection {

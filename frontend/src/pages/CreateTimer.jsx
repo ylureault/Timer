@@ -94,7 +94,11 @@ function SortableSession({ session, index, onEdit, onRemove }) {
           type="number"
           min="1"
           value={session.duree_minutes}
-          onChange={(e) => onEdit(session.id, 'duree_minutes', parseInt(e.target.value) || 1)}
+          onChange={(e) => {
+            const v = e.target.value
+            onEdit(session.id, 'duree_minutes', v === '' ? '' : (parseInt(v, 10) || 1))
+          }}
+          onBlur={(e) => { if (e.target.value === '') onEdit(session.id, 'duree_minutes', 1) }}
         />
         <span>min</span>
       </div>
@@ -244,7 +248,7 @@ function CreateTimer() {
           name: timerName || 'Mon Timer',
           sessions: sessions.map((s) => ({
             nom_session: s.nom_session,
-            duree_secondes: s.duree_minutes * 60,
+            duree_secondes: (parseInt(s.duree_minutes, 10) || 1) * 60,
             couleur: s.couleur,
             type: s.type,
           })),
@@ -303,7 +307,7 @@ function CreateTimer() {
   }
 
   // ---- Computed ----
-  const totalMinutes = sessions.reduce((acc, s) => acc + s.duree_minutes, 0)
+  const totalMinutes = sessions.reduce((acc, s) => acc + (parseInt(s.duree_minutes, 10) || 0), 0)
 
   // ================================================================
   // SUCCESS SCREEN

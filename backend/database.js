@@ -9,6 +9,9 @@ const db = new Database(join(__dirname, 'timer_v2.db'));
 
 // Enable foreign keys
 db.pragma('foreign_keys = ON');
+// WAL: better read/write concurrency under bursts of activity
+db.pragma('journal_mode = WAL');
+db.pragma('synchronous = NORMAL');
 
 // Initialize simplified database schema
 db.exec(`

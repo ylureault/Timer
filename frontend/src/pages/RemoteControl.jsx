@@ -33,6 +33,7 @@ function RemoteControl() {
   const pollingInterval = useRef(null)
   const previousTimeRef = useRef(null)
   const audioContextRef = useRef(null)
+  const failCountRef = useRef(0)
 
   const getAudioContext = () => {
     if (!audioContextRef.current) {
@@ -95,14 +96,22 @@ function RemoteControl() {
     if (newValue) setTimeout(playBeep, 100)
   }
 
+  // Audible countdown: a short beep on each of the final 5 seconds while running.
+  // (Previously beeped on every tick — far too noisy.)
   useEffect(() => {
-    if (!state || !soundEnabled) return
-    const currentTime = state.temps_restant
-    if (previousTimeRef.current !== null && previousTimeRef.current !== currentTime) {
+    if (!state) return
+    const t = state.temps_restant
+    const prev = previousTimeRef.current
+    if (
+      soundEnabled &&
+      state.mode === 'play' &&
+      prev !== null && t < prev &&
+      t <= 5 && t > 0
+    ) {
       playBeep()
     }
-    previousTimeRef.current = currentTime
-  }, [state?.temps_restant, soundEnabled])
+    previousTimeRef.current = t
+  }, [state?.temps_restant, state?.mode, soundEnabled])
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 100)
@@ -144,6 +153,7 @@ function RemoteControl() {
       if (data.success) {
         setState(data)
         setError(null)
+        failCountRef.current = 0
         if (data.theme && data.theme !== currentTheme) {
           setCurrentTheme(data.theme)
         }
@@ -151,12 +161,20 @@ function RemoteControl() {
           setAutoMode(data.auto_mode)
         }
       } else {
-        setError(data.error || 'Timer non trouvé')
+        // Real "not found": surface immediately if we have nothing, else after a
+        // few consecutive failures (avoids flicker on a transient hiccup).
+        failCountRef.current += 1
+        if (!state || failCountRef.current >= 3) {
+          setError(data.error || 'Timer introuvable')
+        }
       }
       setLoading(false)
     } catch (err) {
       console.error('Error fetching state:', err)
-      setError('Erreur de connexion')
+      failCountRef.current += 1
+      if (!state || failCountRef.current >= 3) {
+        setError('Erreur de connexion')
+      }
       setLoading(false)
     }
   }
