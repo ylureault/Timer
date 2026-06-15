@@ -686,7 +686,12 @@
 
   .session-item-modern {
     flex-wrap: wrap;
-    gap: 0.625rem;
+    gap: 0.5rem;
+  }
+
+  .session-info-modern {
+    flex-basis: calc(100% - 80px);
+    min-width: 0;
   }
 
   .session-duration-modern {

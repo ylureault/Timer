@@ -18,6 +18,10 @@
     <meta name="robots" content="index, follow" />
     <meta name="language" content="French" />
     <link rel="canonical" href="https://timer.insuffle.com" />
+    <link rel="alternate" hreflang="fr" href="https://timer.insuffle.com/" />
+    <link rel="alternate" hreflang="x-default" href="https://timer.insuffle.com/" />
+    <meta name="geo.region" content="FR" />
+    <meta name="geo.placename" content="France" />
 
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website" />
@@ -145,6 +149,42 @@
             "@type": "Answer",
             "text": "Il n'y a pas de limite au nombre de participants. Tout le monde peut suivre le timer en temps réel grâce à la synchronisation WebSocket."
           }
+        }
+      ]
+    }
+    </script>
+
+    <!-- Structured Data - HowTo (GEO optimization) -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "HowTo",
+      "name": "Comment créer et utiliser un timer partagé avec Insuffle Timer",
+      "description": "Guide étape par étape pour créer un minuteur visuel partagé, le projeter sur grand écran et le piloter depuis un téléphone.",
+      "totalTime": "PT1M",
+      "tool": [
+        { "@type": "HowToTool", "name": "Navigateur web (Chrome, Firefox, Safari)" },
+        { "@type": "HowToTool", "name": "Smartphone pour la télécommande" }
+      ],
+      "step": [
+        {
+          "@type": "HowToStep",
+          "position": 1,
+          "name": "Créer le timer",
+          "text": "Rendez-vous sur timer.insuffle.com et cliquez sur Créer un timer. Choisissez un modèle ou configurez vos sessions manuellement.",
+          "url": "https://timer.insuffle.com/create"
+        },
+        {
+          "@type": "HowToStep",
+          "position": 2,
+          "name": "Projeter l'affichage",
+          "text": "Ouvrez le lien d'affichage sur l'écran de projection (grand écran, vidéoprojecteur). Activez le mode plein écran."
+        },
+        {
+          "@type": "HowToStep",
+          "position": 3,
+          "name": "Piloter depuis le téléphone",
+          "text": "Ouvrez la télécommande sur votre smartphone en entrant le code XXX-XXX. Contrôlez le timer, ajustez le temps, changez de session."
         }
       ]
     }
