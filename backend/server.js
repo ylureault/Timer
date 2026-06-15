@@ -1,5 +1,6 @@
 import express from 'express';
 import cors from 'cors';
+import compression from 'compression';
 import { WebSocketServer } from 'ws';
 import { createServer } from 'http';
 import { fileURLToPath } from 'url';
@@ -15,13 +16,34 @@ const PORT = process.env.PORT || 3000;
 const WS_PORT = process.env.WS_PORT || 3001;
 
 // Middleware
+app.use(compression());
 app.use(cors());
 app.use(express.json());
+
+// Security headers
+app.use((req, res, next) => {
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'SAMEORIGIN');
+  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+  res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
+  if (req.secure || req.headers['x-forwarded-proto'] === 'https') {
+    res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+  }
+  next();
+});
 
 // Serve static files from frontend build in production
 const frontendDistPath = join(__dirname, '../frontend/dist');
 if (existsSync(frontendDistPath)) {
-  app.use(express.static(frontendDistPath));
+  app.use(express.static(frontendDistPath, {
+    maxAge: '7d',
+    etag: true,
+    setHeaders: (res, filePath) => {
+      if (filePath.endsWith('.html')) {
+        res.setHeader('Cache-Control', 'no-cache');
+      }
+    }
+  }));
 }
 
 // ============================

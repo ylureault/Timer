@@ -1,0 +1,44 @@
+{
+  "name": "Timer par INSUFFLE",
+  "short_name": "Insuffle Timer",
+  "description": "Minuteur visuel partagé pour ateliers, formations et réunions. Synchronisation temps réel, télécommande mobile, 100% gratuit.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f8fafc",
+  "theme_color": "#1f3a8b",
+  "orientation": "any",
+  "lang": "fr",
+  "categories": ["productivity", "education", "utilities"],
+  "icons": [
+    {
+      "src": "/timer-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    },
+    {
+      "src": "/icons/icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/og-image.png",
+      "sizes": "1200x630",
+      "type": "image/png",
+      "label": "Timer par INSUFFLE - Vue principale"
+    }
+  ]
+}
