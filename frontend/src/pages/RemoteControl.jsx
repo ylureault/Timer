@@ -501,7 +501,7 @@ function RemoteControl() {
         {/* Main header */}
         <header className="rc-header">
           <div className="rc-title">
-            <svg className="rc-logo-icon" width="22" height="22" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="#dbe4f7" strokeWidth="2.5"/><path d="M12 3a9 9 0 0 1 9 9" stroke="#1f3a8b" strokeWidth="2.5" strokeLinecap="round"/><circle cx="12" cy="12" r="2.4" fill="#1f3a8b"/></svg>
+            <svg className="rc-logo-icon" width="22" height="22" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="#d9e0f5" strokeWidth="2.5"/><path d="M12 3a9 9 0 0 1 9 9" stroke="#1f3a8b" strokeWidth="2.5" strokeLinecap="round"/><circle cx="12" cy="12" r="2.4" fill="#1f3a8b"/></svg>
             <div>
               <h1>Télécommande</h1>
               <p className="rc-code">Code: {state.timer?.code || code}</p>
@@ -549,7 +549,7 @@ function RemoteControl() {
 
           <div className="rc-ring anim-breathe">
             <svg viewBox="0 0 200 200">
-              <circle cx="100" cy="100" r={RADIUS} fill="none" stroke="#e7ebf3" strokeWidth="12" />
+              <circle cx="100" cy="100" r={RADIUS} fill="none" stroke="#efede6" strokeWidth="12" />
               <circle
                 cx="100" cy="100" r={RADIUS} fill="none" stroke="#1f3a8b"
                 strokeWidth="12" strokeLinecap="round"

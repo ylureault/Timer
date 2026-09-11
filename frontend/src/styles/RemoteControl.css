@@ -4,8 +4,8 @@
 
 .rc {
   min-height: 100vh;
-  background: #f8fafc;
-  color: #0f172a;
+  background: var(--creme);
+  color: var(--navy);
 }
 
 .rc-shell {
@@ -27,7 +27,7 @@
   justify-content: center;
   gap: 16px;
   padding: 24px;
-  background: #f8fafc;
+  background: var(--creme);
   color: var(--text-secondary);
 }
 
@@ -53,7 +53,7 @@
   left: 50%;
   transform: translateX(-50%);
   z-index: 1600;
-  background: #0f172a;
+  background: var(--navy);
   color: #fff;
   padding: 10px 18px;
   border-radius: 999px;
@@ -71,7 +71,7 @@
   right: 0;
   z-index: 1000;
   background: #fff;
-  border-bottom: 1px solid #e2e8f0;
+  border-bottom: 1px solid var(--gris-bord);
   box-shadow: var(--shadow-sm);
   padding: 10px 16px;
   display: flex;
@@ -94,17 +94,17 @@
 }
 
 .rc-sticky-time {
-  font-family: 'Space Grotesk', monospace;
+  font-family: var(--font-timer);
   font-size: 1.25rem;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
-  color: #0f172a;
+  color: var(--navy);
 }
 
 .rc-sticky-name {
   font-size: 0.85rem;
   font-weight: 600;
-  color: #94a3b8;
+  color: var(--gris);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -120,7 +120,7 @@
 .rc-sticky-count {
   font-size: 0.78rem;
   font-weight: 600;
-  color: #94a3b8;
+  color: var(--gris);
 }
 
 /* ===== Main header ===== */
@@ -138,10 +138,10 @@
 }
 
 .rc-title h1 {
-  font-family: 'Manrope', sans-serif;
+  font-family: var(--font-titre);
   font-size: 1.5rem;
   font-weight: 800;
-  color: #0f172a;
+  color: var(--navy);
   letter-spacing: -0.02em;
 }
 
@@ -153,7 +153,7 @@
   margin-top: 2px;
   font-size: 0.82rem;
   font-weight: 600;
-  color: #94a3b8;
+  color: var(--gris);
   letter-spacing: 0.02em;
 }
 
@@ -171,7 +171,7 @@
   justify-content: center;
   font-size: 1.1rem;
   background: #fff;
-  border: 1.5px solid #e2e8f0;
+  border: 1.5px solid var(--gris-bord);
   border-radius: 14px;
   cursor: pointer;
   transition: background 140ms ease, border-color 140ms ease, box-shadow 140ms ease;
@@ -181,8 +181,8 @@
 .rc-icon-btn:active { transform: translateY(1px); }
 
 .rc-icon-btn.is-active {
-  background: #eef3fc;
-  border-color: #d8e2f6;
+  background: var(--bleu-3);
+  border-color: var(--bleu-3);
 }
 
 /* ===== Current session card ===== */
@@ -194,7 +194,7 @@
   gap: 18px;
   border-radius: 18px;
   background: #fff;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--gris-bord);
 }
 
 .rc-session-head {
@@ -219,10 +219,10 @@
 .rc-session-meta { min-width: 0; }
 
 .rc-session-meta h2 {
-  font-family: 'Manrope', sans-serif;
+  font-family: var(--font-titre);
   font-size: 1.2rem;
   font-weight: 700;
-  color: #0f172a;
+  color: var(--navy);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -232,7 +232,7 @@
   margin-top: 2px;
   font-size: 0.85rem;
   font-weight: 600;
-  color: #94a3b8;
+  color: var(--gris);
 }
 
 /* ===== Progress ring ===== */
@@ -259,25 +259,25 @@
 }
 
 .rc-ring-time {
-  font-family: 'Space Grotesk', monospace;
+  font-family: var(--font-timer);
   font-size: 2.6rem;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
   letter-spacing: -0.02em;
-  color: #0f172a;
+  color: var(--navy);
 }
 
 .rc-ring-label {
   margin-top: 2px;
   font-size: 12px;
   font-weight: 600;
-  color: #94a3b8;
+  color: var(--gris);
   text-transform: uppercase;
   letter-spacing: 0.1em;
 }
 
 .rc-progress-pct {
-  font-family: 'Space Grotesk', monospace;
+  font-family: var(--font-timer);
   font-size: 0.9rem;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
@@ -300,9 +300,9 @@
   padding: 19px 20px;
   border: none;
   border-radius: 16px;
-  background: #1f3a8b;
+  background: var(--bleu);
   color: #fff;
-  font-family: 'Manrope', sans-serif;
+  font-family: var(--font-titre);
   font-size: 17px;
   font-weight: 700;
   cursor: pointer;
@@ -337,15 +337,15 @@
   justify-content: center;
   font-size: 1.5rem;
   background: #fff;
-  color: #1f3a8b;
-  border: 1.5px solid #e2e8f0;
+  color: var(--bleu);
+  border: 1.5px solid var(--gris-bord);
   border-radius: 16px;
   cursor: pointer;
   box-shadow: var(--shadow-sm);
   transition: background 140ms ease, transform 140ms ease, box-shadow 140ms ease;
 }
 
-.rc-bell:hover { background: #eef3fc; box-shadow: var(--shadow); }
+.rc-bell:hover { background: var(--bleu-3); box-shadow: var(--shadow); }
 .rc-bell:active { transform: translateY(1px); }
 
 .rc-completed {
@@ -384,17 +384,17 @@
 
 .rc-nav .btn {
   min-height: 48px;
-  background: #eef3fc;
-  color: #1f3a8b;
+  background: var(--bleu-3);
+  color: var(--bleu);
   border: none;
   border-radius: 14px;
-  font-family: 'Manrope', sans-serif;
+  font-family: var(--font-titre);
   font-size: 15px;
   font-weight: 700;
 }
 
 .rc-nav .btn:hover:not(:disabled) {
-  background: #dbe4f7;
+  background: var(--bleu-3);
   box-shadow: var(--shadow-sm);
 }
 
@@ -408,14 +408,14 @@
   padding: 16px;
   border-radius: 18px;
   background: #fff;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--gris-bord);
 }
 
 .rc-block-title {
-  font-family: 'Manrope', sans-serif;
+  font-family: var(--font-titre);
   font-size: 0.95rem;
   font-weight: 700;
-  color: #0f172a;
+  color: var(--navy);
 }
 
 .rc-collapse-head {
@@ -440,7 +440,7 @@
 
 .rc-chevron {
   font-size: 0.7rem;
-  color: #94a3b8;
+  color: var(--gris);
 }
 
 /* ===== Time adjust ===== */
@@ -459,19 +459,19 @@
   min-height: 52px;
   padding: 15px;
   border-radius: 14px;
-  border: 1.5px solid #e2e8f0;
+  border: 1.5px solid var(--gris-bord);
   background: #fff;
-  font-family: 'Space Grotesk', monospace;
+  font-family: var(--font-timer);
   font-size: 16px;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
-  color: #0f172a;
+  color: var(--navy);
   cursor: pointer;
   transition: filter 140ms ease, transform 140ms ease, border-color 140ms ease;
 }
 
 .rc-time-btn:active { transform: translateY(1px); }
-.rc-time-btn:hover { border-color: #cbd5e1; }
+.rc-time-btn:hover { border-color: var(--gris); }
 
 .rc-time-btn-icon {
   display: inline-flex;
@@ -508,21 +508,21 @@
 .rc-theme-btn {
   min-height: 48px;
   border-radius: 14px;
-  border: 1.5px solid #e2e8f0;
+  border: 1.5px solid var(--gris-bord);
   background: #fff;
   color: var(--text-secondary);
-  font-family: 'Manrope', sans-serif;
+  font-family: var(--font-titre);
   font-size: 0.92rem;
   font-weight: 600;
   cursor: pointer;
   transition: background 140ms ease, color 140ms ease, border-color 140ms ease;
 }
 
-.rc-theme-btn:hover { border-color: #d8e2f6; color: #1f3a8b; }
+.rc-theme-btn:hover { border-color: var(--bleu-3); color: var(--bleu); }
 
 .rc-theme-btn.is-selected {
-  background: #1f3a8b;
-  border-color: #1f3a8b;
+  background: var(--bleu);
+  border-color: var(--bleu);
   color: #fff;
 }
 
@@ -539,7 +539,7 @@
 .rc-message-active {
   margin-top: 12px;
   padding: 10px 12px;
-  background: #eef3fc;
+  background: var(--bleu-3);
   border-radius: 14px;
   display: flex;
   align-items: center;
@@ -550,7 +550,7 @@
 .rc-message-text {
   font-weight: 600;
   font-size: 0.9rem;
-  color: #0f172a;
+  color: var(--navy);
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -567,7 +567,7 @@
   border: none;
   border-radius: 8px;
   background: rgba(15, 23, 41, 0.08);
-  color: #0f172a;
+  color: var(--navy);
   font-weight: 700;
   cursor: pointer;
   transition: background 140ms ease;
@@ -577,11 +577,11 @@
 
 /* ===== Stats ===== */
 .rc-stat-pct {
-  font-family: 'Space Grotesk', monospace;
+  font-family: var(--font-timer);
   font-size: 1.1rem;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
-  color: #1f3a8b;
+  color: var(--bleu);
 }
 
 .rc-stats-grid {
@@ -593,23 +593,23 @@
 
 .rc-stat-cell {
   padding: 12px;
-  background: #f8fafc;
+  background: var(--creme);
   border-radius: 14px;
 }
 
 .rc-stat-label {
   font-size: 0.72rem;
   font-weight: 600;
-  color: #94a3b8;
+  color: var(--gris);
   margin-bottom: 4px;
 }
 
 .rc-stat-value {
-  font-family: 'Space Grotesk', monospace;
+  font-family: var(--font-timer);
   font-size: 1.15rem;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
-  color: #0f172a;
+  color: var(--navy);
 }
 
 /* ===== Notes ===== */
@@ -632,7 +632,7 @@
   display: flex;
   gap: 4px;
   padding: 4px;
-  background: #f8fafc;
+  background: var(--creme);
   border-radius: 14px;
 }
 
@@ -640,9 +640,9 @@
   padding: 7px 14px;
   border: none;
   background: transparent;
-  color: #94a3b8;
+  color: var(--gris);
   border-radius: 10px;
-  font-family: 'Manrope', sans-serif;
+  font-family: var(--font-titre);
   font-size: 0.85rem;
   font-weight: 600;
   cursor: pointer;
@@ -651,7 +651,7 @@
 
 .rc-view-btn.is-active {
   background: #fff;
-  color: #0f172a;
+  color: var(--navy);
   box-shadow: var(--shadow-xs);
 }
 
@@ -670,8 +670,8 @@
   gap: 12px;
   width: 100%;
   padding: 10px 12px;
-  border: 1px solid #e2e8f0;
-  border-left: 4px solid #e2e8f0;
+  border: 1px solid var(--gris-bord);
+  border-left: 4px solid var(--gris-bord);
   border-radius: 13px;
   background: #fff;
   cursor: pointer;
@@ -680,7 +680,7 @@
 }
 
 .rc-list-item:hover { box-shadow: var(--shadow-sm); }
-.rc-list-item.is-current { background: #eef3fc; border-color: #d8e2f6; }
+.rc-list-item.is-current { background: var(--bleu-3); border-color: var(--bleu-3); }
 .rc-list-item.is-done { opacity: 0.7; }
 
 .rc-list-num {
@@ -691,7 +691,7 @@
   align-items: center;
   justify-content: center;
   border-radius: 50%;
-  background: #f8fafc;
+  background: var(--creme);
   color: var(--text-secondary);
   font-weight: 700;
   font-size: 0.9rem;
@@ -705,17 +705,17 @@
 
 .rc-list-name {
   font-weight: 600;
-  color: #0f172a;
+  color: var(--navy);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
 .rc-list-dur {
-  font-family: 'Space Grotesk', monospace;
+  font-family: var(--font-timer);
   font-size: 0.8rem;
   font-variant-numeric: tabular-nums;
-  color: #94a3b8;
+  color: var(--gris);
 }
 
 /* ----- Agenda view ----- */
@@ -729,7 +729,7 @@
   position: relative;
   width: 100%;
   padding: 14px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--gris-bord);
   border-radius: 13px;
   background: #fff;
   cursor: pointer;
@@ -741,8 +741,8 @@
 .rc-agenda-item:hover { box-shadow: var(--shadow-sm); }
 
 .rc-agenda-item.is-current {
-  background: #eef3fc;
-  border: 1px solid #d8e2f6;
+  background: var(--bleu-3);
+  border: 1px solid var(--bleu-3);
   border-radius: 13px;
   box-shadow: var(--shadow);
 }
@@ -774,7 +774,7 @@
   align-items: center;
   justify-content: center;
   border-radius: 50%;
-  background: #cbd5e1;
+  background: var(--gris);
   color: transparent;
   font-size: 0;
   overflow: hidden;
@@ -782,13 +782,13 @@
 
 /* Current step dot */
 .rc-agenda-item.is-current .rc-agenda-num {
-  background: #1f3a8b;
+  background: var(--bleu);
   box-shadow: 0 0 0 5px rgba(31,58,139,.14);
 }
 
 /* Done step dot */
 .rc-agenda-item.is-done .rc-agenda-num {
-  background: #1f3a8b;
+  background: var(--bleu);
 }
 
 .rc-agenda-info {
@@ -800,10 +800,10 @@
 }
 
 .rc-agenda-name {
-  font-family: 'Manrope', sans-serif;
+  font-family: var(--font-titre);
   font-weight: 700;
   font-size: 1rem;
-  color: #0f172a;
+  color: var(--navy);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -814,18 +814,18 @@
   align-items: center;
   gap: 8px;
   font-size: 0.8rem;
-  color: #94a3b8;
+  color: var(--gris);
 }
 
 .rc-agenda-sub span:first-child {
-  font-family: 'Space Grotesk', monospace;
+  font-family: var(--font-timer);
   font-variant-numeric: tabular-nums;
 }
 
 .rc-tag {
   padding: 1px 8px;
   border-radius: 999px;
-  background: #f8fafc;
+  background: var(--creme);
   color: var(--text-secondary);
   font-size: 0.72rem;
   font-weight: 600;
@@ -843,12 +843,12 @@
 
 .rc-agenda-time-val {
   display: block;
-  font-family: 'Space Grotesk', monospace;
+  font-family: var(--font-timer);
   font-size: 1.5rem;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
   line-height: 1;
-  color: #0f172a;
+  color: var(--navy);
 }
 
 .rc-agenda-time-pct {
@@ -856,7 +856,7 @@
   margin-top: 4px;
   font-size: 0.72rem;
   font-weight: 600;
-  color: #94a3b8;
+  color: var(--gris);
 }
 
 /* ===== Footer ===== */
@@ -874,10 +874,10 @@
 }
 
 .rc-display-link {
-  font-family: 'Manrope', sans-serif;
+  font-family: var(--font-titre);
   font-size: 0.9rem;
   font-weight: 600;
-  color: #1f3a8b;
+  color: var(--bleu);
 }
 
 .rc-display-link:hover { text-decoration: underline; }
@@ -885,7 +885,7 @@
 .rc-credit {
   font-size: 0.78rem;
   font-weight: 500;
-  color: #94a3b8;
+  color: var(--gris);
 }
 
 .rc-credit:hover { color: var(--text-secondary); }
@@ -931,19 +931,19 @@
 
 .rc-edit-toggle {
   padding: 6px 14px;
-  border: 1.5px solid #e2e8f0;
+  border: 1.5px solid var(--gris-bord);
   border-radius: 999px;
   background: #fff;
   color: var(--text-secondary);
-  font-family: 'Manrope', sans-serif;
+  font-family: var(--font-titre);
   font-size: 0.82rem;
   font-weight: 600;
   cursor: pointer;
   transition: background 140ms ease, color 140ms ease, border-color 140ms ease;
 }
 
-.rc-edit-toggle:hover { border-color: #d8e2f6; color: #1f3a8b; }
-.rc-edit-toggle.is-active { background: #1f3a8b; color: #fff; border-color: #1f3a8b; }
+.rc-edit-toggle:hover { border-color: var(--bleu-3); color: var(--bleu); }
+.rc-edit-toggle.is-active { background: var(--bleu); color: #fff; border-color: var(--bleu); }
 
 /* ===== Edit mode session list ===== */
 .rc-edit-list {
@@ -953,8 +953,8 @@
 }
 
 .rc-edit-item {
-  border: 1px solid #e2e8f0;
-  border-left: 4px solid #e2e8f0;
+  border: 1px solid var(--gris-bord);
+  border-left: 4px solid var(--gris-bord);
   border-radius: 13px;
   background: #fff;
   overflow: hidden;
@@ -972,7 +972,7 @@
   transition: background 140ms ease;
 }
 
-.rc-edit-item-head:hover { background: #f8fafc; }
+.rc-edit-item-head:hover { background: var(--creme); }
 
 .rc-edit-color {
   width: 24px;
@@ -985,24 +985,24 @@
   flex: 1;
   font-weight: 600;
   font-size: 0.95rem;
-  color: #0f172a;
+  color: var(--navy);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
 .rc-edit-dur {
-  font-family: 'Space Grotesk', monospace;
+  font-family: var(--font-timer);
   font-size: 0.82rem;
   font-weight: 600;
   font-variant-numeric: tabular-nums;
-  color: #94a3b8;
+  color: var(--gris);
   flex-shrink: 0;
 }
 
 .rc-edit-chevron {
   font-size: 0.7rem;
-  color: #94a3b8;
+  color: var(--gris);
   flex-shrink: 0;
 }
 
@@ -1011,7 +1011,7 @@
   display: flex;
   flex-direction: column;
   gap: 12px;
-  border-top: 1px solid #e2e8f0;
+  border-top: 1px solid var(--gris-bord);
   padding-top: 14px;
 }
 
@@ -1019,7 +1019,7 @@
   display: block;
   font-size: 0.78rem;
   font-weight: 600;
-  color: #94a3b8;
+  color: var(--gris);
   margin-bottom: 4px;
 }
 
@@ -1058,19 +1058,19 @@
 .rc-color-dot:hover { transform: scale(1.15); }
 
 .rc-color-dot.is-selected {
-  border-color: #0f172a;
-  box-shadow: 0 0 0 2px #fff, 0 0 0 4px #0f172a;
+  border-color: var(--navy);
+  box-shadow: 0 0 0 2px #fff, 0 0 0 4px var(--navy);
 }
 
 /* ===== Add session button / form ===== */
 .rc-add-session-btn {
   width: 100%;
   padding: 14px;
-  border: 2px dashed #d8e2f6;
+  border: 2px dashed var(--bleu-3);
   border-radius: 14px;
   background: transparent;
   color: var(--text-secondary);
-  font-family: 'Manrope', sans-serif;
+  font-family: var(--font-titre);
   font-size: 0.9rem;
   font-weight: 600;
   cursor: pointer;
@@ -1078,15 +1078,15 @@
 }
 
 .rc-add-session-btn:hover {
-  border-color: #1f3a8b;
-  color: #1f3a8b;
-  background: #eef3fc;
+  border-color: var(--bleu);
+  color: var(--bleu);
+  background: var(--bleu-3);
 }
 
 .rc-add-session-form {
-  border: 1px solid #d8e2f6;
+  border: 1px solid var(--bleu-3);
   border-radius: 14px;
-  background: #eef3fc;
+  background: var(--bleu-3);
   padding: 14px;
   display: flex;
   flex-direction: column;

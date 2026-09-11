@@ -15,18 +15,18 @@
 /* ---------- Theme backgrounds ---------- */
 .tdisplay.theme-luxe {
   background:
-    radial-gradient(1200px 600px at 50% -10%, #1c2747 0%, transparent 60%),
-    linear-gradient(180deg, #0b1020 0%, #0a0e1a 100%);
-  color: #f4f6fb;
+    radial-gradient(1200px 600px at 50% -10%, var(--navy-3) 0%, transparent 60%),
+    linear-gradient(180deg, var(--navy) 0%, var(--noir) 100%);
+  color: var(--creme);
 }
 
 .tdisplay.theme-aplat {
-  background: #f7f8fa;
-  color: #0f1729;
+  background: var(--creme);
+  color: var(--navy);
 }
 
 .tdisplay.theme-aurora {
-  background: #070a16;
+  background: var(--noir);
   color: #ffffff;
 }
 
@@ -63,7 +63,7 @@
   font-weight: 700;
   letter-spacing: -0.02em;
 }
-.theme-aplat .td-session-name { color: #0f1729; }
+.theme-aplat .td-session-name { color: var(--navy); }
 
 /* ---------- Main ---------- */
 .td-main {
@@ -120,7 +120,7 @@
   gap: 14px;
 }
 .luxe-time {
-  font-family: 'Space Grotesk', monospace;
+  font-family: var(--font-timer);
   font-size: clamp(3.4rem, 13vmin, 9rem);
   font-weight: 700;
   letter-spacing: -0.02em;
@@ -139,7 +139,7 @@
   gap: 30px;
 }
 .aplat-time {
-  font-family: 'Space Grotesk', monospace;
+  font-family: var(--font-timer);
   font-size: clamp(4.5rem, 22vw, 16rem);
   font-weight: 700;
   letter-spacing: -0.04em;
@@ -149,7 +149,7 @@
 .aplat-bar-track {
   width: 100%;
   height: 12px;
-  background: #e7e9ef;
+  background: var(--creme-2);
   border-radius: var(--radius-full);
   overflow: hidden;
 }
@@ -157,7 +157,7 @@
   height: 100%;
   border-radius: var(--radius-full);
 }
-.theme-aplat .td-status { color: #56607a; }
+.theme-aplat .td-status { color: var(--gris-texte); }
 
 /* ============================================================
    AURORA — radial glow
@@ -185,7 +185,7 @@
   gap: 16px;
 }
 .aurora-time {
-  font-family: 'Space Grotesk', monospace;
+  font-family: var(--font-timer);
   font-size: clamp(4rem, 17vmin, 12rem);
   font-weight: 700;
   letter-spacing: -0.03em;
@@ -261,7 +261,7 @@
 .td-code { opacity: 0.8; letter-spacing: 0.02em; }
 .td-code strong {
   background: var(--accent);
-  color: #0f1729;
+  color: var(--navy);
   padding: 2px 9px;
   border-radius: var(--radius-sm);
   font-variant-numeric: tabular-nums;
@@ -305,7 +305,7 @@
 .td-qr-card {
   position: relative;
   background: #fff;
-  color: #0f1729;
+  color: var(--navy);
   border-radius: var(--radius-xl);
   padding: 32px;
   text-align: center;
@@ -371,7 +371,7 @@
   width: 96px; height: 96px;
   margin: 0 auto 20px;
   border-radius: 50%;
-  background: #16a34a;
+  background: var(--success);
   display: flex; align-items: center; justify-content: center;
   font-size: 3rem; color: #fff;
   box-shadow: 0 0 50px rgba(22, 163, 74, 0.6);

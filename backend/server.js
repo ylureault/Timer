@@ -362,6 +362,7 @@ app.get('/api/timer/:code/state', (req, res) => {
       message_timestamp: timerState.message_timestamp,
       theme: timerState.theme || 'luxe',
       auto_mode: timerState.auto_mode === 1,
+      viewers: timerConnections.get(code)?.size || 0,
       timer: { code: timer.code, name: timer.name }
     });
   } catch (error) {
@@ -842,6 +843,45 @@ app.get('/api/salon/:code/state', (req, res) => {
 });
 
 // ============================
+// STATISTIQUES LIVE
+// ============================
+
+// Compte les écrans actuellement connectés en WebSocket, tous timers confondus.
+function countConnectedScreens() {
+  let total = 0;
+  for (const set of timerConnections.values()) total += set.size;
+  return total;
+}
+
+app.get('/api/stats/live', (req, res) => {
+  try {
+    const timersTotal = db.prepare('SELECT COUNT(*) AS n FROM timers').get().n;
+    const sessionsTotal = db.prepare('SELECT COUNT(*) AS n FROM sessions').get().n;
+    const dureeTotale = db.prepare('SELECT COALESCE(SUM(duree_secondes), 0) AS s FROM sessions').get().s;
+    const enCours = db
+      .prepare("SELECT COUNT(*) AS n FROM timer_states WHERE mode = 'play'").get().n;
+    const actifs24h = db
+      .prepare("SELECT COUNT(*) AS n FROM timers WHERE last_activity >= datetime('now', '-1 day')")
+      .get().n;
+
+    res.json({
+      success: true,
+      timers_en_cours: enCours,
+      timers_actifs_24h: actifs24h,
+      timers_total: timersTotal,
+      sessions_total: sessionsTotal,
+      minutes_orchestrees: Math.round(dureeTotale / 60),
+      ecrans_connectes: countConnectedScreens(),
+      timers_connectes: timerConnections.size,
+      timestamp: Date.now(),
+    });
+  } catch (error) {
+    console.error('Live stats error:', error);
+    res.status(500).json({ success: false, error: 'Erreur statistiques' });
+  }
+});
+
+// ============================
 // HEALTH CHECK
 // ============================
 
@@ -886,8 +926,9 @@ wss.on('connection', (ws, req) => {
 
   console.log(`WebSocket connected for timer: ${timerCode}`);
 
-  // Send initial state
+  // Send initial state, puis prévient les autres écrans du nouvel arrivant
   sendTimerState(ws, timerCode);
+  broadcastTimerUpdate(timerCode);
 
   ws.on('close', () => {
     const connections = timerConnections.get(timerCode);
@@ -897,6 +938,8 @@ wss.on('connection', (ws, req) => {
         timerConnections.delete(timerCode);
       }
     }
+    // Met à jour le compteur d'écrans chez ceux qui restent
+    broadcastTimerUpdate(timerCode);
     console.log(`WebSocket disconnected for timer: ${timerCode}`);
   });
 
@@ -933,6 +976,7 @@ function sendTimerState(ws, code) {
       message_actuel: timerState.message_actuel,
       theme: timerState.theme || 'luxe',
       auto_mode: timerState.auto_mode === 1,
+      viewers: timerConnections.get(code)?.size || 0,
       timer: { code: timer.code, name: timer.name }
     };
 

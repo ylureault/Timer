@@ -13,27 +13,17 @@ function NotFound() {
       alignItems: 'center',
       justifyContent: 'center',
       minHeight: '100vh',
-      background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)',
-      color: 'white',
+      background: 'var(--creme)',
+      color: 'var(--navy)',
       textAlign: 'center',
       padding: '20px'
     }}>
-      <h1 style={{ fontSize: '6rem', margin: '0', opacity: 0.3 }}>404</h1>
+      <h1 style={{ fontSize: '6rem', margin: '0', color: 'var(--gris)' }}>404</h1>
       <h2 style={{ fontSize: '1.5rem', marginBottom: '8px' }}>Page introuvable</h2>
-      <p style={{ opacity: 0.7, marginBottom: '24px' }}>
+      <p style={{ color: 'var(--gris-texte)', marginBottom: '24px' }}>
         La page que vous cherchez n'existe pas ou a été déplacée.
       </p>
-      <Link
-        to="/"
-        style={{
-          padding: '12px 32px',
-          background: 'var(--brand-primary, #1f3a8b)',
-          color: 'white',
-          borderRadius: '8px',
-          textDecoration: 'none',
-          fontWeight: '600'
-        }}
-      >
+      <Link to="/" className="btn btn-primary btn-lg">
         Retour à l'accueil
       </Link>
     </div>
