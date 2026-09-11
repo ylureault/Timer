@@ -424,9 +424,12 @@
   align-items: center;
   justify-content: space-between;
   gap: 10px;
+  /* 44px : cible tactile confortable à une main, en atelier */
+  min-height: 44px;
+  margin: -6px 0;
   background: none;
   border: none;
-  padding: 0;
+  padding: 6px 0;
   cursor: pointer;
   font-family: inherit;
   text-align: left;
@@ -1187,4 +1190,13 @@
 
 .rc-ring-time.is-over {
   animation: urgentPulse 1.8s ease-in-out infinite;
+}
+
+/* Liens de pied : cibles tactiles confortables */
+.rc-display-link,
+.rc-credit {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 8px;
 }

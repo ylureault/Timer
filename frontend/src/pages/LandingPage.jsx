@@ -518,6 +518,8 @@ function LandingPage() {
           </p>
         </header>
 
+        {/* #features : ancre historique, des liens externes pointent dessus */}
+        <span id="features" className="lp-anchor" aria-hidden="true" />
         <div className="lp-cards" id="fonctionnalites">
           {FEATURES.map((feature) => (
             <article

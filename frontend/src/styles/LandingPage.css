@@ -921,3 +921,11 @@
   .lp-usecases { grid-template-columns: 1fr; }
   .lp-step, .lp-step:nth-child(n) { transform: none; }
 }
+
+/* Ancre décalée : compense la navbar collante au saut */
+.lp-anchor {
+  display: block;
+  position: relative;
+  top: -5rem;
+  visibility: hidden;
+}
