@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion } from 'framer-motion'
 import '../styles/LandingPage.css'
 
 const WORDS = [
@@ -194,6 +194,11 @@ function LandingPage() {
 
       {/* ================= HERO ================= */}
       <section className="lp-hero">
+        <div className="lp-hero-bg" aria-hidden="true">
+          <span className="lp-orb lp-orb-blue" />
+          <span className="lp-orb lp-orb-yellow" />
+        </div>
+
         <div className="lp-hero-grid">
           <motion.div
             className="lp-hero-left"
@@ -205,20 +210,18 @@ function LandingPage() {
 
             <h1 className="lp-hero-title">
               Le timer partagé de vos{' '}
-              <span className="lp-rotating">
-                <AnimatePresence mode="wait">
-                  <motion.span
-                    key={currentWordIndex}
-                    className="lp-rotating-word"
-                    initial={{ opacity: 0, y: 14 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -14 }}
-                    transition={{ duration: 0.3 }}
-                  >
-                    {WORDS[currentWordIndex]}
-                  </motion.span>
-                </AnimatePresence>
-              </span>
+              {/* Pas d'AnimatePresence ici : le mode "wait" laissait un instant
+                  sans aucun mot, et le titre se lisait tronqué. La clé suffit
+                  à rejouer l'entrée, le mot est toujours présent. */}
+              <motion.span
+                key={currentWordIndex}
+                className="lp-rotating-word"
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.35, ease: [0.2, 0.7, 0.2, 1] }}
+              >
+                {WORDS[currentWordIndex]}
+              </motion.span>
             </h1>
 
             <p className="lp-hero-desc">
@@ -264,35 +267,73 @@ function LandingPage() {
             </p>
           </motion.div>
 
-          {/* Aperçu de l'anneau */}
+          {/* Mise en scène : l'écran projeté + la télécommande */}
           <motion.div
             className="lp-hero-right"
-            initial={{ opacity: 0, y: 24 }}
+            initial={{ opacity: 0, y: 26 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.45, delay: 0.15 }}
+            transition={{ duration: 0.5, delay: 0.15 }}
           >
-            <div className="lp-ring-card">
-              <div className="lp-ring anim-breathe">
-                <svg viewBox="0 0 224 224" className="lp-ring-svg" aria-hidden="true">
-                  <circle className="lp-ring-track" cx="112" cy="112" r={ringRadius} />
-                  <circle
-                    className="lp-ring-progress"
-                    cx="112"
-                    cy="112"
-                    r={ringRadius}
-                    strokeDasharray={ringCircumference}
-                    strokeDashoffset={ringCircumference * 0.25}
-                  />
-                </svg>
-                <div className="lp-ring-center">
-                  <div className="lp-ring-time">12:30</div>
-                  <div className="lp-ring-label">Idéation</div>
+            <div className="lp-mockup">
+              {/* L'écran de la salle */}
+              <div className="lp-screen">
+                <div className="lp-screen-glow" aria-hidden="true" />
+                <div className="lp-screen-head">
+                  <span className="lp-screen-step">Séquence 2 / 4</span>
+                  <span className="lp-screen-name">Idéation</span>
+                </div>
+
+                <div className="lp-screen-ring anim-breathe">
+                  <svg viewBox="0 0 224 224" className="lp-ring-svg" aria-hidden="true">
+                    <circle className="lp-ring-track" cx="112" cy="112" r={ringRadius} />
+                    <circle
+                      className="lp-ring-progress"
+                      cx="112"
+                      cy="112"
+                      r={ringRadius}
+                      strokeDasharray={ringCircumference}
+                      strokeDashoffset={ringCircumference * 0.28}
+                    />
+                  </svg>
+                  <div className="lp-ring-center">
+                    <div className="lp-ring-time">12:30</div>
+                    <div className="lp-ring-status">
+                      <span className="lp-ring-dot" />
+                      En cours
+                    </div>
+                  </div>
+                </div>
+
+                <div className="lp-screen-dots" aria-hidden="true">
+                  <span className="is-done" />
+                  <span className="is-active" />
+                  <span />
+                  <span />
                 </div>
               </div>
-              <div className="lp-ring-indicator">
-                <span className="lp-ring-dot" />
-                Synchronisé en direct
+
+              {/* La télécommande, posée par-dessus */}
+              <div className="lp-remote">
+                <span className="lp-remote-label">Télécommande</span>
+                <span className="lp-remote-time">12:30</span>
+                <div className="lp-remote-row">
+                  <span className="lp-remote-btn">
+                    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                      <rect x="6" y="4" width="4" height="16" rx="1" />
+                      <rect x="14" y="4" width="4" height="16" rx="1" />
+                    </svg>
+                  </span>
+                  <span className="lp-remote-pill">+ 2 min</span>
+                  <span className="lp-remote-pill">Suivant</span>
+                </div>
               </div>
+
+              {/* Puces flottantes */}
+              <span className="lp-chip lp-chip-sync">
+                <span className="lp-chip-dot" />
+                {stats?.ecrans_connectes ? `${stats.ecrans_connectes} écrans` : 'Écrans'} synchronisés
+              </span>
+              <span className="lp-chip lp-chip-time">+ 2 min ajoutées</span>
             </div>
           </motion.div>
         </div>

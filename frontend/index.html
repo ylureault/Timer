@@ -9,6 +9,10 @@
     <link rel="manifest" href="/manifest.json" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
+    <!-- Perf : ouvre les connexions polices avant le parsing CSS (gain LCP) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+
     <!-- Primary Meta Tags -->
     <title>Timer par INSUFFLE — Le minuteur partagé des facilitateurs</title>
     <meta name="title" content="Timer par INSUFFLE — Le minuteur partagé des facilitateurs" />
@@ -29,13 +33,16 @@
     <meta property="og:title" content="Timer par INSUFFLE — Le minuteur partagé des facilitateurs" />
     <meta property="og:description" content="Créez un minuteur partagé en 30 secondes, projetez-le et pilotez-le depuis votre téléphone. Sans inscription, 100% gratuit." />
     <meta property="og:image" content="https://timer.insuffle.com/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Timer par INSUFFLE — minuteur partagé projeté en salle et piloté depuis un mobile" />
     <meta property="og:locale" content="fr_FR" />
     <meta property="og:site_name" content="Timer par INSUFFLE" />
 
     <!-- Twitter -->
     <meta property="twitter:card" content="summary_large_image" />
     <meta property="twitter:url" content="https://timer.insuffle.com/" />
-    <meta property="twitter:title" content="Timer par INSUFFLE — Minuteur visuel gratuit" />
+    <meta property="twitter:title" content="Timer par INSUFFLE — Le minuteur partagé des facilitateurs" />
     <meta property="twitter:description" content="Créez un minuteur partagé en 30 secondes, projetez-le et pilotez-le depuis votre téléphone. Sans inscription, 100% gratuit." />
     <meta property="twitter:image" content="https://timer.insuffle.com/og-image.png" />
 
@@ -53,7 +60,7 @@
       "@context": "https://schema.org",
       "@type": "WebApplication",
       "name": "Insuffle Timer",
-      "description": "Timer visuel gratuit pour ateliers, formations et réunions. Synchronisation temps réel, templates prédéfinis, design spectaculaire.",
+      "description": "Le timer en ligne des facilitateurs, formateurs et scrum masters : projetez le temps restant, pilotez-le depuis votre mobile et ajustez le déroulé en direct. Gratuit, sans inscription.",
       "url": "https://timer.insuffle.com",
       "applicationCategory": "ProductivityApplication",
       "operatingSystem": "All",
@@ -69,12 +76,6 @@
         "name": "Insuffle",
         "url": "https://insuffle.com",
         "logo": "https://timer.insuffle.com/timer-icon.svg"
-      },
-      "aggregateRating": {
-        "@type": "AggregateRating",
-        "ratingValue": "4.8",
-        "ratingCount": "150",
-        "bestRating": "5"
       },
       "featureList": [
         "Timer visuel avec plusieurs formats d'affichage",
@@ -120,34 +121,42 @@
       "mainEntity": [
         {
           "@type": "Question",
-          "name": "Insuffle Timer est-il gratuit ?",
+          "name": "Faut-il créer un compte pour utiliser le timer ?",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "Oui, Insuffle Timer est 100% gratuit et sans inscription. Créez autant de timers que vous le souhaitez, sans aucun frais."
+            "text": "Non. Aucune inscription, aucun mot de passe, aucune carte bancaire. Vous créez un timer, vous recevez un code à six chiffres et un lien d'édition secret. C'est tout."
           }
         },
         {
           "@type": "Question",
-          "name": "Comment rejoindre un timer existant ?",
+          "name": "Comment les participants voient-ils le temps restant ?",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "Entrez simplement le code à 6 chiffres (format XXX-XXX) sur la page d'accueil pour rejoindre instantanément un timer."
+            "text": "Vous projetez l'affichage sur l'écran de la salle, ou vous partagez votre écran en visio. Un QR code permet aussi à chacun d'ouvrir le timer sur son téléphone."
           }
         },
         {
           "@type": "Question",
-          "name": "Puis-je utiliser Insuffle Timer sur mobile ?",
+          "name": "Puis-je modifier le déroulé pendant la séance ?",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "Oui, Insuffle Timer est entièrement responsive. Vous pouvez contrôler le timer depuis votre smartphone et afficher sur un grand écran."
+            "text": "Oui. Depuis la télécommande, vous ajoutez ou supprimez des séquences, changez les durées et ajoutez du temps à la volée. Tous les écrans se mettent à jour immédiatement."
           }
         },
         {
           "@type": "Question",
-          "name": "Combien de participants peuvent rejoindre un timer ?",
+          "name": "Le timer fonctionne-t-il à distance et en hybride ?",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "Il n'y a pas de limite au nombre de participants. Tout le monde peut suivre le timer en temps réel grâce à la synchronisation WebSocket."
+            "text": "Oui. La synchronisation passe par le web : tous ceux qui ouvrent le lien voient le même temps, qu'ils soient dans la salle ou connectés à distance."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Combien de temps mon timer est-il conservé ?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Un timer reste accessible tant qu'il est utilisé. Les timers inactifs depuis plus de sept jours sont automatiquement supprimés."
           }
         }
       ]

@@ -41,6 +41,7 @@
   font-size: 1.05rem;
   font-weight: 700;
   letter-spacing: -0.01em;
+  white-space: nowrap;
 }
 
 .lp-logo-sep { color: var(--gris); font-weight: 400; }
@@ -62,9 +63,42 @@
 
 /* ================= HERO ================= */
 .lp-hero {
+  position: relative;
+  isolation: isolate;
   max-width: var(--wrap);
   margin: 0 auto;
-  padding: 4.5rem 1.5rem 3.5rem;
+  padding: 5rem 1.5rem 4.5rem;
+}
+
+/* Halos décoratifs : donnent de la profondeur au fond crème */
+.lp-hero-bg {
+  position: absolute;
+  inset: -10% -20% 0;
+  z-index: -1;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.lp-orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(90px);
+}
+
+.lp-orb-blue {
+  width: 46rem;
+  height: 46rem;
+  top: -18rem;
+  right: -10rem;
+  background: radial-gradient(circle, rgba(31, 58, 139, 0.20) 0%, transparent 68%);
+}
+
+.lp-orb-yellow {
+  width: 34rem;
+  height: 34rem;
+  bottom: -14rem;
+  left: -8rem;
+  background: radial-gradient(circle, rgba(255, 222, 89, 0.38) 0%, transparent 68%);
 }
 
 .lp-hero-grid {
@@ -153,29 +187,71 @@
   font-weight: 500;
 }
 
-/* ---------- Aperçu anneau ---------- */
+/* ---------- Mise en scène : écran projeté + télécommande ---------- */
 .lp-hero-right {
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-.lp-ring-card {
+.lp-mockup {
+  position: relative;
+  width: 100%;
+  max-width: 30rem;
+  padding-bottom: 3.5rem;
+}
+
+/* L'écran de la salle */
+.lp-screen {
+  position: relative;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 1.4rem;
-  background: #fff;
-  border: 1px solid var(--gris-bord);
+  gap: 1.25rem;
+  padding: 1.9rem 1.75rem 1.6rem;
   border-radius: var(--radius-lg);
-  padding: 2.8rem 2.8rem 1.9rem;
-  box-shadow: var(--ombre-2);
+  background: linear-gradient(165deg, var(--navy-2) 0%, var(--navy) 55%, var(--noir) 100%);
+  box-shadow: 0 30px 60px -28px rgba(12, 22, 41, 0.65),
+    0 2px 6px rgba(12, 22, 41, 0.18);
 }
 
-.lp-ring {
+.lp-screen-glow {
+  position: absolute;
+  inset: -40% -20% auto;
+  height: 80%;
+  background: radial-gradient(ellipse at 50% 0%, rgba(42, 77, 179, 0.55) 0%, transparent 62%);
+  pointer-events: none;
+}
+
+.lp-screen-head {
   position: relative;
-  width: 224px;
-  height: 224px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.lp-screen-step {
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.lp-screen-name {
+  font-family: var(--font-titre);
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: -0.01em;
+}
+
+.lp-screen-ring {
+  position: relative;
+  width: 200px;
+  height: 200px;
 }
 
 .lp-ring-svg {
@@ -186,15 +262,16 @@
 
 .lp-ring-track {
   fill: none;
-  stroke: var(--creme-2);
-  stroke-width: 13;
+  stroke: rgba(255, 255, 255, 0.1);
+  stroke-width: 12;
 }
 
 .lp-ring-progress {
   fill: none;
-  stroke: var(--bleu);
-  stroke-width: 13;
+  stroke: var(--jaune);
+  stroke-width: 12;
   stroke-linecap: round;
+  filter: drop-shadow(0 0 10px rgba(255, 222, 89, 0.45));
 }
 
 .lp-ring-center {
@@ -204,42 +281,153 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 0.25rem;
+  gap: 0.4rem;
 }
 
 .lp-ring-time {
   font-family: var(--font-timer);
-  font-size: 3rem;
+  font-size: 2.9rem;
   font-weight: 700;
-  letter-spacing: -0.02em;
-  color: var(--navy);
+  letter-spacing: -0.03em;
+  color: #fff;
   font-variant-numeric: tabular-nums;
   line-height: 1;
 }
 
-.lp-ring-label {
-  font-size: 0.75rem;
+.lp-ring-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.68rem;
   font-weight: 600;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.lp-ring-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: var(--radius-full);
+  background: #34d399;
+  box-shadow: 0 0 8px #34d399;
+}
+
+.lp-screen-dots {
+  display: flex;
+  gap: 0.45rem;
+}
+
+.lp-screen-dots span {
+  width: 8px;
+  height: 8px;
+  border-radius: var(--radius-full);
+  background: rgba(255, 255, 255, 0.18);
+}
+.lp-screen-dots .is-done { background: rgba(255, 255, 255, 0.42); }
+.lp-screen-dots .is-active {
+  background: var(--jaune);
+  transform: scale(1.35);
+  box-shadow: 0 0 0 4px rgba(255, 222, 89, 0.18);
+}
+
+/* La télécommande, posée en bas à gauche */
+.lp-remote {
+  position: absolute;
+  left: -1.25rem;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding: 0.9rem 1rem;
+  background: #fff;
+  border: 1px solid var(--gris-bord);
+  border-radius: var(--radius);
+  box-shadow: var(--ombre-2);
+}
+
+.lp-remote-label {
+  font-size: 0.62rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--gris);
 }
 
-.lp-ring-indicator {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  font-size: 0.85rem;
-  font-weight: 600;
-  color: var(--gris-texte);
+.lp-remote-time {
+  font-family: var(--font-timer);
+  font-size: 1.35rem;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--navy);
+  font-variant-numeric: tabular-nums;
 }
 
-.lp-ring-dot {
-  width: 8px;
-  height: 8px;
+.lp-remote-row {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-top: 0.15rem;
+}
+
+.lp-remote-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 9px;
+  background: var(--bleu);
+  color: #fff;
+  flex-shrink: 0;
+}
+.lp-remote-btn svg { width: 14px; height: 14px; }
+
+.lp-remote-pill {
+  padding: 0.25rem 0.6rem;
+  border-radius: var(--radius-full);
+  background: var(--creme-2);
+  color: var(--gris-texte);
+  font-size: 0.72rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* Puces flottantes */
+.lp-chip {
+  position: absolute;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.4rem 0.8rem;
+  border-radius: var(--radius-full);
+  font-size: 0.78rem;
+  font-weight: 600;
+  white-space: nowrap;
+  box-shadow: var(--ombre);
+}
+
+.lp-chip-sync {
+  top: -0.9rem;
+  right: -1.25rem;
+  background: #fff;
+  color: var(--navy);
+  border: 1px solid var(--gris-bord);
+}
+
+.lp-chip-dot {
+  width: 7px;
+  height: 7px;
   border-radius: var(--radius-full);
   background: var(--success);
   box-shadow: 0 0 0 3px rgba(22, 121, 74, 0.15);
+}
+
+.lp-chip-time {
+  right: -0.5rem;
+  bottom: 2.5rem;
+  background: var(--jaune);
+  color: var(--navy);
 }
 
 /* ================= COMPTEUR LIVE ================= */
@@ -598,9 +786,18 @@
   .lp-join { width: 100%; }
   .lp-join-input { flex: 1; width: auto; }
 
-  .lp-ring-card { padding: 2rem 2rem 1.5rem; }
-  .lp-ring { width: 180px; height: 180px; }
-  .lp-ring-time { font-size: 2.4rem; }
+  .lp-mockup { max-width: 22rem; padding-bottom: 3rem; }
+  .lp-screen { padding: 1.5rem 1.25rem 1.35rem; gap: 1rem; }
+  .lp-screen-ring { width: 160px; height: 160px; }
+  .lp-ring-time { font-size: 2.3rem; }
+  .lp-screen-name { font-size: 1.15rem; }
+  .lp-remote { left: -0.5rem; padding: 0.75rem 0.85rem; }
+  .lp-remote-time { font-size: 1.15rem; }
+  .lp-chip { font-size: 0.72rem; padding: 0.32rem 0.65rem; }
+  .lp-chip-sync { right: 0.25rem; top: -0.85rem; }
+  .lp-chip-time { right: -0.25rem; bottom: 2rem; }
+  .lp-orb-blue { width: 26rem; height: 26rem; }
+  .lp-orb-yellow { width: 20rem; height: 20rem; }
 
   .lp-section { padding: 3rem 1.1rem; }
   .lp-cards { grid-template-columns: 1fr; }
