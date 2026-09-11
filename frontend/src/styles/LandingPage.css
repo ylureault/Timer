@@ -7,6 +7,8 @@
   min-height: 100vh;
   background: var(--creme);
   color: var(--navy);
+  /* 'clip' et non 'hidden' : hidden casserait le position:sticky de la navbar */
+  overflow-x: clip;
 }
 
 /* ================= NAVBAR ================= */
@@ -816,4 +818,106 @@
   .lp-stat { padding-left: 0.8rem; }
   .lp-stat dd { font-size: 1.5rem; }
   .lp-stat dt { font-size: 0.78rem; }
+}
+
+/* ============================================================
+   UX / UI — accessibilité, retours, rythme visuel
+   ============================================================ */
+
+/* Lien d'évitement clavier */
+.lp-skip {
+  position: absolute;
+  left: 0;
+  top: 0;
+  transform: translateY(-130%);
+  transition: transform var(--t-fast);
+  z-index: 100;
+  padding: 0.7rem 1.2rem;
+  background: var(--navy);
+  color: #fff;
+  border-radius: 0 0 var(--radius) 0;
+  font-weight: 600;
+}
+.lp-skip:focus { transform: translateY(0); }
+
+/* Champ code : état d'erreur explicite */
+.lp-join-input.has-error {
+  border-color: var(--danger);
+  box-shadow: 0 0 0 3px rgba(179, 38, 30, 0.13);
+}
+
+.lp-join-error {
+  margin-bottom: 0.7rem;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--danger);
+}
+
+/* Rythme : alternance crème / blanc, et grain sur les aplats */
+.lp-section-alt {
+  background: #fff;
+  border-block: 1px solid var(--gris-bord);
+  max-width: none;
+}
+.lp-section-alt > * {
+  max-width: var(--wrap);
+  margin-inline: auto;
+}
+
+/* Inclinaisons « papier collé » */
+.lp-step:nth-child(1) { transform: rotate(var(--tilt-a)); }
+.lp-step:nth-child(2) { transform: rotate(var(--tilt-b)); }
+.lp-step:nth-child(3) { transform: rotate(var(--tilt-c)); }
+.lp-step { transition: transform var(--dur) var(--ease); }
+.lp-step:hover { transform: rotate(0deg) translateY(-3px); }
+
+.lp-chip-time { transform: rotate(var(--tilt-b)); }
+.lp-remote { transform: rotate(var(--tilt-a)); }
+
+/* Le surlignage se trace à chaque nouveau mot */
+.lp-rotating-word { animation: markerIn .5s var(--ease) both; }
+
+/* ============================================================
+   CAS D'USAGE — contenu de fond (substance SEO)
+   ============================================================ */
+.lp-usecases {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.1rem;
+}
+
+.lp-usecase {
+  background: var(--creme);
+  border: 1px solid var(--gris-bord);
+  border-radius: var(--radius-lg);
+  padding: 1.6rem 1.5rem;
+}
+
+.lp-usecase h3 {
+  font-family: var(--font-titre);
+  font-size: 1.1rem;
+  margin-bottom: 0.5rem;
+}
+
+.lp-usecase p {
+  font-size: 0.97rem;
+  color: var(--gris-texte);
+  line-height: 1.6;
+}
+
+.lp-usecase-meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-top: 0.9rem;
+  font-family: var(--font-timer);
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--bleu);
+  font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 768px) {
+  .lp-usecases { grid-template-columns: 1fr; }
+  .lp-step, .lp-step:nth-child(n) { transform: none; }
 }

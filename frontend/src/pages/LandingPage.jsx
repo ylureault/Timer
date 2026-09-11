@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import '../styles/LandingPage.css'
@@ -83,6 +83,33 @@ const PUBLICS = [
   'Organisateurs d’événements',
 ]
 
+const USECASES = [
+  {
+    titre: 'Atelier de co-construction',
+    texte:
+      "Une divergence qui s'emballe, une convergence bâclée : l'atelier se joue souvent sur la tenue du temps. Séquencez idéation, regroupement et vote, projetez le déroulé, et laissez le minuteur porter la contrainte à votre place. Vous n'êtes plus celui qui coupe la parole, c'est le temps affiché qui le fait.",
+    meta: '6 à 8 séquences · 2 à 3 h',
+  },
+  {
+    titre: 'Formation et montée en compétences',
+    texte:
+      "Alternez apports, exercices et pauses sur une journée entière. Les participants voient le rythme à l'avance, savent quand la pause arrive, et reviennent à l'heure parce que l'écran l'annonce. Les durées se réajustent en direct quand un exercice prend plus que prévu.",
+    meta: 'Journée · 8 à 12 séquences',
+  },
+  {
+    titre: 'Rituels agiles',
+    texte:
+      "Daily de quinze minutes, rétrospective en cinq temps, revue de sprint minutée. Le timer partagé rend la time-box visible par toute l'équipe plutôt que gardée par le scrum master. Le dépassement s'affiche : on voit précisément de combien on déborde.",
+    meta: 'Daily 15 min · Rétro 1 h',
+  },
+  {
+    titre: 'Pitchs, soutenances et jurys',
+    texte:
+      "Chaque intervenant dispose du même temps, affiché en grand et lisible du fond de la salle. Le décompte devient un arbitre neutre : plus de discussion sur qui a eu plus de temps, plus de sonnerie à déclencher à la main.",
+    meta: '5 min par passage',
+  },
+]
+
 const FAQ = [
   {
     q: 'Faut-il créer un compte pour utiliser le timer ?',
@@ -137,12 +164,119 @@ function useLiveStats() {
 const formatNumber = (n) =>
   typeof n === 'number' ? n.toLocaleString('fr-FR') : '—'
 
+const prefersReducedMotion = () =>
+  typeof window !== 'undefined' &&
+  window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
+
+/* Compteur qui s'incrémente vers sa valeur. Rend la donnée vivante plutôt
+   que de la faire apparaître d'un coup. */
+function useCountUp(target, duration = 900) {
+  const [value, setValue] = useState(typeof target === 'number' ? target : 0)
+  const fromRef = useRef(0)
+
+  useEffect(() => {
+    if (typeof target !== 'number') return
+    if (prefersReducedMotion()) {
+      setValue(target)
+      fromRef.current = target
+      return
+    }
+
+    const from = fromRef.current
+    if (from === target) return
+    const start = performance.now()
+    let raf
+
+    const step = (now) => {
+      const t = Math.min(1, (now - start) / duration)
+      const eased = 1 - Math.pow(1 - t, 3)
+      setValue(Math.round(from + (target - from) * eased))
+      if (t < 1) raf = requestAnimationFrame(step)
+      else fromRef.current = target
+    }
+
+    raf = requestAnimationFrame(step)
+    return () => cancelAnimationFrame(raf)
+  }, [target, duration])
+
+  return value
+}
+
+/* Révélation au défilement. On n'« arme » (= masque) qu'après avoir
+   confirmé que l'observateur existe : sans lui, le contenu reste visible. */
+function useReveal() {
+  const ref = useRef(null)
+
+  useEffect(() => {
+    const el = ref.current
+    if (!el || typeof IntersectionObserver === 'undefined') return
+    if (prefersReducedMotion()) return
+
+    const targets = el.querySelectorAll('.reveal')
+    targets.forEach((t) => t.classList.add('is-armed'))
+
+    const io = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((e) => {
+          if (e.isIntersecting) {
+            e.target.classList.add('is-visible')
+            io.unobserve(e.target)
+          }
+        })
+      },
+      { rootMargin: '0px 0px -10% 0px', threshold: 0.05 }
+    )
+
+    targets.forEach((t) => io.observe(t))
+
+    // Filet de sécurité : si rien n'a été révélé au bout de 2 s
+    // (observateur en échec, onglet en arrière-plan…), on démasque tout.
+    const safety = setTimeout(() => {
+      targets.forEach((t) => t.classList.add('is-visible'))
+    }, 2000)
+
+    return () => {
+      io.disconnect()
+      clearTimeout(safety)
+    }
+  }, [])
+
+  return ref
+}
+
+/* Le minuteur de la vitrine tourne vraiment, au lieu d'être une image figée. */
+function useDemoCountdown(from = 750) {
+  const [left, setLeft] = useState(from)
+  useEffect(() => {
+    if (prefersReducedMotion()) return
+    const id = setInterval(() => setLeft((v) => (v <= 1 ? from : v - 1)), 1000)
+    return () => clearInterval(id)
+  }, [from])
+  return left
+}
+
+const mmss = (s) =>
+  `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`
+
+function LiveStat({ label, value, hero = false }) {
+  const shown = useCountUp(value)
+  return (
+    <div className={`lp-stat ${hero ? 'lp-stat-hero' : ''}`}>
+      <dt>{label}</dt>
+      <dd>{typeof value === 'number' ? shown.toLocaleString('fr-FR') : '—'}</dd>
+    </div>
+  )
+}
+
 function LandingPage() {
   const navigate = useNavigate()
   const [joinCode, setJoinCode] = useState('')
   const [currentWordIndex, setCurrentWordIndex] = useState(0)
   const [openFaq, setOpenFaq] = useState(null)
+  const [joinError, setJoinError] = useState('')
   const stats = useLiveStats()
+  const revealRef = useReveal()
+  const demoLeft = useDemoCountdown(750)
 
   useEffect(() => {
     const interval = setInterval(
@@ -157,19 +291,31 @@ function LandingPage() {
   const handleJoinTimer = () => {
     const trimmed = joinCode.trim()
     const digits = trimmed.replace(/-/g, '')
-    if (digits.length >= 6) {
-      const formatted = trimmed.includes('-')
-        ? trimmed
-        : `${digits.slice(0, 3)}-${digits.slice(3, 6)}`
-      navigate(`/timer/${formatted}`)
+    if (digits.length < 6) {
+      setJoinError('Un code contient six chiffres, par exemple 428-903.')
+      return
     }
+    setJoinError('')
+    const formatted = trimmed.includes('-')
+      ? trimmed
+      : `${digits.slice(0, 3)}-${digits.slice(3, 6)}`
+    navigate(`/timer/${formatted}`)
+  }
+
+  // Formatage à la saisie : l'utilisateur tape 6 chiffres, le tiret s'ajoute.
+  const handleJoinChange = (e) => {
+    const digits = e.target.value.replace(/\D/g, '').slice(0, 6)
+    setJoinCode(digits.length > 3 ? `${digits.slice(0, 3)}-${digits.slice(3)}` : digits)
+    if (joinError) setJoinError('')
   }
 
   const ringRadius = 92
   const ringCircumference = 2 * Math.PI * ringRadius
 
   return (
-    <div className="lp">
+    <div className="lp" ref={revealRef}>
+      <a className="lp-skip" href="#contenu">Aller au contenu</a>
+
       {/* ================= NAVBAR ================= */}
       <header className="lp-nav">
         <div className="lp-nav-inner">
@@ -244,23 +390,28 @@ function LandingPage() {
               <div className="lp-join">
                 <input
                   type="text"
-                  className="input lp-join-input"
+                  inputMode="numeric"
+                  className={`input lp-join-input ${joinError ? 'has-error' : ''}`}
                   placeholder="XXX-XXX"
                   maxLength={7}
                   value={joinCode}
-                  onChange={(e) => setJoinCode(e.target.value.replace(/[^0-9-]/g, ''))}
+                  onChange={handleJoinChange}
                   onKeyDown={(e) => e.key === 'Enter' && handleJoinTimer()}
                   aria-label="Code du timer à rejoindre"
+                  aria-invalid={joinError ? 'true' : undefined}
+                  aria-describedby={joinError ? 'lp-join-err' : undefined}
                 />
-                <button
-                  className="btn btn-secondary"
-                  onClick={handleJoinTimer}
-                  disabled={joinCode.replace(/-/g, '').length < 6}
-                >
+                <button className="btn btn-secondary" onClick={handleJoinTimer}>
                   Rejoindre
                 </button>
               </div>
             </div>
+
+            {joinError && (
+              <p className="lp-join-error" id="lp-join-err" role="alert">
+                {joinError}
+              </p>
+            )}
 
             <p className="lp-reassurance">
               Aucun compte · Aucune carte bancaire · Prêt en moins d’une minute
@@ -292,11 +443,12 @@ function LandingPage() {
                       cy="112"
                       r={ringRadius}
                       strokeDasharray={ringCircumference}
-                      strokeDashoffset={ringCircumference * 0.28}
+                      strokeDashoffset={ringCircumference * (1 - demoLeft / 750)}
+                      style={{ transition: 'stroke-dashoffset 1s linear' }}
                     />
                   </svg>
                   <div className="lp-ring-center">
-                    <div className="lp-ring-time">12:30</div>
+                    <div className="lp-ring-time">{mmss(demoLeft)}</div>
                     <div className="lp-ring-status">
                       <span className="lp-ring-dot" />
                       En cours
@@ -315,7 +467,7 @@ function LandingPage() {
               {/* La télécommande, posée par-dessus */}
               <div className="lp-remote">
                 <span className="lp-remote-label">Télécommande</span>
-                <span className="lp-remote-time">12:30</span>
+                <span className="lp-remote-time">{mmss(demoLeft)}</span>
                 <div className="lp-remote-row">
                   <span className="lp-remote-btn">
                     <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
@@ -348,28 +500,16 @@ function LandingPage() {
           </div>
 
           <dl className="lp-live-stats">
-            <div className="lp-stat lp-stat-hero">
-              <dt>Timers en cours</dt>
-              <dd>{formatNumber(stats?.timers_en_cours)}</dd>
-            </div>
-            <div className="lp-stat">
-              <dt>Écrans connectés</dt>
-              <dd>{formatNumber(stats?.ecrans_connectes)}</dd>
-            </div>
-            <div className="lp-stat">
-              <dt>Timers créés</dt>
-              <dd>{formatNumber(stats?.timers_total)}</dd>
-            </div>
-            <div className="lp-stat">
-              <dt>Minutes orchestrées</dt>
-              <dd>{formatNumber(stats?.minutes_orchestrees)}</dd>
-            </div>
+            <LiveStat hero label="Timers en cours" value={stats?.timers_en_cours} />
+            <LiveStat label="Écrans connectés" value={stats?.ecrans_connectes} />
+            <LiveStat label="Timers créés" value={stats?.timers_total} />
+            <LiveStat label="Minutes orchestrées" value={stats?.minutes_orchestrees} />
           </dl>
         </div>
       </section>
 
       {/* ================= FONCTIONNALITÉS ================= */}
-      <section className="lp-section" id="fonctionnalites">
+      <section className="lp-section" id="contenu">
         <header className="lp-section-head">
           <h2>Tout ce qu’il faut pour tenir le temps</h2>
           <p>
@@ -378,20 +518,40 @@ function LandingPage() {
           </p>
         </header>
 
-        <div className="lp-cards">
-          {FEATURES.map((feature, idx) => (
+        <div className="lp-cards" id="fonctionnalites">
+          {FEATURES.map((feature) => (
             <article
               key={feature.title}
-              className="lp-fcard anim-float"
-              style={{ animationDelay: `${(idx % 3) * 80}ms` }}
+              className="lp-fcard reveal"
             >
               <div className="lp-fcard-icon" aria-hidden="true">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" focusable="false">
                   {feature.icon}
                 </svg>
               </div>
               <h3>{feature.title}</h3>
               <p>{feature.description}</p>
+            </article>
+          ))}
+        </div>
+      </section>
+
+      {/* ================= CAS D'USAGE ================= */}
+      <section className="lp-section lp-section-alt has-grain" id="cas-usage">
+        <header className="lp-section-head reveal">
+          <h2>Quatre situations où le temps décide de tout</h2>
+          <p>
+            Le minuteur ne fait pas l’animation à votre place. Il enlève la
+            charge de surveiller la montre pendant que vous écoutez.
+          </p>
+        </header>
+
+        <div className="lp-usecases">
+          {USECASES.map((u) => (
+            <article key={u.titre} className="lp-usecase reveal">
+              <h3>{u.titre}</h3>
+              <p>{u.texte}</p>
+              <span className="lp-usecase-meta">{u.meta}</span>
             </article>
           ))}
         </div>
@@ -406,7 +566,7 @@ function LandingPage() {
 
         <ol className="lp-steps">
           {STEPS.map((step) => (
-            <li key={step.num} className="lp-step">
+            <li key={step.num} className="lp-step reveal">
               <span className="lp-step-num">{step.num}</span>
               <h3>{step.title}</h3>
               <p>{step.desc}</p>
@@ -417,7 +577,7 @@ function LandingPage() {
 
       {/* ================= PUBLICS ================= */}
       <section className="lp-section lp-section-publics">
-        <div className="lp-publics-card">
+        <div className="lp-publics-card reveal has-grain">
           <h2>Fait pour celles et ceux qui animent</h2>
           <ul className="lp-publics">
             {PUBLICS.map((p) => (
@@ -440,7 +600,7 @@ function LandingPage() {
           {FAQ.map((item, idx) => (
             <details
               key={item.q}
-              className="lp-faq-item"
+              className="lp-faq-item reveal"
               open={openFaq === idx}
               onToggle={(e) => e.currentTarget.open && setOpenFaq(idx)}
             >

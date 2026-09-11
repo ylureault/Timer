@@ -49,6 +49,14 @@
   --ease: cubic-bezier(.2, .7, .2, 1);
   --dur: .45s;
 
+  /* Inclinaisons « papier collé » — reprises de la CSS de référence */
+  --tilt-a: -0.7deg;
+  --tilt-b: 1.3deg;
+  --tilt-c: -1.8deg;
+
+  /* Grain papier : réchauffe les aplats crème */
+  --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.82' numOctaves='3'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='.5'/%3E%3C/svg%3E");
+
   /* ============================================================
      Alias sémantiques utilisés dans toute l'application
      ============================================================ */
@@ -153,6 +161,33 @@ a {
 @keyframes floatIn { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
 @keyframes spin { to { transform: rotate(360deg); } }
 @keyframes fadeUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+/* Révélation au défilement. L'état par défaut est VISIBLE : si
+   l'IntersectionObserver ne se déclenche jamais, le contenu reste lisible.
+   C'est .is-armed (posé en JS) qui masque, donc uniquement quand
+   l'observateur est réellement en place. */
+.reveal { opacity: 1; transform: none; }
+.reveal.is-armed { opacity: 0; transform: translateY(18px); }
+.reveal.is-armed.is-visible {
+  opacity: 1;
+  transform: none;
+  transition: opacity .6s var(--ease), transform .6s var(--ease);
+}
+
+/* Surlignage au feutre qui se trace */
+@keyframes markerIn { from { background-size: 0 32%; } to { background-size: 100% 32%; } }
+
+/* Grain papier, en overlay non interactif */
+.has-grain { position: relative; }
+.has-grain::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: var(--grain);
+  opacity: .035;
+  pointer-events: none;
+  mix-blend-mode: multiply;
+}
 
 .anim-breathe { animation: breathe 5s ease-in-out infinite; }
 .anim-glow { animation: glow 4.5s ease-in-out infinite; }
