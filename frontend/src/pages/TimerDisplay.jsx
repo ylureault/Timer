@@ -15,11 +15,16 @@ const getWsUrl = () => {
 const getQRCodeUrl = (text, size = 220) =>
   `https://api.qrserver.com/v1/create-qr-code/?size=${size}x${size}&data=${encodeURIComponent(text)}`;
 
+// Temps signé : au-delà de l'échéance on compte le dépassement (+2:14) plutôt
+// que de rester figé à 0:00, qui ne dit rien au facilitateur.
 const formatTime = (seconds) => {
-  const s = Math.max(0, Math.floor(seconds));
+  const raw = Math.floor(seconds);
+  const over = raw < 0;
+  const s = Math.abs(raw);
   const mins = Math.floor(s / 60);
   const secs = s % 60;
-  return { mins, secs, display: `${mins}:${secs.toString().padStart(2, '0')}` };
+  const body = `${mins}:${secs.toString().padStart(2, '0')}`;
+  return { mins, secs, over, display: over ? `+${body}` : body };
 };
 
 // ============================================================
@@ -240,7 +245,9 @@ export default function TimerDisplay() {
   useEffect(() => {
     if (state?.mode === 'play') {
       tickRef.current = setInterval(() => {
-        setLocalTime((prev) => Math.max(0, prev - 1));
+        // pas de borne à 0 : le compteur continue en négatif pour afficher
+        // le dépassement
+        setLocalTime((prev) => prev - 1);
       }, 1000);
     } else {
       clearInterval(tickRef.current);
@@ -319,6 +326,10 @@ export default function TimerDisplay() {
   const progress = Math.max(0, Math.min(1, localTime / total));
   const time = formatTime(localTime);
   const isCritical = state?.mode === 'play' && localTime <= 10 && localTime > 0;
+  const isOvertime = localTime < 0;
+  // Ce qui arrive ensuite : l'information que le facilitateur cherche en
+  // priorité quand la séquence se termine.
+  const nextSession = state?.sessions?.[(state?.session_en_cours ?? 0) + 1] || null;
   const Renderer = THEME_RENDERERS[theme];
 
   if (loading) {
@@ -345,7 +356,7 @@ export default function TimerDisplay() {
   return (
     <div
       ref={containerRef}
-      className={`tdisplay theme-${theme} ${isCritical ? 'is-critical' : ''}`}
+      className={`tdisplay theme-${theme} ${isCritical ? 'is-critical' : ''} ${isOvertime ? 'is-overtime' : ''}`}
       style={{ '--session-color': sessionColor }}
     >
       {/* Header */}
@@ -355,6 +366,7 @@ export default function TimerDisplay() {
             Session {(state?.session_en_cours ?? 0) + 1} / {state?.total_sessions || 1}
           </span>
           <h1 className="td-session-name">{currentSession?.nom_session || 'Timer'}</h1>
+          {isOvertime && <span className="td-over-badge">Temps dépassé</span>}
         </div>
       </header>
 
@@ -395,6 +407,19 @@ export default function TimerDisplay() {
           )}
         </AnimatePresence>
       </main>
+
+      {/* Ce qui arrive ensuite */}
+      {nextSession && (
+        <div className="td-next">
+          <span className="td-next-label">Ensuite</span>
+          <span className="td-next-name" style={{ '--next-color': nextSession.couleur }}>
+            {nextSession.nom_session}
+          </span>
+          <span className="td-next-dur">
+            {Math.round(nextSession.duree_secondes / 60)} min
+          </span>
+        </div>
+      )}
 
       {/* Session dots */}
       <div className="td-dots">

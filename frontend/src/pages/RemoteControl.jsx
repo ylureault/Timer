@@ -403,11 +403,14 @@ function RemoteControl() {
     }
   }
 
+  // Temps signé : « +01:20 » quand la séquence déborde.
   const formatTime = (seconds) => {
-    const s = Math.max(0, Math.floor(seconds))
+    const raw = Math.floor(seconds)
+    const s = Math.abs(raw)
     const mins = Math.floor(s / 60)
     const secs = s % 60
-    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`
+    const body = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`
+    return raw < 0 ? `+${body}` : body
   }
 
   if (loading) {
@@ -452,6 +455,7 @@ function RemoteControl() {
   const isPlaying = mode === 'play'
   const isPaused = mode === 'pause'
   const isCompleted = mode === 'termine'
+  const isOvertime = temps_restant < 0
 
   const sessionColor = current_session.couleur || 'var(--brand)'
   const RADIUS = 90
@@ -559,14 +563,18 @@ function RemoteControl() {
               />
             </svg>
             <div className="rc-ring-text">
-              <div className="rc-ring-time">{formatTime(temps_restant)}</div>
+              <div className={`rc-ring-time ${isOvertime ? 'is-over' : ''}`}>
+                {formatTime(temps_restant)}
+              </div>
               <div className="rc-ring-label">
-                {isPlaying ? 'en cours' : isPaused ? 'en pause' : 'terminé'}
+                {isOvertime ? 'dépassé' : isPlaying ? 'en cours' : isPaused ? 'en pause' : 'terminé'}
               </div>
             </div>
           </div>
 
-          <div className="rc-progress-pct">{progressPercentage}% écoulé</div>
+          <div className={`rc-progress-pct ${isOvertime ? 'is-over' : ''}`}>
+            {isOvertime ? 'temps dépassé' : `${progressPercentage}% écoulé`}
+          </div>
         </section>
 
         {/* Primary controls */}

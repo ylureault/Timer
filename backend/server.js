@@ -63,15 +63,19 @@ const generateEditToken = () => {
   return token;
 };
 
+// Renvoie un temps SIGNÉ : négatif = dépassement. Un facilitateur doit savoir
+// de combien il déborde, pas seulement que le temps est écoulé.
+// L'enchaînement automatique (checkAutoAdvance) fait son propre calcul borné,
+// il n'est pas affecté par ce signe.
 const calculateTimeRemaining = (timerState, currentSession) => {
   if (!timerState || !currentSession) return 0;
 
   if (timerState.mode === 'pause' || timerState.mode === 'termine') {
-    return Math.max(0, timerState.temps_restant);
+    return timerState.temps_restant;
   }
 
   const elapsed = Math.floor((Date.now() - timerState.timestamp_dernier_update) / 1000);
-  return Math.max(0, timerState.temps_restant - elapsed);
+  return timerState.temps_restant - elapsed;
 };
 
 const findTimerByCode = (code) => {
@@ -558,7 +562,9 @@ app.post('/api/timer/:code/addtime', (req, res) => {
     const currentSession = sessions[timerState.session_en_cours];
 
     const actualRemaining = calculateTimeRemaining(timerState, currentSession);
-    const newRemaining = Math.max(0, actualRemaining + (seconds || 0));
+    // Pas de borne à 0 : depuis -2 min, ajouter 1 min doit laisser -1 min
+    // de dépassement, pas remettre le compteur à zéro.
+    const newRemaining = actualRemaining + (seconds || 0);
 
     db.prepare(`
       UPDATE timer_states

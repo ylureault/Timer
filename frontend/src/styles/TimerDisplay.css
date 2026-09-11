@@ -7,7 +7,8 @@
   min-height: 100vh;
   min-height: 100dvh;
   display: grid;
-  grid-template-rows: auto 1fr auto auto;
+  /* en-tête · minuteur · ensuite · pastilles · pied */
+  grid-template-rows: auto 1fr auto auto auto;
   overflow: hidden;
   transition: background 0.5s ease, color 0.5s ease;
 }
@@ -218,6 +219,75 @@
   box-shadow: 0 12px 40px rgba(0, 0, 0, 0.25);
 }
 .theme-aplat .td-message { color: #fff; }
+
+/* ---------- Dépassement ---------- */
+.td-over-badge {
+  display: inline-block;
+  margin-top: 10px;
+  padding: 4px 14px;
+  border-radius: var(--radius-full);
+  background: #ff6b5b;
+  color: #2a0b07;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.theme-aplat .td-over-badge { background: var(--danger); color: #fff; }
+
+/* La couleur de session est posée en inline sur .aplat-time : il faut
+   forcer la main pour signaler le dépassement. */
+.tdisplay.is-overtime .luxe-time,
+.tdisplay.is-overtime .aplat-time,
+.tdisplay.is-overtime .aurora-time {
+  color: #ff6b5b !important;
+  animation: urgentPulse 1.8s ease-in-out infinite;
+}
+.tdisplay.theme-aplat.is-overtime .aplat-time { color: var(--danger) !important; }
+
+/* ---------- Ce qui arrive ensuite ---------- */
+.td-next {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 6px 24px 2px;
+  font-size: clamp(0.85rem, 1.6vw, 1.05rem);
+}
+
+.td-next-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  opacity: 0.5;
+}
+
+.td-next-name {
+  position: relative;
+  padding-left: 16px;
+  font-weight: 600;
+  opacity: 0.92;
+}
+.td-next-name::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--next-color, currentColor);
+}
+
+.td-next-dur {
+  font-family: var(--font-timer);
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  opacity: 0.55;
+}
 
 /* ---------- Session dots ---------- */
 .td-dots {

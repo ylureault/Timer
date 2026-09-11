@@ -1178,3 +1178,13 @@
   .rc-sticky-time { font-size: 1.1rem; }
   .rc-sticky-name { font-size: 0.78rem; }
 }
+
+/* ===== Dépassement de temps ===== */
+.rc-ring-time.is-over,
+.rc-progress-pct.is-over {
+  color: var(--danger);
+}
+
+.rc-ring-time.is-over {
+  animation: urgentPulse 1.8s ease-in-out infinite;
+}
