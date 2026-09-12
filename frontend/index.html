@@ -3,8 +3,232 @@
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/timer-icon.svg" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/manifest.json" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Timer Salon - Orchestrez le temps de vos ateliers</title>
+
+    <!-- Perf : ouvre les connexions polices avant le parsing CSS (gain LCP) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+
+    <!-- Primary Meta Tags -->
+    <title>Timer par INSUFFLE — Le minuteur partagé des facilitateurs</title>
+    <meta name="title" content="Timer par INSUFFLE — Le minuteur partagé des facilitateurs" />
+    <meta name="description" content="Le timer en ligne des facilitateurs, formateurs et scrum masters. Projetez le temps restant, pilotez-le depuis votre mobile, ajustez en direct. Gratuit, sans inscription." />
+    <meta name="keywords" content="timer, minuteur, timer visuel, timer atelier, timer formation, timer réunion, facilitation, pomodoro, chronomètre, gestion du temps, timer collaboratif, timer gratuit, sans inscription, INSUFFLE" />
+    <meta name="author" content="Insuffle" />
+    <meta name="robots" content="index, follow" />
+    <meta name="language" content="French" />
+    <link rel="canonical" href="https://timer.insuffle.com" />
+    <link rel="alternate" hreflang="fr" href="https://timer.insuffle.com/" />
+    <link rel="alternate" hreflang="x-default" href="https://timer.insuffle.com/" />
+    <meta name="geo.region" content="FR" />
+    <meta name="geo.placename" content="France" />
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://timer.insuffle.com/" />
+    <meta property="og:title" content="Timer par INSUFFLE — Le minuteur partagé des facilitateurs" />
+    <meta property="og:description" content="Créez un minuteur partagé en 30 secondes, projetez-le et pilotez-le depuis votre téléphone. Sans inscription, 100% gratuit." />
+    <meta property="og:image" content="https://timer.insuffle.com/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Timer par INSUFFLE — minuteur partagé projeté en salle et piloté depuis un mobile" />
+    <meta property="og:locale" content="fr_FR" />
+    <meta property="og:site_name" content="Timer par INSUFFLE" />
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image" />
+    <meta property="twitter:url" content="https://timer.insuffle.com/" />
+    <meta property="twitter:title" content="Timer par INSUFFLE — Le minuteur partagé des facilitateurs" />
+    <meta property="twitter:description" content="Créez un minuteur partagé en 30 secondes, projetez-le et pilotez-le depuis votre téléphone. Sans inscription, 100% gratuit." />
+    <meta property="twitter:image" content="https://timer.insuffle.com/og-image.png" />
+
+    <!-- Additional SEO -->
+    <meta name="application-name" content="Insuffle Timer" />
+    <meta name="theme-color" content="#0c1629" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Insuffle Timer" />
+
+    <!-- Structured Data - WebApplication -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "Insuffle Timer",
+      "description": "Le timer en ligne des facilitateurs, formateurs et scrum masters : projetez le temps restant, pilotez-le depuis votre mobile et ajustez le déroulé en direct. Gratuit, sans inscription.",
+      "url": "https://timer.insuffle.com",
+      "applicationCategory": "ProductivityApplication",
+      "operatingSystem": "All",
+      "browserRequirements": "Requires JavaScript. Requires HTML5.",
+      "softwareVersion": "2.0",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "EUR"
+      },
+      "author": {
+        "@type": "Organization",
+        "name": "Insuffle",
+        "url": "https://insuffle.com",
+        "logo": "https://timer.insuffle.com/timer-icon.svg"
+      },
+      "featureList": [
+        "Timer visuel avec plusieurs formats d'affichage",
+        "Synchronisation temps réel WebSocket",
+        "Templates prédéfinis (Pomodoro, Design Thinking, Daily)",
+        "Télécommande mobile",
+        "Mode plein écran",
+        "Sessions colorées personnalisables",
+        "Code XXX-XXX pour rejoindre",
+        "Messages en direct",
+        "3 thèmes visuels (Luxe, Aplat, Aurora)",
+        "Mode automatique",
+        "Sans inscription, 100% gratuit"
+      ],
+      "screenshot": "https://timer.insuffle.com/og-image.png"
+    }
+    </script>
+
+    <!-- Structured Data - Organization -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      "name": "Insuffle",
+      "url": "https://insuffle.com",
+      "logo": "https://timer.insuffle.com/timer-icon.svg",
+      "sameAs": [
+        "https://www.linkedin.com/company/insuffle"
+      ],
+      "contactPoint": {
+        "@type": "ContactPoint",
+        "contactType": "customer support",
+        "url": "https://insuffle.com/contact"
+      }
+    }
+    </script>
+
+    <!-- Structured Data - FAQ -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "Faut-il créer un compte pour utiliser le timer ?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Non. Aucune inscription, aucun mot de passe, aucune carte bancaire. Vous créez un timer, vous recevez un code à six chiffres et un lien d'édition secret. C'est tout."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Comment les participants voient-ils le temps restant ?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Vous projetez l'affichage sur l'écran de la salle, ou vous partagez votre écran en visio. Un QR code permet aussi à chacun d'ouvrir le timer sur son téléphone."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Puis-je modifier le déroulé pendant la séance ?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Oui. Depuis la télécommande, vous ajoutez ou supprimez des séquences, changez les durées et ajoutez du temps à la volée. Tous les écrans se mettent à jour immédiatement."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Le timer fonctionne-t-il à distance et en hybride ?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Oui. La synchronisation passe par le web : tous ceux qui ouvrent le lien voient le même temps, qu'ils soient dans la salle ou connectés à distance."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Combien de temps mon timer est-il conservé ?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Un timer reste accessible tant qu'il est utilisé. Les timers inactifs depuis plus de sept jours sont automatiquement supprimés."
+          }
+        }
+      ]
+    }
+    </script>
+
+    <!-- Structured Data - BreadcrumbList -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Timer par INSUFFLE",
+          "item": "https://timer.insuffle.com/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "Créer un timer",
+          "item": "https://timer.insuffle.com/create"
+        }
+      ]
+    }
+    </script>
+
+    <!-- Structured Data - HowTo (GEO optimization) -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "HowTo",
+      "name": "Comment créer et utiliser un timer partagé avec Insuffle Timer",
+      "description": "Guide étape par étape pour créer un minuteur visuel partagé, le projeter sur grand écran et le piloter depuis un téléphone.",
+      "totalTime": "PT1M",
+      "tool": [
+        { "@type": "HowToTool", "name": "Navigateur web (Chrome, Firefox, Safari)" },
+        { "@type": "HowToTool", "name": "Smartphone pour la télécommande" }
+      ],
+      "step": [
+        {
+          "@type": "HowToStep",
+          "position": 1,
+          "name": "Créer le timer",
+          "text": "Rendez-vous sur timer.insuffle.com et cliquez sur Créer un timer. Choisissez un modèle ou configurez vos sessions manuellement.",
+          "url": "https://timer.insuffle.com/create"
+        },
+        {
+          "@type": "HowToStep",
+          "position": 2,
+          "name": "Projeter l'affichage",
+          "text": "Ouvrez le lien d'affichage sur l'écran de projection (grand écran, vidéoprojecteur). Activez le mode plein écran."
+        },
+        {
+          "@type": "HowToStep",
+          "position": 3,
+          "name": "Piloter depuis le téléphone",
+          "text": "Ouvrez la télécommande sur votre smartphone en entrant le code XXX-XXX. Contrôlez le timer, ajustez le temps, changez de session."
+        }
+      ]
+    }
+    </script>
+
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-5QRXJ6X3YC"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-5QRXJ6X3YC');
+    </script>
   </head>
   <body>
     <div id="root"></div>
