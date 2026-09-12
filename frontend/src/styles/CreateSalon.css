@@ -706,3 +706,115 @@
     font-size: 0.75rem;
   }
 }
+
+/* ============================================================
+   MES DÉROULÉS — modèles personnels gardés sur l'appareil
+   ============================================================ */
+.mes-modeles { margin-top: 1.6rem; }
+
+.mes-modeles-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.7rem;
+}
+
+.mes-modeles-head h3 {
+  font-family: var(--font-titre);
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.mes-modeles-note {
+  font-size: 0.78rem;
+  color: var(--gris);
+}
+
+.template-card-mine {
+  display: flex;
+  align-items: stretch;
+  gap: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
+.template-card-open {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  padding: 0.9rem 1rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  font-family: inherit;
+  min-height: 44px;
+}
+
+.template-card-del {
+  flex-shrink: 0;
+  width: 44px;
+  border: none;
+  border-left: 1px solid var(--gris-bord);
+  background: none;
+  color: var(--gris);
+  font-size: 1.3rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: background var(--t-fast), color var(--t-fast);
+}
+.template-card-del:hover { background: var(--danger-soft); color: var(--danger); }
+
+/* ============================================================
+   ENCHAÎNEMENT : manuel ou automatique
+   ============================================================ */
+.mode-choice {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.7rem;
+  margin-bottom: 0.9rem;
+}
+
+.mode-option {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 0.9rem 1rem;
+  border: 1.5px solid var(--gris-bord);
+  border-radius: var(--radius);
+  background: #fff;
+  cursor: pointer;
+  text-align: left;
+  font-family: inherit;
+  transition: border-color var(--t-fast), background var(--t-fast),
+    box-shadow var(--t-fast);
+}
+
+.mode-option:hover { border-color: var(--bleu-3); }
+
+.mode-option.is-active {
+  border-color: var(--bleu);
+  background: var(--bleu-3);
+  box-shadow: var(--ombre);
+}
+
+.mode-option-title {
+  font-family: var(--font-titre);
+  font-weight: 700;
+  font-size: 0.98rem;
+  color: var(--navy);
+}
+
+.mode-option-desc {
+  font-size: 0.85rem;
+  color: var(--gris-texte);
+  line-height: 1.45;
+}
+
+.save-modele { width: 100%; justify-content: center; }
+
+@media (max-width: 640px) {
+  .mode-choice { grid-template-columns: 1fr; }
+}

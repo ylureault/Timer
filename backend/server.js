@@ -92,7 +92,7 @@ const updateLastActivity = (timerId) => {
 
 app.post('/api/timer/create', (req, res) => {
   try {
-    const { name, sessions } = req.body;
+    const { name, sessions, auto_mode } = req.body;
 
     if (!name) {
       return res.status(400).json({ success: false, error: 'Nom du timer requis' });
@@ -144,10 +144,14 @@ app.post('/api/timer/create', (req, res) => {
 
     // Initialize timer state
     const firstDuration = sessions[0].duree_secondes || 300;
+    // Thème posé explicitement : le DEFAULT du schéma ne s'applique pas aux
+    // bases déjà créées (CREATE TABLE IF NOT EXISTS ne modifie rien), donc en
+    // production les nouveaux timers hériteraient encore de l'ancien défaut.
     db.prepare(`
-      INSERT INTO timer_states (timer_id, session_en_cours, temps_restant, mode, timestamp_dernier_update)
-      VALUES (?, 0, ?, 'pause', ?)
-    `).run(timerId, firstDuration, Date.now());
+      INSERT INTO timer_states
+        (timer_id, session_en_cours, temps_restant, mode, timestamp_dernier_update, auto_mode, theme)
+      VALUES (?, 0, ?, 'pause', ?, ?, 'timetimer')
+    `).run(timerId, firstDuration, Date.now(), auto_mode ? 1 : 0);
 
     res.json({
       success: true,
@@ -197,7 +201,7 @@ app.get('/api/timer/edit/:token', (req, res) => {
 app.put('/api/timer/edit/:token', (req, res) => {
   try {
     const { token } = req.params;
-    const { name, sessions } = req.body;
+    const { name, sessions, auto_mode } = req.body;
 
     const timer = db.prepare('SELECT * FROM timers WHERE edit_token = ?').get(token);
     if (!timer) {

@@ -17,7 +17,14 @@ import {
   useSortable,
 } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
-import { SESSION_TEMPLATES, exportSalonConfig, importSalonConfig } from '../utils/features'
+import {
+  SESSION_TEMPLATES,
+  exportSalonConfig,
+  importSalonConfig,
+  getMesModeles,
+  saveMonModele,
+  deleteMonModele,
+} from '../utils/features'
 import '../styles/CreateSalon.css'
 
 const SESSION_COLORS = [
@@ -122,6 +129,10 @@ function CreateTimer() {
   const fileInputRef = useRef(null)
 
   const [timerName, setTimerName] = useState('')
+  const [mesModeles, setMesModeles] = useState(() => getMesModeles())
+  const [modeleEnregistre, setModeleEnregistre] = useState(null)
+  // Enchaînement des séquences : automatique ou piloté à la main
+  const [autoMode, setAutoMode] = useState(false)
   const [sessions, setSessions] = useState([
     {
       id: Date.now(),
@@ -160,6 +171,26 @@ function CreateTimer() {
         id: Date.now() + idx,
       }))
     )
+  }
+
+  // ---- Mes déroulés (enregistrés sur l'appareil) ----
+  const chargerMonModele = (modele) => {
+    setTimerName(modele.nom)
+    setSessions(modele.sessions.map((s, idx) => ({ ...s, id: Date.now() + idx })))
+  }
+
+  const enregistrerMonModele = () => {
+    const nom = (timerName || '').trim() || 'Déroulé sans titre'
+    if (saveMonModele(nom, sessions)) {
+      setMesModeles(getMesModeles())
+      setModeleEnregistre(nom)
+      setTimeout(() => setModeleEnregistre(null), 2600)
+    }
+  }
+
+  const supprimerMonModele = (id) => {
+    deleteMonModele(id)
+    setMesModeles(getMesModeles())
   }
 
   // ---- Export / Import ----
@@ -246,6 +277,7 @@ function CreateTimer() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name: timerName || 'Mon Timer',
+          auto_mode: autoMode,
           sessions: sessions.map((s) => ({
             nom_session: s.nom_session,
             duree_secondes: (parseInt(s.duree_minutes, 10) || 1) * 60,
@@ -521,6 +553,42 @@ function CreateTimer() {
                   </motion.button>
                 ))}
               </div>
+
+              {/* ---- Mes déroulés, gardés sur cet appareil ---- */}
+              {mesModeles.length > 0 && (
+                <div className="mes-modeles">
+                  <div className="mes-modeles-head">
+                    <h3>Mes déroulés</h3>
+                    <span className="mes-modeles-note">Gardés sur cet appareil</span>
+                  </div>
+                  <div className="templates-grid">
+                    {mesModeles.map((m) => (
+                      <div key={m.id} className="template-card template-card-mine">
+                        <button
+                          type="button"
+                          className="template-card-open"
+                          onClick={() => chargerMonModele(m)}
+                        >
+                          <span className="template-card-name">{m.nom}</span>
+                          <span className="template-card-meta">
+                            {m.sessions.length} séquence{m.sessions.length > 1 ? 's' : ''} ·{' '}
+                            {m.sessions.reduce((a, x) => a + (parseInt(x.duree_minutes, 10) || 0), 0)} min
+                          </span>
+                        </button>
+                        <button
+                          type="button"
+                          className="template-card-del"
+                          onClick={() => supprimerMonModele(m.id)}
+                          aria-label={`Supprimer le déroulé ${m.nom}`}
+                          title="Supprimer"
+                        >
+                          ×
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* ---- Timer name ---- */}
@@ -681,6 +749,45 @@ function CreateTimer() {
                 </motion.div>
               ) : null}
             </div>
+
+            {/* ---- Enchaînement des séquences ---- */}
+            {sessions.length > 0 && (
+              <div className="form-section-modern">
+                <label>Passage d’une séquence à la suivante</label>
+                <div className="mode-choice">
+                  <button
+                    type="button"
+                    className={`mode-option ${!autoMode ? 'is-active' : ''}`}
+                    onClick={() => setAutoMode(false)}
+                    aria-pressed={!autoMode}
+                  >
+                    <span className="mode-option-title">Manuel</span>
+                    <span className="mode-option-desc">
+                      Vous décidez quand passer à la suite. Si ça déborde, l’écran
+                      affiche le dépassement.
+                    </span>
+                  </button>
+                  <button
+                    type="button"
+                    className={`mode-option ${autoMode ? 'is-active' : ''}`}
+                    onClick={() => setAutoMode(true)}
+                    aria-pressed={autoMode}
+                  >
+                    <span className="mode-option-title">Automatique</span>
+                    <span className="mode-option-desc">
+                      La séquence suivante démarre seule à la fin du décompte.
+                    </span>
+                  </button>
+                </div>
+                <button
+                  type="button"
+                  className="btn btn-ghost save-modele"
+                  onClick={enregistrerMonModele}
+                >
+                  {modeleEnregistre ? `« ${modeleEnregistre} » enregistré` : 'Enregistrer ce déroulé'}
+                </button>
+              </div>
+            )}
 
             {/* ---- Summary & Create button ---- */}
             {sessions.length > 0 && (
