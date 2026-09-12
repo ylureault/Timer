@@ -17,26 +17,31 @@ const Logo = ({ size = 26 }) => (
   </svg>
 )
 
-/* Affiche l'illustration si le fichier existe, sinon retombe sur le
-   pictogramme. Permet de livrer avant que les images soient déposées :
-   aucune image cassée entre-temps. */
-function FeatureVisual({ illu, alt, icon }) {
-  const [illuOk, setIlluOk] = useState(Boolean(illu))
+/* <picture> : WebP d'abord (97 % plus léger que le PNG source), PNG en
+   repli. Si aucun fichier n'existe, on retombe sur le pictogramme — la page
+   ne montre jamais d'image cassée. */
+function Illustration({ base, alt, icon, className = 'lp-fcard-illu' }) {
+  const [ok, setOk] = useState(Boolean(base))
 
-  if (illu && illuOk) {
+  if (base && ok) {
     return (
-      <img
-        className="lp-fcard-illu"
-        src={`/illustrations/${illu}`}
-        alt={alt}
-        loading="lazy"
-        decoding="async"
-        width="480"
-        height="336"
-        onError={() => setIlluOk(false)}
-      />
+      <picture>
+        <source srcSet={`/illustrations/${base}.webp`} type="image/webp" />
+        <img
+          className={className}
+          src={`/illustrations/${base}.png`}
+          alt={alt}
+          loading="lazy"
+          decoding="async"
+          width="900"
+          height="637"
+          onError={() => setOk(false)}
+        />
+      </picture>
     )
   }
+
+  if (!icon) return null
 
   return (
     <div className="lp-fcard-icon" aria-hidden="true">
@@ -50,7 +55,7 @@ function FeatureVisual({ illu, alt, icon }) {
 const FEATURES = [
   {
     icon: <path d="M12 6V3L8 7l4 4V8a4 4 0 1 1-4 4H6a6 6 0 1 0 6-6z" />,
-    illu: 'sync-ecrans.png',
+    illu: 't-synchro-a-la-seconde',
     alt: "Un écran de salle, un ordinateur portable et un téléphone affichant la même horloge",
     title: 'Synchro à la seconde',
     description:
@@ -58,7 +63,7 @@ const FEATURES = [
   },
   {
     icon: <path d="M7 2h10a2 2 0 0 1 2 2v16a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2zm5 16.5a1.3 1.3 0 1 0 0 2.6 1.3 1.3 0 0 0 0-2.6z" />,
-    illu: 'telecommande.png',
+    illu: 't-telecommande-dans-la-poche',
     alt: 'Une main appuie sur un téléphone qui pilote à distance l’horloge affichée sur un écran',
     title: 'Télécommande dans la poche',
     description:
@@ -66,7 +71,7 @@ const FEATURES = [
   },
   {
     icon: <path d="M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z" />,
-    illu: 'deroule-frise.png',
+    illu: 't-deroule-complet',
     alt: 'Trois personnes observent une frise de séquences avec un curseur de progression',
     title: 'Déroulé complet',
     description:
@@ -74,7 +79,7 @@ const FEATURES = [
   },
   {
     icon: <path d="M12 2a10 10 0 1 0 10 10h-2a8 8 0 1 1-8-8V2zm1 4h-2v7l5.25 3.15 1-1.64L13 11.8V6z" />,
-    illu: 'ajout-temps.png',
+    illu: 't-ajustable-en-direct',
     alt: 'Un doigt appuie sur un bouton plus qui allonge la première séquence d’une suite',
     title: 'Ajustable en direct',
     description:
@@ -82,7 +87,7 @@ const FEATURES = [
   },
   {
     icon: <path d="M3 5h18v2H3zm0 6h18v2H3zm0 6h12v2H3z" />,
-    illu: 'public-horloge.png',
+    illu: 't-lisible-du-fond-de-la-salle',
     alt: 'Un public assis face à un grand écran affichant une horloge, chacun la voit',
     title: 'Lisible du fond de la salle',
     description:
@@ -90,7 +95,7 @@ const FEATURES = [
   },
   {
     icon: <path d="M12 1 3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z" />,
-    illu: 'sans-papier.png',
+    illu: 't-sans-compte-sans-trace',
     alt: 'Un ordre du jour papier à la corbeille, remplacé par un QR code sur un téléphone',
     title: 'Sans compte, sans trace',
     description:
@@ -128,24 +133,32 @@ const PUBLICS = [
 const USECASES = [
   {
     titre: 'Atelier de co-construction',
+    illu: 't-atelier-de-co-construction',
+    alt: 'Un facilitateur anime un groupe debout autour d’une table couverte de post-it, une horloge projetée derrière lui',
     texte:
       "Une divergence qui s'emballe, une convergence bâclée : l'atelier se joue souvent sur la tenue du temps. Séquencez idéation, regroupement et vote, projetez le déroulé, et laissez le minuteur porter la contrainte à votre place. Vous n'êtes plus celui qui coupe la parole, c'est le temps affiché qui le fait.",
     meta: '6 à 8 séquences · 2 à 3 h',
   },
   {
     titre: 'Formation et montée en compétences',
+    illu: 't-formation-montee-en-competences',
+    alt: 'Le déroulé d’une journée de formation, séquences et pauses alternées du lever au coucher du soleil',
     texte:
       "Alternez apports, exercices et pauses sur une journée entière. Les participants voient le rythme à l'avance, savent quand la pause arrive, et reviennent à l'heure parce que l'écran l'annonce. Les durées se réajustent en direct quand un exercice prend plus que prévu.",
     meta: 'Journée · 8 à 12 séquences',
   },
   {
     titre: 'Rituels agiles',
+    illu: 't-rituels-agiles',
+    alt: 'Trois personnes observent une frise de séquences avec un curseur de progression',
     texte:
       "Daily de quinze minutes, rétrospective en cinq temps, revue de sprint minutée. Le timer partagé rend la time-box visible par toute l'équipe plutôt que gardée par le scrum master. Le dépassement s'affiche : on voit précisément de combien on déborde.",
     meta: 'Daily 15 min · Rétro 1 h',
   },
   {
     titre: 'Pitchs, soutenances et jurys',
+    illu: 't-pitchs-soutenances-jurys',
+    alt: 'Un public assis face à un grand écran affichant une horloge, chacun voit le même temps',
     texte:
       "Chaque intervenant dispose du même temps, affiché en grand et lisible du fond de la salle. Le décompte devient un arbitre neutre : plus de discussion sur qui a eu plus de temps, plus de sonnerie à déclencher à la main.",
     meta: '5 min par passage',
@@ -568,7 +581,7 @@ function LandingPage() {
               key={feature.title}
               className="lp-fcard reveal"
             >
-              <FeatureVisual illu={feature.illu} alt={feature.alt} icon={feature.icon} />
+              <Illustration base={feature.illu} alt={feature.alt} icon={feature.icon} />
               <h3>{feature.title}</h3>
               <p>{feature.description}</p>
             </article>
@@ -589,6 +602,7 @@ function LandingPage() {
         <div className="lp-usecases">
           {USECASES.map((u) => (
             <article key={u.titre} className="lp-usecase reveal">
+              <Illustration base={u.illu} alt={u.alt} className="lp-usecase-illu" />
               <h3>{u.titre}</h3>
               <p>{u.texte}</p>
               <span className="lp-usecase-meta">{u.meta}</span>

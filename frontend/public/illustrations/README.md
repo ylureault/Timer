@@ -1,31 +1,45 @@
 # Illustrations de la landing page
 
-Déposer les fichiers dans ce dossier, **avec exactement ces noms**. La page
-les détecte toute seule : tant qu'un fichier est absent, la carte affiche son
-pictogramme et rien n'est cassé.
+Chaque illustration existe en **deux formats** :
 
-| Fichier | Illustration attendue |
+- `.webp` — servi en priorité (≈ 30 Ko pièce)
+- `.png` — repli pour les navigateurs sans WebP (≈ 120 Ko pièce)
+
+Les sources déposées faisaient 1490 px de large pour ~1 Mo chacune, soit
+9,7 Mo au total. Elles ont été redimensionnées à 900 px (les cartes font
+~400 px, 900 couvre le 2x rétine) et recompressées : **326 Ko en WebP**.
+
+## Correspondance
+
+| Fichier (sans extension) | Emplacement |
 |---|---|
-| `sync-ecrans.png` | Écran de salle + ordinateur portable + téléphone, même horloge |
-| `telecommande.png` | Main qui appuie sur un téléphone, ondes vers l'écran |
-| `deroule-frise.png` | Trois personnages devant une frise de séquences |
-| `ajout-temps.png` | Doigt sur un bouton « + » qui allonge une barre |
-| `public-horloge.png` | Public assis face au grand écran avec l'horloge |
-| `sans-papier.png` | Ordre du jour à la corbeille, QR code sur le téléphone |
+| `t-synchro-a-la-seconde` | Carte « Synchro à la seconde » |
+| `t-telecommande-dans-la-poche` | Carte « Télécommande dans la poche » |
+| `t-deroule-complet` | Carte « Déroulé complet » |
+| `t-ajustable-en-direct` | Carte « Ajustable en direct » |
+| `t-lisible-du-fond-de-la-salle` | Carte « Lisible du fond de la salle » |
+| `t-sans-compte-sans-trace` | Carte « Sans compte, sans trace » |
+| `t-atelier-de-co-construction` | Cas d'usage « Atelier de co-construction » |
+| `t-formation-montee-en-competences` | Cas d'usage « Formation » |
+| `t-rituels-agiles` | Cas d'usage « Rituels agiles » |
+| `t-pitchs-soutenances-jurys` | Cas d'usage « Pitchs & soutenances » |
 
-## Format
+## Pour remplacer ou ajouter une illustration
 
-- **PNG** (ou JPG/WebP en changeant l'extension dans `LandingPage.jsx`)
-- Ratio proche de **10:7** (les fichiers fournis sont en ~1500×1050, parfait)
-- Fond blanc : les cartes sont blanches, le trait noir et jaune s'y pose seul
-- Poids conseillé : **moins de 200 Ko** par image. Au-delà, compresser —
-  ces illustrations au trait se compressent très bien.
+1. Déposer le PNG source ici sous le nom voulu
+2. Régénérer les deux formats :
 
-Les textes alternatifs sont déjà rédigés dans `src/pages/LandingPage.jsx`
-(champ `alt` de chaque entrée de `FEATURES`) : inutile d'y toucher.
+```bash
+node -e "
+const sharp=require('sharp'), fs=require('fs');
+const f='mon-image.png';
+sharp(f).resize({width:900,withoutEnlargement:true}).webp({quality:86,effort:6}).toFile(f.replace('.png','.webp'));
+sharp(f).resize({width:900,withoutEnlargement:true}).png({palette:true,quality:82,effort:10}).toFile(f+'.tmp');
+"
+```
 
-## Deux images encore sans emplacement
+3. Déclarer le nom de base (sans extension) dans `src/pages/LandingPage.jsx`,
+   champ `illu`, et rédiger son `alt`.
 
-Les illustrations « atelier autour de la table » et « journée avec pauses »
-n'ont pas encore de place attribuée. Dis-moi où tu les veux (hero, section
-cas d'usage, bandeau publics) et je les câble.
+Si un fichier manque, la carte retombe sur son pictogramme : jamais d'image
+cassée.

@@ -942,3 +942,15 @@
   border-radius: var(--radius);
   margin-bottom: 0.6rem;
 }
+
+/* ---------- Illustration des cas d'usage ---------- */
+.lp-usecase-illu {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 10 / 7;
+  object-fit: contain;
+  background: #fff;
+  border-radius: var(--radius);
+  margin-bottom: 0.9rem;
+}
