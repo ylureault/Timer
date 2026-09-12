@@ -340,6 +340,9 @@
   font-variant-numeric: tabular-nums;
 }
 .td-foot-brand {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
   color: inherit;
   opacity: 0.7;
   font-size: 0.82rem;

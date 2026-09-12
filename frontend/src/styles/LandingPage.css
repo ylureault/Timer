@@ -929,3 +929,16 @@
   top: -5rem;
   visibility: hidden;
 }
+
+/* ---------- Illustrations des cartes ---------- */
+.lp-fcard-illu {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 10 / 7;
+  object-fit: contain;
+  object-position: center;
+  background: #fff;
+  border-radius: var(--radius);
+  margin-bottom: 0.6rem;
+}

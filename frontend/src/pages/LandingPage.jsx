@@ -17,39 +17,81 @@ const Logo = ({ size = 26 }) => (
   </svg>
 )
 
+/* Affiche l'illustration si le fichier existe, sinon retombe sur le
+   pictogramme. Permet de livrer avant que les images soient déposées :
+   aucune image cassée entre-temps. */
+function FeatureVisual({ illu, alt, icon }) {
+  const [illuOk, setIlluOk] = useState(Boolean(illu))
+
+  if (illu && illuOk) {
+    return (
+      <img
+        className="lp-fcard-illu"
+        src={`/illustrations/${illu}`}
+        alt={alt}
+        loading="lazy"
+        decoding="async"
+        width="480"
+        height="336"
+        onError={() => setIlluOk(false)}
+      />
+    )
+  }
+
+  return (
+    <div className="lp-fcard-icon" aria-hidden="true">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" focusable="false">
+        {icon}
+      </svg>
+    </div>
+  )
+}
+
 const FEATURES = [
   {
     icon: <path d="M12 6V3L8 7l4 4V8a4 4 0 1 1-4 4H6a6 6 0 1 0 6-6z" />,
+    illu: 'sync-ecrans.png',
+    alt: "Un écran de salle, un ordinateur portable et un téléphone affichant la même horloge",
     title: 'Synchro à la seconde',
     description:
       "L'écran de la salle, le vidéoprojecteur et votre téléphone affichent exactement le même temps.",
   },
   {
     icon: <path d="M7 2h10a2 2 0 0 1 2 2v16a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2zm5 16.5a1.3 1.3 0 1 0 0 2.6 1.3 1.3 0 0 0 0-2.6z" />,
+    illu: 'telecommande.png',
+    alt: 'Une main appuie sur un téléphone qui pilote à distance l’horloge affichée sur un écran',
     title: 'Télécommande dans la poche',
     description:
       'Lancez, mettez en pause, ajoutez 2 minutes ou passez à la suite depuis votre mobile, sans rien installer.',
   },
   {
     icon: <path d="M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z" />,
+    illu: 'deroule-frise.png',
+    alt: 'Trois personnes observent une frise de séquences avec un curseur de progression',
     title: 'Déroulé complet',
     description:
       'Enchaînez vos séquences et vos pauses. Le groupe voit où il en est et ce qui arrive ensuite.',
   },
   {
     icon: <path d="M12 2a10 10 0 1 0 10 10h-2a8 8 0 1 1-8-8V2zm1 4h-2v7l5.25 3.15 1-1.64L13 11.8V6z" />,
+    illu: 'ajout-temps.png',
+    alt: 'Un doigt appuie sur un bouton plus qui allonge la première séquence d’une suite',
     title: 'Ajustable en direct',
     description:
       "Un débat qui s'étire ? Ajoutez du temps d'un geste, tous les écrans se recalent instantanément.",
   },
   {
     icon: <path d="M3 5h18v2H3zm0 6h18v2H3zm0 6h12v2H3z" />,
+    illu: 'public-horloge.png',
+    alt: 'Un public assis face à un grand écran affichant une horloge, chacun la voit',
     title: 'Lisible du fond de la salle',
     description:
       'Trois affichages au choix, pensés pour rester lisibles à dix mètres comme sur un écran partagé.',
   },
   {
     icon: <path d="M12 1 3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z" />,
+    illu: 'sans-papier.png',
+    alt: 'Un ordre du jour papier à la corbeille, remplacé par un QR code sur un téléphone',
     title: 'Sans compte, sans trace',
     description:
       'Pas d’inscription, pas de mot de passe, aucune donnée personnelle. Un lien, un code, c’est tout.',
@@ -526,11 +568,7 @@ function LandingPage() {
               key={feature.title}
               className="lp-fcard reveal"
             >
-              <div className="lp-fcard-icon" aria-hidden="true">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" focusable="false">
-                  {feature.icon}
-                </svg>
-              </div>
+              <FeatureVisual illu={feature.illu} alt={feature.alt} icon={feature.icon} />
               <h3>{feature.title}</h3>
               <p>{feature.description}</p>
             </article>
