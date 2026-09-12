@@ -568,3 +568,33 @@
 .theme-jauge .td-next { color: #fff; }
 
 
+
+/* ---------- Accès à la télécommande depuis l'affichage ---------- */
+.td-pilot-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 38px;
+  padding: 0 14px;
+  border-radius: var(--radius-full);
+  border: 1px solid currentColor;
+  color: inherit;
+  opacity: 0.75;
+  font-size: 0.86rem;
+  font-weight: 600;
+  white-space: nowrap;
+  transition: opacity 0.2s ease, background 0.2s ease;
+}
+.td-pilot-btn:hover { opacity: 1; background: rgba(127, 127, 127, 0.14); }
+
+.theme-timetimer .td-pilot-btn,
+.theme-aplat .td-pilot-btn { color: var(--bleu); border-color: var(--bleu); opacity: 0.9; }
+
+.td-qr-open { width: 100%; justify-content: center; margin-top: 14px; }
+
+.td-qr-url {
+  margin-top: 10px;
+  font-size: 0.76rem;
+  color: var(--gris-texte);
+  word-break: break-all;
+}

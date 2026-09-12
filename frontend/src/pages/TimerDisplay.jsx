@@ -547,6 +547,21 @@ export default function TimerDisplay() {
       <footer className="td-footer">
         <div className="td-foot-left">
           <span className="td-code">Code&nbsp;<strong>{state?.timer?.code || code}</strong></span>
+          {/* Sans ce lien, le seul accès aux commandes était de scanner le QR
+              avec un téléphone : impossible de piloter depuis la machine qui
+              projette. */}
+          <a
+            className="td-pilot-btn"
+            href={`/remote/${code}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            title="Ouvrir la télécommande"
+          >
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true">
+              <path d="M7 2h10a2 2 0 0 1 2 2v16a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2zm5 16.5a1.3 1.3 0 1 0 0 2.6 1.3 1.3 0 0 0 0-2.6z" />
+            </svg>
+            Piloter
+          </a>
           <button className="td-icon-btn" onClick={() => setShowQRCode(true)} title="QR code (Q)" aria-label="Afficher le QR code de la télécommande">
             <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2">
               <rect x="3" y="3" width="7" height="7" /><rect x="14" y="3" width="7" height="7" />
@@ -595,8 +610,17 @@ export default function TimerDisplay() {
               <button className="td-qr-close" onClick={() => setShowQRCode(false)}>×</button>
               <h3>Piloter ce timer</h3>
               <img src={getQRCodeUrl(`${window.location.origin}/remote/${code}`)} alt="QR code télécommande" />
-              <p className="muted">Scannez pour ouvrir la télécommande</p>
+              <p className="muted">Scannez pour piloter depuis un téléphone</p>
               <p className="td-qr-code">{state?.timer?.code || code}</p>
+              <a
+                className="btn btn-primary td-qr-open"
+                href={`/remote/${code}`}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Ouvrir la télécommande ici
+              </a>
+              <p className="td-qr-url">{`${window.location.origin}/remote/${code}`}</p>
             </motion.div>
           </motion.div>
         )}
