@@ -3,61 +3,136 @@
 // ============================================
 
 export const SESSION_TEMPLATES = {
-  scrum: {
-    name: 'Daily Scrum',
+  atelier: {
+    name: 'Atelier de co-construction',
+    resume: '2 h 30 · divergence puis convergence',
     sessions: [
-      { nom_session: 'Tour de table', duree_minutes: 10, couleur: '#3B82F6', type: 'session' },
-      { nom_session: 'Points bloquants', duree_minutes: 5, couleur: '#EF4444', type: 'session' },
-      { nom_session: 'Plan du jour', duree_minutes: 5, couleur: '#10B981', type: 'session' }
-    ]
+      { nom_session: 'Cadrage & règles du jeu', duree_minutes: 10, couleur: '#1f3a8b', type: 'session' },
+      { nom_session: 'Divergence : idéation', duree_minutes: 30, couleur: '#2a4db3', type: 'session' },
+      { nom_session: 'Pause', duree_minutes: 10, couleur: '#94a3b8', type: 'pause' },
+      { nom_session: 'Regroupement des idées', duree_minutes: 25, couleur: '#0e7490', type: 'session' },
+      { nom_session: 'Convergence : priorisation', duree_minutes: 30, couleur: '#15803d', type: 'session' },
+      { nom_session: 'Plan d’action', duree_minutes: 20, couleur: '#a16207', type: 'session' },
+      { nom_session: 'Clôture & météo', duree_minutes: 10, couleur: '#7c3aed', type: 'session' },
+    ],
   },
-  designThinking: {
-    name: 'Design Thinking Workshop',
+  formationJournee: {
+    name: 'Formation — journée',
+    resume: '7 h · apports, pratique et pauses',
     sessions: [
-      { nom_session: 'Empathie', duree_minutes: 30, couleur: '#8B5CF6', type: 'session' },
-      { nom_session: 'Pause café', duree_minutes: 10, couleur: '#6B7280', type: 'pause' },
-      { nom_session: 'Définition', duree_minutes: 20, couleur: '#3B82F6', type: 'session' },
-      { nom_session: 'Idéation', duree_minutes: 45, couleur: '#F59E0B', type: 'session' },
-      { nom_session: 'Pause déjeuner', duree_minutes: 60, couleur: '#6B7280', type: 'pause' },
-      { nom_session: 'Prototype', duree_minutes: 60, couleur: '#10B981', type: 'session' },
-      { nom_session: 'Test', duree_minutes: 30, couleur: '#EC4899', type: 'session' }
-    ]
+      { nom_session: 'Accueil & objectifs', duree_minutes: 20, couleur: '#1f3a8b', type: 'session' },
+      { nom_session: 'Apport 1', duree_minutes: 50, couleur: '#2a4db3', type: 'session' },
+      { nom_session: 'Pause', duree_minutes: 15, couleur: '#94a3b8', type: 'pause' },
+      { nom_session: 'Mise en pratique', duree_minutes: 60, couleur: '#15803d', type: 'session' },
+      { nom_session: 'Déjeuner', duree_minutes: 60, couleur: '#94a3b8', type: 'pause' },
+      { nom_session: 'Apport 2', duree_minutes: 45, couleur: '#0e7490', type: 'session' },
+      { nom_session: 'Pause', duree_minutes: 15, couleur: '#94a3b8', type: 'pause' },
+      { nom_session: 'Atelier appliqué', duree_minutes: 75, couleur: '#a16207', type: 'session' },
+      { nom_session: 'Synthèse & évaluation', duree_minutes: 20, couleur: '#7c3aed', type: 'session' },
+    ],
   },
-  presentation: {
-    name: 'Présentation 1h',
+  codir: {
+    name: 'Comité de direction',
+    resume: '2 h · ordre du jour tenu',
     sessions: [
-      { nom_session: 'Introduction', duree_minutes: 5, couleur: '#3B82F6', type: 'session' },
-      { nom_session: 'Partie 1', duree_minutes: 20, couleur: '#8B5CF6', type: 'session' },
-      { nom_session: 'Pause', duree_minutes: 5, couleur: '#6B7280', type: 'pause' },
-      { nom_session: 'Partie 2', duree_minutes: 20, couleur: '#10B981', type: 'session' },
-      { nom_session: 'Questions & Réponses', duree_minutes: 10, couleur: '#F59E0B', type: 'session' }
-    ]
+      { nom_session: 'Tour de table', duree_minutes: 15, couleur: '#1f3a8b', type: 'session' },
+      { nom_session: 'Indicateurs', duree_minutes: 20, couleur: '#2a4db3', type: 'session' },
+      { nom_session: 'Sujet de fond 1', duree_minutes: 30, couleur: '#0e7490', type: 'session' },
+      { nom_session: 'Pause', duree_minutes: 10, couleur: '#94a3b8', type: 'pause' },
+      { nom_session: 'Sujet de fond 2', duree_minutes: 30, couleur: '#15803d', type: 'session' },
+      { nom_session: 'Décisions & qui fait quoi', duree_minutes: 15, couleur: '#a16207', type: 'session' },
+    ],
   },
-  formation: {
-    name: 'Session de formation',
+  seminaire: {
+    name: 'Séminaire d’équipe',
+    resume: '3 h · collectif et projection',
     sessions: [
-      { nom_session: 'Accueil & Objectifs', duree_minutes: 10, couleur: '#3B82F6', type: 'session' },
-      { nom_session: 'Théorie', duree_minutes: 45, couleur: '#8B5CF6', type: 'session' },
-      { nom_session: 'Pause', duree_minutes: 15, couleur: '#6B7280', type: 'pause' },
-      { nom_session: 'Pratique', duree_minutes: 60, couleur: '#10B981', type: 'session' },
-      { nom_session: 'Déjeuner', duree_minutes: 60, couleur: '#6B7280', type: 'pause' },
-      { nom_session: 'Exercices', duree_minutes: 90, couleur: '#F59E0B', type: 'session' },
-      { nom_session: 'Pause', duree_minutes: 15, couleur: '#6B7280', type: 'pause' },
-      { nom_session: 'Récapitulatif', duree_minutes: 20, couleur: '#EC4899', type: 'session' }
-    ]
+      { nom_session: 'Brise-glace', duree_minutes: 15, couleur: '#7c3aed', type: 'session' },
+      { nom_session: 'Où en sommes-nous ?', duree_minutes: 35, couleur: '#1f3a8b', type: 'session' },
+      { nom_session: 'Pause', duree_minutes: 15, couleur: '#94a3b8', type: 'pause' },
+      { nom_session: 'Futur désiré', duree_minutes: 45, couleur: '#0e7490', type: 'session' },
+      { nom_session: 'Chemin & engagements', duree_minutes: 40, couleur: '#15803d', type: 'session' },
+      { nom_session: 'Clôture', duree_minutes: 15, couleur: '#a16207', type: 'session' },
+    ],
   },
-  pomodoro: {
-    name: 'Pomodoro (4 cycles)',
+  pitchs: {
+    name: 'Pitchs & soutenances',
+    resume: '1 h · temps égal pour chacun',
     sessions: [
-      { nom_session: 'Focus 1', duree_minutes: 25, couleur: '#EF4444', type: 'session' },
-      { nom_session: 'Pause courte', duree_minutes: 5, couleur: '#6B7280', type: 'pause' },
-      { nom_session: 'Focus 2', duree_minutes: 25, couleur: '#EF4444', type: 'session' },
-      { nom_session: 'Pause courte', duree_minutes: 5, couleur: '#6B7280', type: 'pause' },
-      { nom_session: 'Focus 3', duree_minutes: 25, couleur: '#EF4444', type: 'session' },
-      { nom_session: 'Pause courte', duree_minutes: 5, couleur: '#6B7280', type: 'pause' },
-      { nom_session: 'Focus 4', duree_minutes: 25, couleur: '#EF4444', type: 'session' },
-      { nom_session: 'Pause longue', duree_minutes: 15, couleur: '#10B981', type: 'pause' }
-    ]
+      { nom_session: 'Cadrage du jury', duree_minutes: 10, couleur: '#1f3a8b', type: 'session' },
+      { nom_session: 'Pitch 1', duree_minutes: 5, couleur: '#2a4db3', type: 'session' },
+      { nom_session: 'Questions 1', duree_minutes: 5, couleur: '#94a3b8', type: 'session' },
+      { nom_session: 'Pitch 2', duree_minutes: 5, couleur: '#2a4db3', type: 'session' },
+      { nom_session: 'Questions 2', duree_minutes: 5, couleur: '#94a3b8', type: 'session' },
+      { nom_session: 'Pitch 3', duree_minutes: 5, couleur: '#2a4db3', type: 'session' },
+      { nom_session: 'Questions 3', duree_minutes: 5, couleur: '#94a3b8', type: 'session' },
+      { nom_session: 'Délibération', duree_minutes: 20, couleur: '#15803d', type: 'session' },
+    ],
+  },
+  focus: {
+    name: 'Temps de travail concentré',
+    resume: '2 h · quatre blocs',
+    sessions: [
+      { nom_session: 'Bloc de concentration 1', duree_minutes: 25, couleur: '#1f3a8b', type: 'session' },
+      { nom_session: 'Pause', duree_minutes: 5, couleur: '#94a3b8', type: 'pause' },
+      { nom_session: 'Bloc de concentration 2', duree_minutes: 25, couleur: '#1f3a8b', type: 'session' },
+      { nom_session: 'Pause', duree_minutes: 5, couleur: '#94a3b8', type: 'pause' },
+      { nom_session: 'Bloc de concentration 3', duree_minutes: 25, couleur: '#1f3a8b', type: 'session' },
+      { nom_session: 'Pause', duree_minutes: 5, couleur: '#94a3b8', type: 'pause' },
+      { nom_session: 'Bloc de concentration 4', duree_minutes: 25, couleur: '#1f3a8b', type: 'session' },
+      { nom_session: 'Pause longue', duree_minutes: 20, couleur: '#15803d', type: 'pause' },
+    ],
+  },
+}
+
+// ============================================
+// MODÈLES PERSONNELS — enregistrés sur l'appareil
+// Aucun compte : on garde les déroulés dans le navigateur du
+// facilitateur, qui les retrouve d'une séance à l'autre.
+// ============================================
+
+const CLE_MODELES = 'timer_mes_modeles'
+
+export const getMesModeles = () => {
+  try {
+    const brut = localStorage.getItem(CLE_MODELES)
+    const liste = brut ? JSON.parse(brut) : []
+    return Array.isArray(liste) ? liste : []
+  } catch {
+    return []
+  }
+}
+
+export const saveMonModele = (nom, sessions) => {
+  const titre = (nom || '').trim() || 'Déroulé sans titre'
+  const modele = {
+    id: `m_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
+    nom: titre,
+    enregistre_le: new Date().toISOString(),
+    sessions: sessions.map((s) => ({
+      nom_session: s.nom_session,
+      duree_minutes: s.duree_minutes,
+      couleur: s.couleur,
+      type: s.type,
+    })),
+  }
+  try {
+    const liste = getMesModeles()
+    // un même nom écrase l'ancien plutôt que d'empiler les doublons
+    const sansDoublon = liste.filter((m) => m.nom !== titre)
+    localStorage.setItem(CLE_MODELES, JSON.stringify([modele, ...sansDoublon].slice(0, 30)))
+    return modele
+  } catch {
+    return null
+  }
+}
+
+export const deleteMonModele = (id) => {
+  try {
+    localStorage.setItem(CLE_MODELES, JSON.stringify(getMesModeles().filter((m) => m.id !== id)))
+    return true
+  } catch {
+    return false
   }
 }
 
