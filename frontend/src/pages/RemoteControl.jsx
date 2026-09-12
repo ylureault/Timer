@@ -19,7 +19,7 @@ function RemoteControl() {
   const [showNotes, setShowNotes] = useState(false)
   const [showStats, setShowStats] = useState(false)
   const [stats, setStats] = useState(null)
-  const [currentTheme, setCurrentTheme] = useState('luxe')
+  const [currentTheme, setCurrentTheme] = useState('timetimer')
   const [message, setMessage] = useState('')
   const [viewMode, setViewMode] = useState('agenda')
   const [autoMode, setAutoMode] = useState(false)
@@ -151,6 +151,8 @@ function RemoteControl() {
   }
 
   const themes = [
+    { id: 'timetimer', name: 'Time Timer' },
+    { id: 'jauge', name: 'Jauge plein écran' },
     { id: 'luxe', name: 'Luxe' },
     { id: 'aplat', name: 'Aplat' },
     { id: 'aurora', name: 'Aurora' }

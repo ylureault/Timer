@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import '../styles/TimerDisplay.css';
 
 // Three display themes only: luxe, aplat, aurora
-const THEMES = ['luxe', 'aplat', 'aurora'];
+const THEMES = ['timetimer', 'jauge', 'luxe', 'aplat', 'aurora'];
 
 const getWsUrl = () => {
   if (import.meta.env.VITE_WS_URL) return import.meta.env.VITE_WS_URL;
@@ -127,7 +127,104 @@ const AuroraTimer = ({ time, progress, state, currentSession, sessionColor }) =>
   </div>
 );
 
+// ============================================================
+// PROGRESSION VERT -> ORANGE -> ROUGE
+// `reste` = fraction de temps restante (1 = tout le temps, 0 = échéance).
+// Interpolation continue plutôt que trois paliers : le glissement de
+// couleur est lui-même une information sur le temps qui passe.
+// ============================================================
+const urgencyColor = (reste, { vif = false } = {}) => {
+  const r = Math.max(0, Math.min(1, reste));
+  let teinte;
+  if (r > 0.5) {
+    const t = (r - 0.5) / 0.5;        // 1 au départ -> 0 à mi-parcours
+    teinte = 32 + (142 - 32) * t;     // vert -> orange
+  } else {
+    const t = r / 0.5;                // 1 à mi-parcours -> 0 à l'échéance
+    teinte = 32 * t;                  // orange -> rouge
+  }
+  const sat = vif ? 72 : 62;
+  const lum = vif ? 44 : 40;
+  return `hsl(${teinte.toFixed(1)} ${sat}% ${lum}%)`;
+};
+
+// Secteur circulaire partant de midi, sens horaire.
+const sectorPath = (cx, cy, r, frac) => {
+  if (frac <= 0) return '';
+  if (frac >= 0.9999) {
+    return `M ${cx} ${cy - r} A ${r} ${r} 0 1 1 ${cx - 0.01} ${cy - r} Z`;
+  }
+  const a = frac * 2 * Math.PI;
+  const x = cx + r * Math.sin(a);
+  const y = cy - r * Math.cos(a);
+  return `M ${cx} ${cy} L ${cx} ${cy - r} A ${r} ${r} 0 ${frac > 0.5 ? 1 : 0} 1 ${x} ${y} Z`;
+};
+
+// --- Time Timer : réplique du cadran physique, disque qui se résorbe ---
+const TimeTimerDisplay = ({ time, progress, state }) => {
+  const size = 460;
+  const c = size / 2;
+  const rDial = 196;
+  const couleur = urgencyColor(progress, { vif: true });
+
+  // Graduations posées SUR le cadran (et dessinées après le secteur), sinon
+  // la lunette les recouvre et elles disparaissent sous la couleur.
+  const ticks = [];
+  for (let i = 0; i < 60; i++) {
+    const ang = (i * 6 - 90) * (Math.PI / 180);
+    const majeur = i % 5 === 0;
+    const r1 = rDial - (majeur ? 26 : 15);
+    const r2 = rDial - 3;
+    ticks.push(
+      <line
+        key={i}
+        x1={c + r1 * Math.cos(ang)} y1={c + r1 * Math.sin(ang)}
+        x2={c + r2 * Math.cos(ang)} y2={c + r2 * Math.sin(ang)}
+        className={majeur ? 'tt-tick tt-tick-major' : 'tt-tick'}
+      />
+    );
+  }
+
+  return (
+    <div className="tt-wrap">
+      <div className="tt-dial">
+        <svg viewBox={`0 0 ${size} ${size}`} className="tt-svg">
+          <circle cx={c} cy={c} r={rDial + 22} className="tt-bezel" />
+          <circle cx={c} cy={c} r={rDial} className="tt-face" />
+          <motion.path
+            d={sectorPath(c, c, rDial, Math.max(0, Math.min(1, progress)))}
+            fill={couleur}
+            initial={false}
+            animate={{ opacity: 1 }}
+            style={{ transition: 'fill .9s linear' }}
+          />
+          {ticks}
+          <circle cx={c} cy={c} r={12} className="tt-hub" />
+        </svg>
+      </div>
+      {/* Frère du cadran, pas enfant : .tt-dial a un ratio fixe, un enfant
+          en déborderait et recouvrirait la ligne « Ensuite ». */}
+      <div className="tt-readout">
+        <div className="tt-time" style={{ color: couleur }}>{time.display}</div>
+        <StatusLabel mode={state?.mode} />
+      </div>
+    </div>
+  );
+};
+
+// --- Jauge plein écran : le fond lui-même se vide ---
+const JaugeDisplay = ({ time, state }) => (
+  // Chiffres blancs : ils traversent la limite entre la zone colorée et le
+  // fond sombre, aucune couleur de texte ne serait lisible sur les deux.
+  <div className="jauge-wrap">
+    <div className="jauge-time">{time.display}</div>
+    <StatusLabel mode={state?.mode} />
+  </div>
+);
+
 const THEME_RENDERERS = {
+  timetimer: TimeTimerDisplay,
+  jauge: JaugeDisplay,
   luxe: LuxeTimer,
   aplat: AplatTimer,
   aurora: AuroraTimer,
@@ -156,7 +253,7 @@ export default function TimerDisplay() {
   const audioRef = useRef(null);
   const lastBeepRef = useRef(null);
 
-  const theme = THEMES.includes(state?.theme) ? state.theme : 'luxe';
+  const theme = THEMES.includes(state?.theme) ? state.theme : 'timetimer';
 
   // ---- normalize + apply a state payload (from WS or polling) ----
   const applyState = useCallback((data) => {
@@ -359,6 +456,19 @@ export default function TimerDisplay() {
       className={`tdisplay theme-${theme} ${isCritical ? 'is-critical' : ''} ${isOvertime ? 'is-overtime' : ''}`}
       style={{ '--session-color': sessionColor }}
     >
+      {/* Jauge plein écran : le fond lui-même se vide, lisible de très loin */}
+      {theme === 'jauge' && (
+        <div className="td-gauge-bg" aria-hidden="true">
+          <div
+            className="td-gauge-fill"
+            style={{
+              height: `${Math.max(0, Math.min(1, progress)) * 100}%`,
+              background: urgencyColor(progress, { vif: true }),
+            }}
+          />
+        </div>
+      )}
+
       {/* Header */}
       <header className="td-header">
         <div className="td-session-meta">

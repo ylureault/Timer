@@ -74,6 +74,9 @@
   justify-content: center;
   gap: 28px;
   padding: 24px;
+  /* autorise la rangée 1fr à se contracter au lieu de déborder sur
+     les rangées suivantes (« ensuite », pastilles, pied) */
+  min-height: 0;
 }
 .td-core {
   display: flex;
@@ -454,3 +457,111 @@
   .td-footer { font-size: 0.82rem; }
   .td-header { padding-top: 28px; }
 }
+
+/* ============================================================
+   TIME TIMER — réplique du cadran physique
+   ============================================================ */
+.tdisplay.theme-timetimer {
+  background: var(--creme);
+  color: var(--navy);
+}
+
+.tt-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: clamp(10px, 2.5vh, 28px);
+}
+
+/* Dimensionné en vh aussi : le cadran ET les chiffres doivent tenir
+   dans la hauteur, sinon le temps sort de l'écran. */
+.tt-dial {
+  position: relative;
+  width: min(44vh, 62vmin, 500px);
+  aspect-ratio: 1;
+}
+
+.tt-svg { width: 100%; height: 100%; display: block; }
+
+.tt-bezel { fill: var(--navy); }
+.tt-face { fill: #fff; }
+.tt-hub { fill: var(--navy); }
+
+.tt-tick { stroke: var(--navy); stroke-width: 2.5; opacity: 0.30; }
+.tt-tick-major { stroke-width: 5; opacity: 0.55; }
+
+.tt-readout {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.tt-time {
+  font-family: var(--font-timer);
+  font-size: clamp(2.4rem, 7.5vh, 5.2rem);
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  transition: color .9s linear;
+}
+
+.theme-timetimer .td-status { color: var(--gris-texte); }
+.theme-timetimer .td-session-name,
+.theme-timetimer .td-session-index { color: var(--navy); }
+
+/* ============================================================
+   JAUGE PLEIN ÉCRAN — le fond se vide, lisible de très loin
+   ============================================================ */
+.tdisplay.theme-jauge {
+  background: var(--noir);
+  color: #fff;
+}
+
+.td-gauge-bg {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  display: flex;
+  align-items: flex-end;
+  pointer-events: none;
+}
+
+.td-gauge-fill {
+  width: 100%;
+  /* 1s linear : le fond descend au rythme exact des secondes */
+  transition: height 1s linear, background .9s linear;
+}
+
+/* Tout le contenu repasse au-dessus du fond */
+.theme-jauge .td-header,
+.theme-jauge .td-main,
+.theme-jauge .td-next,
+.theme-jauge .td-dots,
+.theme-jauge .td-footer { position: relative; z-index: 1; }
+
+.jauge-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+}
+
+.jauge-time {
+  font-family: var(--font-timer);
+  font-size: clamp(5rem, 26vw, 20rem);
+  font-weight: 700;
+  letter-spacing: -0.05em;
+  font-variant-numeric: tabular-nums;
+  line-height: 0.9;
+  color: #fff;
+  text-shadow: 0 6px 32px rgba(0, 0, 0, 0.45);
+}
+
+.theme-jauge .td-status,
+.theme-jauge .td-session-name,
+.theme-jauge .td-session-index { color: #fff; }
+.theme-jauge .td-next { color: #fff; }
+
+

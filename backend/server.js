@@ -336,7 +336,7 @@ app.get('/api/timer/:code/state', (req, res) => {
           sessions,
           total_sessions: sessions.length,
           message_actuel: timerState.message_actuel,
-          theme: timerState.theme || 'luxe',
+          theme: timerState.theme || 'timetimer',
           auto_mode: true,
           timer: { code: timer.code, name: timer.name }
         });
@@ -364,7 +364,7 @@ app.get('/api/timer/:code/state', (req, res) => {
       total_sessions: sessions.length,
       message_actuel: timerState.message_actuel,
       message_timestamp: timerState.message_timestamp,
-      theme: timerState.theme || 'luxe',
+      theme: timerState.theme || 'timetimer',
       auto_mode: timerState.auto_mode === 1,
       viewers: timerConnections.get(code)?.size || 0,
       timer: { code: timer.code, name: timer.name }
@@ -647,9 +647,12 @@ app.post('/api/timer/:code/theme', (req, res) => {
     const { code } = req.params;
     const { theme } = req.body;
 
-    const validThemes = ['luxe', 'aplat', 'aurora'];
+    const validThemes = ['timetimer', 'jauge', 'luxe', 'aplat', 'aurora'];
     if (!validThemes.includes(theme)) {
-      return res.status(400).json({ success: false, error: 'Theme invalide. Themes disponibles: luxe, aplat, aurora' });
+      return res.status(400).json({
+        success: false,
+        error: `Theme invalide. Themes disponibles: ${validThemes.join(', ')}`,
+      });
     }
 
     const timer = findTimerByCode(code);
@@ -980,7 +983,7 @@ function sendTimerState(ws, code) {
       sessions,
       total_sessions: sessions.length,
       message_actuel: timerState.message_actuel,
-      theme: timerState.theme || 'luxe',
+      theme: timerState.theme || 'timetimer',
       auto_mode: timerState.auto_mode === 1,
       viewers: timerConnections.get(code)?.size || 0,
       timer: { code: timer.code, name: timer.name }

@@ -44,7 +44,7 @@ db.exec(`
     timestamp_dernier_update INTEGER,
     message_actuel TEXT DEFAULT NULL,
     message_timestamp INTEGER DEFAULT NULL,
-    theme TEXT DEFAULT 'luxe',
+    theme TEXT DEFAULT 'timetimer',
     auto_mode INTEGER DEFAULT 0,
     FOREIGN KEY (timer_id) REFERENCES timers(id) ON DELETE CASCADE
   );
