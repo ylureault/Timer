@@ -247,6 +247,15 @@ export default function TimerDisplay() {
   const [showQRCode, setShowQRCode] = useState(false);
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [qrDataUrl, setQrDataUrl] = useState(null);
+  // Le plein écran ne peut pas être déclenché sans geste de l'utilisateur :
+  // les navigateurs l'interdisent. On propose donc, une seule fois.
+  const [proposerPleinEcran, setProposerPleinEcran] = useState(
+    () => !document.fullscreenElement && localStorage.getItem('td_plein_ecran_vu') !== '1'
+  );
+  const refuserPleinEcran = useCallback(() => {
+    setProposerPleinEcran(false);
+    try { localStorage.setItem('td_plein_ecran_vu', '1'); } catch { /* ignore */ }
+  }, []);
 
   const wsRef = useRef(null);
   const pollRef = useRef(null);
@@ -410,6 +419,39 @@ export default function TimerDisplay() {
       } catch { /* ignore */ }
     }
   }, [localTime, soundEnabled, state?.mode]);
+
+  // ---- carillon de fin de séquence ----
+  // Il n'y avait qu'un bip à 3, 2, 1 : rien au moment qui compte. Dans une
+  // salle, c'est l'écran projeté qui doit sonner, pas le téléphone du
+  // facilitateur resté dans sa poche.
+  const finSonneeRef = useRef(null);
+  useEffect(() => {
+    if (!soundEnabled || state?.mode !== 'play') return;
+    const cle = `${state?.session_en_cours}`;
+    if (localTime > 0 || finSonneeRef.current === cle) return;
+    finSonneeRef.current = cle;
+    try {
+      if (!audioRef.current) audioRef.current = new (window.AudioContext || window.webkitAudioContext)();
+      const ac = audioRef.current;
+      // Trois notes descendantes : reconnaissable de loin, sans être agressif.
+      [
+        { f: 880, t: 0 },
+        { f: 660, t: 0.18 },
+        { f: 440, t: 0.36 },
+      ].forEach(({ f, t }) => {
+        const osc = ac.createOscillator();
+        const gain = ac.createGain();
+        osc.connect(gain); gain.connect(ac.destination);
+        osc.frequency.value = f;
+        osc.type = 'sine';
+        const d = ac.currentTime + t;
+        gain.gain.setValueAtTime(0.0001, d);
+        gain.gain.exponentialRampToValueAtTime(0.2, d + 0.03);
+        gain.gain.exponentialRampToValueAtTime(0.0001, d + 0.55);
+        osc.start(d); osc.stop(d + 0.6);
+      });
+    } catch { /* contexte audio indisponible */ }
+  }, [localTime, soundEnabled, state?.mode, state?.session_en_cours]);
 
   // ---- document title ----
   useEffect(() => {
@@ -578,6 +620,23 @@ export default function TimerDisplay() {
           )}
         </AnimatePresence>
       </main>
+
+      {/* Invitation au plein écran : impossible à déclencher seul, un geste
+          est exigé par le navigateur. */}
+      {proposerPleinEcran && !isFullscreen && (
+        <div className="td-plein-ecran">
+          <span>Projeter en plein écran&nbsp;?</span>
+          <button
+            className="td-pe-oui"
+            onClick={() => { toggleFullscreen(); refuserPleinEcran(); }}
+          >
+            Plein écran
+          </button>
+          <button className="td-pe-non" onClick={refuserPleinEcran} aria-label="Ne plus proposer">
+            Plus tard
+          </button>
+        </div>
+      )}
 
       {/* Barre de commandes : apparaît au mouvement de souris, s'efface seule */}
       <div className={`td-barre ${barreVisible ? 'is-visible' : ''}`}>

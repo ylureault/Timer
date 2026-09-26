@@ -599,6 +599,17 @@ function LandingPage() {
                   <a className="btn btn-primary btn-sm" href={`/remote/${t.code}`}>
                     Piloter
                   </a>
+                  {/* Le jeton d'édition était donné une fois à la création puis
+                      jamais revu : le déroulé devenait impossible à modifier. */}
+                  {t.edit_token && (
+                    <a
+                      className="btn btn-ghost btn-sm"
+                      href={`/edit/${t.edit_token}`}
+                      title="Modifier le déroulé"
+                    >
+                      Modifier
+                    </a>
+                  )}
                   <button
                     className="lp-timer-oubli"
                     onClick={() => setMesTimers(oublierTimer(t.code))}
