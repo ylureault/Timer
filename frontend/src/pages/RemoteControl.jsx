@@ -405,6 +405,20 @@ function RemoteControl() {
     }
   }
 
+  // Heure de fin projetée, au format « 17:23 ».
+  const formatHeure = (ms) =>
+    ms ? new Date(ms).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) : '—'
+
+  // Dérive en clair. Sous une minute, on parle de « dans les temps » plutôt
+  // que d'afficher une poussière de secondes qui ne veut rien dire.
+  const formatDerive = (sec) => {
+    if (sec === null || sec === undefined) return null
+    const m = Math.round(Math.abs(sec) / 60)
+    if (m < 1) return { texte: 'dans les temps', etat: 'ok' }
+    if (sec > 0) return { texte: `${m} min de retard`, etat: 'retard' }
+    return { texte: `${m} min d'avance`, etat: 'avance' }
+  }
+
   // Temps signé : « +01:20 » quand la séquence déborde.
   const formatTime = (seconds) => {
     const raw = Math.floor(seconds)
@@ -578,6 +592,29 @@ function RemoteControl() {
             {isOvertime ? 'temps dépassé' : `${progressPercentage}% écoulé`}
           </div>
         </section>
+
+        {/* Pilotage temporel : la question que se pose vraiment un
+            facilitateur — est-ce que je finis à l'heure ? */}
+        {!isCompleted && (
+          <section className="rc-pilotage">
+            <div className="rc-pilotage-bloc">
+              <span className="rc-pilotage-label">Fin prévue</span>
+              <span className="rc-pilotage-valeur">{formatHeure(state.fin_projetee)}</span>
+            </div>
+            <div className="rc-pilotage-sep" aria-hidden="true" />
+            <div className="rc-pilotage-bloc">
+              <span className="rc-pilotage-label">Sur le déroulé</span>
+              {(() => {
+                const d = formatDerive(state.derive_secondes)
+                return (
+                  <span className={`rc-pilotage-valeur rc-derive-${d?.etat || 'ok'}`}>
+                    {d?.texte || '—'}
+                  </span>
+                )
+              })()}
+            </div>
+          </section>
+        )}
 
         {/* Primary controls */}
         <div className="rc-primary">

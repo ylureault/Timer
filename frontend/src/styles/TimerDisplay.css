@@ -598,3 +598,31 @@
   color: var(--gris-texte);
   word-break: break-all;
 }
+
+/* ---------- Heure de fin projetée, dans le pied ---------- */
+.td-fin {
+  font-size: 0.86rem;
+  opacity: 0.72;
+  white-space: nowrap;
+}
+.td-fin strong {
+  font-family: var(--font-timer);
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+}
+.td-fin em {
+  font-style: normal;
+  font-weight: 700;
+  margin-left: 8px;
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+  font-size: 0.78rem;
+}
+.td-fin-retard { background: rgba(255, 107, 91, 0.2); color: #ff6b5b; }
+.td-fin-avance { background: rgba(52, 211, 153, 0.18); color: #34d399; }
+.theme-timetimer .td-fin-retard,
+.theme-aplat .td-fin-retard { background: var(--danger-soft); color: var(--danger); }
+.theme-timetimer .td-fin-avance,
+.theme-aplat .td-fin-avance { background: var(--success-soft); color: var(--success); }
+
+@media (max-width: 860px) { .td-fin { display: none; } }

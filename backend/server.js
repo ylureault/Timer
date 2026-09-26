@@ -78,6 +78,33 @@ const calculateTimeRemaining = (timerState, currentSession) => {
   return timerState.temps_restant - elapsed;
 };
 
+// ============================
+// PILOTAGE TEMPOREL GLOBAL
+// ============================
+// La dérive dit si l'animation est en avance ou en retard sur SON PLAN,
+// toutes séquences confondues. Positif = retard.
+//
+// À chaque changement de séquence, le temps restant donne exactement ce que
+// la séquence a coûté par rapport au prévu : +60 = terminée 1 min en avance
+// (on gagne 60 s), -90 = 1 min 30 de dépassement (on perd 90 s).
+const deriveApresTransition = (deriveActuelle, restantALaTransition) =>
+  Math.round((deriveActuelle || 0) - restantALaTransition);
+
+// Dérive telle qu'elle doit être AFFICHÉE : on compte immédiatement le
+// dépassement en cours, sans attendre le passage à la séquence suivante.
+const deriveVive = (timerState, restantActuel) =>
+  Math.round((timerState.derive_secondes || 0) + Math.max(0, -restantActuel));
+
+// Instant de fin projeté : maintenant + ce qui reste + les séquences à venir.
+// À l'arrêt, le décompte ne court pas : la projection n'a pas de sens.
+const finProjetee = (timerState, sessions, restantActuel) => {
+  if (timerState.mode === 'termine') return null;
+  const aVenir = sessions
+    .slice(timerState.session_en_cours + 1)
+    .reduce((total, s) => total + s.duree_secondes, 0);
+  return Date.now() + (Math.max(0, restantActuel) + aVenir) * 1000;
+};
+
 const findTimerByCode = (code) => {
   return db.prepare('SELECT * FROM timers WHERE code = ?').get(code);
 };
@@ -238,7 +265,7 @@ app.put('/api/timer/edit/:token', (req, res) => {
         if (sessions.length > 0) {
           db.prepare(`
             UPDATE timer_states
-            SET session_en_cours = 0, temps_restant = ?, mode = 'pause', timestamp_dernier_update = ?
+            SET session_en_cours = 0, temps_restant = ?, mode = 'pause', timestamp_dernier_update = ?, derive_secondes = 0
             WHERE timer_id = ?
           `).run(sessions[0].duree_secondes || 300, Date.now(), timer.id);
         }
@@ -370,6 +397,8 @@ app.get('/api/timer/:code/state', (req, res) => {
       message_timestamp: timerState.message_timestamp,
       theme: timerState.theme || 'timetimer',
       auto_mode: timerState.auto_mode === 1,
+      derive_secondes: deriveVive(timerState, actualRemaining),
+      fin_projetee: finProjetee(timerState, sessions, actualRemaining),
       viewers: timerConnections.get(code)?.size || 0,
       timer: { code: timer.code, name: timer.name }
     });
@@ -467,11 +496,14 @@ app.post('/api/timer/:code/next', (req, res) => {
 
     if (timerState.session_en_cours + 1 < sessions.length) {
       const nextSession = sessions[timerState.session_en_cours + 1];
+      const restant = calculateTimeRemaining(timerState, sessions[timerState.session_en_cours]);
+      const derive = deriveApresTransition(timerState.derive_secondes, restant);
       db.prepare(`
         UPDATE timer_states
-        SET session_en_cours = ?, temps_restant = ?, mode = 'pause', timestamp_dernier_update = ?
+        SET session_en_cours = ?, temps_restant = ?, mode = 'pause',
+            timestamp_dernier_update = ?, derive_secondes = ?
         WHERE timer_id = ?
-      `).run(timerState.session_en_cours + 1, nextSession.duree_secondes, Date.now(), timer.id);
+      `).run(timerState.session_en_cours + 1, nextSession.duree_secondes, Date.now(), derive, timer.id);
 
       updateLastActivity(timer.id);
       broadcastTimerUpdate(code);
@@ -538,7 +570,7 @@ app.post('/api/timer/:code/reset', (req, res) => {
 
     db.prepare(`
       UPDATE timer_states
-      SET session_en_cours = 0, temps_restant = ?, mode = 'pause', timestamp_dernier_update = ?
+      SET session_en_cours = 0, temps_restant = ?, mode = 'pause', timestamp_dernier_update = ?, derive_secondes = 0
       WHERE timer_id = ?
     `).run(sessions[0]?.duree_secondes || 0, Date.now(), timer.id);
 
@@ -989,6 +1021,8 @@ function sendTimerState(ws, code) {
       message_actuel: timerState.message_actuel,
       theme: timerState.theme || 'timetimer',
       auto_mode: timerState.auto_mode === 1,
+      derive_secondes: deriveVive(timerState, actualRemaining),
+      fin_projetee: finProjetee(timerState, sessions, actualRemaining),
       viewers: timerConnections.get(code)?.size || 0,
       timer: { code: timer.code, name: timer.name }
     };
@@ -1034,6 +1068,8 @@ function checkAutoAdvance() {
 
         if (timerState.session_en_cours + 1 < sessions.length) {
           const nextSession = sessions[timerState.session_en_cours + 1];
+          // En automatique la bascule se fait à 0 : la séquence a duré
+          // exactement ce qui était prévu, la dérive ne bouge pas.
           db.prepare(`
             UPDATE timer_states
             SET session_en_cours = ?, temps_restant = ?, timestamp_dernier_update = ?

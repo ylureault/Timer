@@ -46,6 +46,7 @@ db.exec(`
     message_timestamp INTEGER DEFAULT NULL,
     theme TEXT DEFAULT 'timetimer',
     auto_mode INTEGER DEFAULT 0,
+    derive_secondes INTEGER DEFAULT 0,
     FOREIGN KEY (timer_id) REFERENCES timers(id) ON DELETE CASCADE
   );
 
@@ -54,5 +55,15 @@ db.exec(`
   CREATE INDEX IF NOT EXISTS idx_sessions_timer ON sessions(timer_id);
   CREATE INDEX IF NOT EXISTS idx_timer_states_timer ON timer_states(timer_id);
 `);
+
+// Migration : CREATE TABLE IF NOT EXISTS ne touche pas une base déjà créée,
+// donc la colonne doit être ajoutée explicitement pour les bases existantes
+// (c'est ce piège qui avait laissé le thème par défaut sur l'ancienne valeur).
+try {
+  db.exec('ALTER TABLE timer_states ADD COLUMN derive_secondes INTEGER DEFAULT 0');
+  console.log('Migration : colonne derive_secondes ajoutee');
+} catch (e) {
+  if (!/duplicate column/i.test(e.message)) throw e;
+}
 
 export default db;

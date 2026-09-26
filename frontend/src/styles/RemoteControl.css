@@ -1200,3 +1200,58 @@
   min-height: 44px;
   padding: 0 8px;
 }
+
+/* ============================================================
+   PILOTAGE TEMPOREL — finit-on à l'heure ?
+   ============================================================ */
+.rc-pilotage {
+  display: flex;
+  align-items: stretch;
+  gap: 0;
+  padding: 0.9rem 0;
+  background: #fff;
+  border: 1px solid var(--gris-bord);
+  border-radius: 18px;
+}
+
+.rc-pilotage-bloc {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.2rem;
+  padding: 0 0.6rem;
+  min-width: 0;
+}
+
+.rc-pilotage-sep {
+  width: 1px;
+  background: var(--gris-bord);
+}
+
+.rc-pilotage-label {
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--gris);
+}
+
+.rc-pilotage-valeur {
+  font-family: var(--font-timer);
+  font-size: 1.15rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--navy);
+  text-align: center;
+  line-height: 1.2;
+}
+
+.rc-derive-ok { color: var(--success); }
+.rc-derive-avance { color: var(--bleu); }
+.rc-derive-retard { color: var(--danger); }
+
+@media (max-width: 360px) {
+  .rc-pilotage-valeur { font-size: 1rem; }
+  .rc-pilotage-label { font-size: 0.62rem; }
+}

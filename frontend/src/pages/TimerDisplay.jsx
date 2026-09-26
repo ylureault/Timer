@@ -572,6 +572,24 @@ export default function TimerDisplay() {
           </button>
         </div>
 
+        {state?.fin_projetee && state?.mode !== 'termine' && (
+          <span className="td-fin">
+            Fin prévue&nbsp;
+            <strong>
+              {new Date(state.fin_projetee).toLocaleTimeString('fr-FR', {
+                hour: '2-digit',
+                minute: '2-digit',
+              })}
+            </strong>
+            {Math.abs(state.derive_secondes || 0) >= 60 && (
+              <em className={state.derive_secondes > 0 ? 'td-fin-retard' : 'td-fin-avance'}>
+                {state.derive_secondes > 0 ? '+' : '−'}
+                {Math.round(Math.abs(state.derive_secondes) / 60)}&nbsp;min
+              </em>
+            )}
+          </span>
+        )}
+
         <a className="td-foot-brand" href="https://www.insuffle.com" target="_blank" rel="noopener noreferrer">
           Timer par <strong>INSUFFLE</strong>
         </a>
