@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+import QRCode from 'qrcode';
 import '../styles/TimerDisplay.css';
 
 // Three display themes only: luxe, aplat, aurora
@@ -12,8 +13,9 @@ const getWsUrl = () => {
   return `${protocol}//${window.location.host}/ws`;
 };
 
-const getQRCodeUrl = (text, size = 220) =>
-  `https://api.qrserver.com/v1/create-qr-code/?size=${size}x${size}&data=${encodeURIComponent(text)}`;
+// Le QR était généré par api.qrserver.com. Réseau filtrant, salle sans accès
+// sortant ou service en panne, et le seul chemin vers les commandes
+// disparaissait. Il est maintenant encodé dans le navigateur.
 
 // Temps signé : au-delà de l'échéance on compte le dépassement (+2:14) plutôt
 // que de rester figé à 0:00, qui ne dit rien au facilitateur.
@@ -244,6 +246,7 @@ export default function TimerDisplay() {
   const [showTransition, setShowTransition] = useState(false);
   const [showQRCode, setShowQRCode] = useState(false);
   const [soundEnabled, setSoundEnabled] = useState(true);
+  const [qrDataUrl, setQrDataUrl] = useState(null);
 
   const wsRef = useRef(null);
   const pollRef = useRef(null);
@@ -268,6 +271,41 @@ export default function TimerDisplay() {
     setState(data);
     setLocalTime(data.temps_restant ?? 0);
   }, []);
+
+  // ---- Pilotage direct depuis l'écran qui projette ----
+  // Sans cela, il fallait un second appareil pour la moindre action.
+  const [barreVisible, setBarreVisible] = useState(false);
+  const masquerRef = useRef(null);
+
+  const piloter = useCallback(async (action, corps) => {
+    try {
+      await fetch(`/api/timer/${code}/${action}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: corps ? JSON.stringify(corps) : undefined,
+      });
+      const r = await fetch(`/api/timer/${code}/state`);
+      const d = await r.json();
+      if (d.success) applyState(d);
+    } catch {
+      /* le polling reprendra la main */
+    }
+  }, [code, applyState]);
+
+  const reveillerBarre = useCallback(() => {
+    setBarreVisible(true);
+    clearTimeout(masquerRef.current);
+    // On la laisse disparaître : l'écran est projeté, il doit rester propre.
+    masquerRef.current = setTimeout(() => setBarreVisible(false), 3500);
+  }, []);
+
+  useEffect(() => {
+    window.addEventListener('mousemove', reveillerBarre);
+    return () => {
+      window.removeEventListener('mousemove', reveillerBarre);
+      clearTimeout(masquerRef.current);
+    };
+  }, [reveillerBarre]);
 
   // ---- polling fallback ----
   const pollOnce = useCallback(async () => {
@@ -408,13 +446,36 @@ export default function TimerDisplay() {
         case 'm': setSoundEnabled((s) => !s); break;
         case 'q': setShowQRCode((q) => !q); break;
         case 'c': navigator.clipboard?.writeText(code); break;
+        case ' ':
+          e.preventDefault();
+          piloter(state?.mode === 'play' ? 'pause' : 'start');
+          reveillerBarre();
+          break;
+        case 'arrowright': e.preventDefault(); piloter('next'); reveillerBarre(); break;
+        case 'arrowleft': e.preventDefault(); piloter('previous'); reveillerBarre(); break;
+        case '+': case '=': piloter('addtime', { seconds: 60 }); reveillerBarre(); break;
+        case '-': piloter('addtime', { seconds: -60 }); reveillerBarre(); break;
         case 'escape': if (showQRCode) setShowQRCode(false); break;
         default: break;
       }
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [toggleFullscreen, showQRCode, code]);
+  }, [toggleFullscreen, showQRCode, code, piloter, reveillerBarre, state?.mode]);
+
+  // ---- QR de la télécommande, encodé localement ----
+  useEffect(() => {
+    let vivant = true;
+    QRCode.toDataURL(`${window.location.origin}/remote/${code}`, {
+      width: 440,
+      margin: 1,
+      color: { dark: '#0c1629', light: '#ffffff' },
+      errorCorrectionLevel: 'M',
+    })
+      .then((url) => { if (vivant) setQrDataUrl(url); })
+      .catch(() => { if (vivant) setQrDataUrl(null); });
+    return () => { vivant = false; };
+  }, [code]);
 
   // ---- derived ----
   const currentSession = state?.current_session;
@@ -517,6 +578,34 @@ export default function TimerDisplay() {
           )}
         </AnimatePresence>
       </main>
+
+      {/* Barre de commandes : apparaît au mouvement de souris, s'efface seule */}
+      <div className={`td-barre ${barreVisible ? 'is-visible' : ''}`}>
+        <button onClick={() => piloter('previous')} title="Séquence précédente (←)" aria-label="Séquence précédente">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M6 6h2v12H6zm3.5 6 8.5 6V6z" /></svg>
+        </button>
+        <button onClick={() => piloter('addtime', { seconds: -60 })} title="Retirer 1 minute (−)" aria-label="Retirer une minute">
+          −1 min
+        </button>
+        <button
+          className="td-barre-play"
+          onClick={() => piloter(state?.mode === 'play' ? 'pause' : 'start')}
+          title="Démarrer ou mettre en pause (espace)"
+          aria-label={state?.mode === 'play' ? 'Mettre en pause' : 'Démarrer'}
+        >
+          {state?.mode === 'play' ? (
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><rect x="6" y="4" width="4" height="16" rx="1" /><rect x="14" y="4" width="4" height="16" rx="1" /></svg>
+          ) : (
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M8 5v14l11-7z" /></svg>
+          )}
+        </button>
+        <button onClick={() => piloter('addtime', { seconds: 60 })} title="Ajouter 1 minute (+)" aria-label="Ajouter une minute">
+          +1 min
+        </button>
+        <button onClick={() => piloter('next')} title="Séquence suivante (→)" aria-label="Séquence suivante">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M16 6h2v12h-2zM6 6l8.5 6L6 18z" /></svg>
+        </button>
+      </div>
 
       {/* Ce qui arrive ensuite */}
       {nextSession && (
@@ -627,7 +716,11 @@ export default function TimerDisplay() {
             >
               <button className="td-qr-close" onClick={() => setShowQRCode(false)}>×</button>
               <h3>Piloter ce timer</h3>
-              <img src={getQRCodeUrl(`${window.location.origin}/remote/${code}`)} alt="QR code télécommande" />
+              {qrDataUrl ? (
+                <img src={qrDataUrl} alt="QR code vers la télécommande de ce timer" />
+              ) : (
+                <div className="td-qr-vide">QR indisponible — utilisez le lien ci-dessous</div>
+              )}
               <p className="muted">Scannez pour piloter depuis un téléphone</p>
               <p className="td-qr-code">{state?.timer?.code || code}</p>
               <a

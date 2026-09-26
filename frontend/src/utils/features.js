@@ -414,3 +414,30 @@ export const calculateStats = (sessions, completedSessions) => {
     progress_percentage: Math.round(progress)
   }
 }
+
+// ============================================
+// MES TIMERS — retrouver ce qu'on a créé
+// Sans compte, le code est la seule clé. S'il est perdu, le timer l'est
+// aussi. On garde donc la trace des créations sur l'appareil.
+// ============================================
+
+const CLE_TIMERS = 'timer_history'
+
+export const getMesTimers = () => {
+  try {
+    const liste = JSON.parse(localStorage.getItem(CLE_TIMERS) || '[]')
+    return Array.isArray(liste) ? liste.filter((t) => t && t.code) : []
+  } catch {
+    return []
+  }
+}
+
+export const oublierTimer = (code) => {
+  try {
+    const reste = getMesTimers().filter((t) => t.code !== code)
+    localStorage.setItem(CLE_TIMERS, JSON.stringify(reste))
+    return reste
+  } catch {
+    return getMesTimers()
+  }
+}

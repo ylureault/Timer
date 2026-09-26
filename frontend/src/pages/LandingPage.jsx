@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
+import { getMesTimers, oublierTimer } from '../utils/features'
 import '../styles/LandingPage.css'
 
 const WORDS = [
@@ -330,6 +331,7 @@ function LandingPage() {
   const [openFaq, setOpenFaq] = useState(null)
   const [joinError, setJoinError] = useState('')
   const stats = useLiveStats()
+  const [mesTimers, setMesTimers] = useState(() => getMesTimers())
   const revealRef = useReveal()
   const demoLeft = useDemoCountdown(750)
 
@@ -562,6 +564,59 @@ function LandingPage() {
           </dl>
         </div>
       </section>
+
+      {/* ================= MES TIMERS ================= */}
+      {mesTimers.length > 0 && (
+        <section className="lp-section lp-mes-timers" aria-label="Mes timers récents">
+          <header className="lp-section-head">
+            <h2>Reprendre un timer</h2>
+            <p>
+              Vos créations depuis cet appareil. Sans compte, le code est la seule
+              clé : on le garde ici pour vous.
+            </p>
+          </header>
+
+          <ul className="lp-timers">
+            {mesTimers.map((t) => (
+              <li key={t.code} className="lp-timer-carte">
+                <div className="lp-timer-info">
+                  <span className="lp-timer-nom">{t.name || 'Timer sans nom'}</span>
+                  <span className="lp-timer-meta">
+                    <code>{t.code}</code>
+                    {t.sessions_count ? ` · ${t.sessions_count} séquences` : ''}
+                    {t.created_at
+                      ? ` · ${new Date(t.created_at).toLocaleDateString('fr-FR', {
+                          day: 'numeric',
+                          month: 'short',
+                        })}`
+                      : ''}
+                  </span>
+                </div>
+                <div className="lp-timer-actions">
+                  <a className="btn btn-secondary btn-sm" href={`/timer/${t.code}`}>
+                    Afficher
+                  </a>
+                  <a className="btn btn-primary btn-sm" href={`/remote/${t.code}`}>
+                    Piloter
+                  </a>
+                  <button
+                    className="lp-timer-oubli"
+                    onClick={() => setMesTimers(oublierTimer(t.code))}
+                    aria-label={`Retirer ${t.name || t.code} de la liste`}
+                    title="Retirer de la liste"
+                  >
+                    ×
+                  </button>
+                </div>
+              </li>
+            ))}
+          </ul>
+          <p className="lp-timers-note">
+            Un timer inactif depuis plus de sept jours est supprimé du serveur ;
+            il peut donc rester listé ici sans être joignable.
+          </p>
+        </section>
+      )}
 
       {/* ================= FONCTIONNALITÉS ================= */}
       <section className="lp-section" id="contenu">

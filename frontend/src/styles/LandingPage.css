@@ -954,3 +954,89 @@
   border-radius: var(--radius);
   margin-bottom: 0.9rem;
 }
+
+/* ============================================================
+   MES TIMERS — reprendre une création
+   ============================================================ */
+.lp-mes-timers { padding-top: 3.5rem; padding-bottom: 1rem; }
+
+.lp-timers {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.8rem;
+  list-style: none;
+}
+
+.lp-timer-carte {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.9rem 1.1rem;
+  background: #fff;
+  border: 1px solid var(--gris-bord);
+  border-radius: var(--radius-lg);
+  transition: border-color var(--t-fast), box-shadow var(--t-fast);
+}
+.lp-timer-carte:hover { border-color: var(--bleu-3); box-shadow: var(--ombre); }
+
+.lp-timer-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  min-width: 0;
+}
+
+.lp-timer-nom {
+  font-family: var(--font-titre);
+  font-weight: 700;
+  font-size: 1rem;
+  color: var(--navy);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.lp-timer-meta {
+  font-size: 0.82rem;
+  color: var(--gris-texte);
+}
+.lp-timer-meta code {
+  font-family: var(--font-timer);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--bleu);
+}
+
+.lp-timer-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-shrink: 0;
+}
+
+.lp-timer-oubli {
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: none;
+  color: var(--gris);
+  font-size: 1.2rem;
+  line-height: 1;
+  cursor: pointer;
+  border-radius: var(--radius-full);
+  transition: background var(--t-fast), color var(--t-fast);
+}
+.lp-timer-oubli:hover { background: var(--danger-soft); color: var(--danger); }
+
+.lp-timers-note {
+  margin-top: 1rem;
+  font-size: 0.82rem;
+  color: var(--gris);
+}
+
+@media (max-width: 768px) {
+  .lp-timers { grid-template-columns: 1fr; }
+  .lp-timer-carte { flex-direction: column; align-items: stretch; gap: 0.7rem; }
+  .lp-timer-actions { justify-content: space-between; }
+}

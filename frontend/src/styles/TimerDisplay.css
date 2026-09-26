@@ -342,6 +342,9 @@
 .td-foot-brand {
   display: inline-flex;
   align-items: center;
+  /* inline-flex fait des enfants des éléments flex : l'espace du texte entre
+     « par » et <strong> disparaît. Le gap le rétablit. */
+  gap: 0.32em;
   min-height: 44px;
   color: inherit;
   opacity: 0.7;
@@ -626,3 +629,91 @@
 .theme-aplat .td-fin-avance { background: var(--success-soft); color: var(--success); }
 
 @media (max-width: 860px) { .td-fin { display: none; } }
+
+/* ---------- Barre de commandes sur l'affichage ---------- */
+.td-barre {
+  position: fixed;
+  left: 50%;
+  bottom: 84px;
+  transform: translateX(-50%) translateY(14px);
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px;
+  border-radius: var(--radius-full);
+  background: rgba(12, 22, 41, 0.86);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 18px 44px -18px rgba(0, 0, 0, 0.7);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease, transform 0.25s var(--ease);
+}
+.td-barre.is-visible {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+  pointer-events: auto;
+}
+
+.theme-timetimer .td-barre,
+.theme-aplat .td-barre {
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid var(--gris-bord);
+  box-shadow: var(--ombre-2);
+}
+
+.td-barre button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 44px;
+  min-width: 44px;
+  padding: 0 14px;
+  border: none;
+  border-radius: var(--radius-full);
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+  font-family: var(--font-texte);
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.18s ease, transform 0.18s ease;
+}
+.td-barre button:hover { background: rgba(255, 255, 255, 0.24); }
+.td-barre button:active { transform: translateY(1px); }
+
+.theme-timetimer .td-barre button,
+.theme-aplat .td-barre button {
+  background: var(--creme-2);
+  color: var(--navy);
+}
+.theme-timetimer .td-barre button:hover,
+.theme-aplat .td-barre button:hover { background: var(--bleu-3); }
+
+.td-barre-play {
+  background: var(--bleu) !important;
+  color: #fff !important;
+  min-width: 56px;
+}
+.td-barre-play:hover { background: var(--bleu-2) !important; }
+
+.td-qr-vide {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 220px;
+  height: 220px;
+  margin: 0 auto 14px;
+  border: 1px dashed var(--gris-bord);
+  border-radius: var(--radius);
+  color: var(--gris-texte);
+  font-size: 0.85rem;
+  text-align: center;
+  padding: 16px;
+}
+
+@media (max-width: 640px) {
+  .td-barre { bottom: 72px; gap: 6px; padding: 6px; }
+  .td-barre button { padding: 0 10px; font-size: 0.8rem; }
+}
