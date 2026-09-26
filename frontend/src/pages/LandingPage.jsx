@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { getMesTimers, oublierTimer } from '../utils/features'
+import { getMesTimers, oublierTimer, getMesEspaces, memoriserEspace } from '../utils/features'
 import '../styles/LandingPage.css'
 
 const WORDS = [
@@ -332,6 +332,8 @@ function LandingPage() {
   const [joinError, setJoinError] = useState('')
   const stats = useLiveStats()
   const [mesTimers, setMesTimers] = useState(() => getMesTimers())
+  const [mesEspaces, setMesEspaces] = useState(() => getMesEspaces())
+  const [creationEspace, setCreationEspace] = useState(false)
   const revealRef = useReveal()
   const demoLeft = useDemoCountdown(750)
 
@@ -344,6 +346,28 @@ function LandingPage() {
   }, [])
 
   const handleCreateTimer = () => navigate('/create')
+
+  // Un espace se crée en un clic : pas de formulaire, pas de mot de passe.
+  // Le lien retourné EST la clé, on le mémorise tout de suite sur l'appareil.
+  const creerEspace = async () => {
+    setCreationEspace(true)
+    try {
+      const r = await fetch('/api/espace', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ nom: 'Mon espace' }),
+      })
+      const d = await r.json()
+      if (d.success) {
+        memoriserEspace(d.cle, d.nom)
+        navigate(`/espace/${d.cle}`)
+        return
+      }
+    } catch {
+      /* on retombe sur l'état initial */
+    }
+    setCreationEspace(false)
+  }
 
   const handleJoinTimer = () => {
     const trimmed = joinCode.trim()
@@ -473,6 +497,30 @@ function LandingPage() {
             <p className="lp-reassurance">
               Aucun compte · Aucune carte bancaire · Prêt en moins d’une minute
             </p>
+
+            <div className="lp-espace-accroche">
+              {mesEspaces.length > 0 ? (
+                <>
+                  <span>Vos espaces&nbsp;:</span>
+                  {mesEspaces.slice(0, 3).map((e) => (
+                    <a key={e.cle} className="lp-espace-lien" href={`/espace/${e.cle}`}>
+                      {e.nom}
+                    </a>
+                  ))}
+                </>
+              ) : (
+                <>
+                  <span>Plusieurs animations à suivre&nbsp;?</span>
+                  <button
+                    className="lp-espace-bouton"
+                    onClick={creerEspace}
+                    disabled={creationEspace}
+                  >
+                    {creationEspace ? 'Création…' : 'Créer un espace'}
+                  </button>
+                </>
+              )}
+            </div>
           </motion.div>
 
           {/* Mise en scène : l'écran projeté + la télécommande */}

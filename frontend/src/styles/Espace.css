@@ -1,0 +1,235 @@
+/* ============================================================
+   ESPACE — un lien secret, pas de compte
+   ============================================================ */
+
+.esp {
+  min-height: 100vh;
+  background: var(--creme);
+  color: var(--navy);
+}
+
+/* ---------- États (chargement, erreur) ---------- */
+.esp-etat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  padding: 2rem 1.5rem;
+}
+
+.esp-etat-carte {
+  max-width: 30rem;
+  padding: 2.2rem 2rem;
+  text-align: center;
+}
+.esp-etat-carte h1 { font-size: 1.5rem; margin-bottom: 0.6rem; }
+.esp-etat-carte p { margin-bottom: 1.4rem; line-height: 1.6; }
+
+/* ---------- En-tête ---------- */
+.esp-tete {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid var(--gris-bord);
+  background: color-mix(in srgb, var(--creme) 92%, transparent);
+  backdrop-filter: blur(8px);
+  position: sticky;
+  top: 0;
+  z-index: 20;
+}
+
+.esp-logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  font-family: var(--font-titre);
+  font-size: 1.02rem;
+  font-weight: 700;
+  color: var(--navy);
+  white-space: nowrap;
+}
+.esp-logo-sep { color: var(--gris); font-weight: 400; }
+.esp-logo strong { color: var(--bleu); font-weight: 800; }
+
+/* ---------- Corps ---------- */
+.esp-corps {
+  max-width: 56rem;
+  margin: 0 auto;
+  padding: 2.5rem 1.5rem 4rem;
+}
+
+.esp-titre { margin-bottom: 1.6rem; }
+
+.esp-titre h1 {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-family: var(--font-titre);
+  font-size: clamp(1.7rem, 4vw, 2.3rem);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.esp-renommer {
+  width: 36px;
+  height: 36px;
+  border: none;
+  background: none;
+  color: var(--gris);
+  font-size: 1rem;
+  cursor: pointer;
+  border-radius: var(--radius-full);
+  transition: background var(--t-fast), color var(--t-fast);
+}
+.esp-renommer:hover { background: var(--bleu-3); color: var(--bleu); }
+
+.esp-titre-champ {
+  font-family: var(--font-titre);
+  font-size: clamp(1.5rem, 3.4vw, 2rem);
+  font-weight: 800;
+  padding: 0.4rem 0.8rem;
+}
+
+.esp-resume {
+  margin-top: 0.35rem;
+  color: var(--gris-texte);
+  font-size: 1rem;
+}
+
+.esp-actions { margin-bottom: 2rem; }
+
+/* ---------- Espace vide ---------- */
+.esp-vide {
+  padding: 2rem 1.8rem;
+  text-align: center;
+  color: var(--gris-texte);
+  line-height: 1.65;
+}
+
+/* ---------- Liste des timers ---------- */
+.esp-liste {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+  list-style: none;
+}
+
+.esp-carte {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+  padding: 1.1rem 1.3rem;
+  background: #fff;
+  border: 1px solid var(--gris-bord);
+  border-left: 4px solid var(--gris-bord);
+  border-radius: var(--radius-lg);
+  transition: border-color var(--t-fast), box-shadow var(--t-fast);
+}
+.esp-carte:hover { box-shadow: var(--ombre); }
+
+.esp-carte.est-actif { border-left-color: var(--success); }
+.esp-carte.est-pause { border-left-color: var(--gris); }
+.esp-carte.est-fini { border-left-color: var(--bleu-3); }
+
+.esp-carte-haut {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+}
+
+.esp-etat-pastille {
+  width: 10px;
+  height: 10px;
+  flex-shrink: 0;
+  border-radius: var(--radius-full);
+  background: var(--gris);
+}
+.est-actif .esp-etat-pastille {
+  background: var(--success);
+  box-shadow: 0 0 0 4px rgba(22, 121, 74, 0.16);
+  animation: tdPulse 1.6s ease-in-out infinite;
+}
+.est-fini .esp-etat-pastille { background: var(--bleu-3); }
+
+.esp-carte-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+  flex: 1;
+}
+
+.esp-carte-nom {
+  font-family: var(--font-titre);
+  font-weight: 700;
+  font-size: 1.05rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.esp-carte-meta {
+  font-size: 0.85rem;
+  color: var(--gris-texte);
+}
+.esp-carte-meta code {
+  font-family: var(--font-timer);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--bleu);
+}
+
+.esp-carte-etat {
+  flex-shrink: 0;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--gris);
+}
+.est-actif .esp-carte-etat { color: var(--success); }
+
+.esp-carte-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  flex-wrap: wrap;
+}
+
+.esp-retirer {
+  margin-left: auto;
+  width: 36px;
+  height: 36px;
+  border: none;
+  background: none;
+  color: var(--gris);
+  font-size: 1.25rem;
+  line-height: 1;
+  cursor: pointer;
+  border-radius: var(--radius-full);
+  transition: background var(--t-fast), color var(--t-fast);
+}
+.esp-retirer:hover { background: var(--danger-soft); color: var(--danger); }
+
+/* ---------- Avertissement sur la clé ---------- */
+.esp-avertissement {
+  margin-top: 2.2rem;
+  padding: 1rem 1.2rem;
+  border-radius: var(--radius);
+  background: var(--jaune-2);
+  color: var(--navy);
+  font-size: 0.9rem;
+  line-height: 1.6;
+}
+
+@media (max-width: 640px) {
+  .esp-corps { padding: 1.8rem 1.1rem 3rem; }
+  .esp-tete { padding: 0.8rem 1.1rem; }
+  .esp-carte-haut { flex-wrap: wrap; }
+  .esp-carte-etat { width: 100%; }
+  .esp-carte-actions .btn { flex: 1; justify-content: center; }
+  .esp-retirer { margin-left: 0; }
+}

@@ -441,3 +441,29 @@ export const oublierTimer = (code) => {
     return getMesTimers()
   }
 }
+
+// ============================================
+// MES ESPACES — les liens secrets gardés sur l'appareil
+// ============================================
+
+const CLE_ESPACES = 'timer_mes_espaces'
+
+export const getMesEspaces = () => {
+  try {
+    const l = JSON.parse(localStorage.getItem(CLE_ESPACES) || '[]')
+    return Array.isArray(l) ? l.filter((e) => e && e.cle) : []
+  } catch {
+    return []
+  }
+}
+
+export const memoriserEspace = (cle, nom) => {
+  try {
+    const liste = getMesEspaces().filter((e) => e.cle !== cle)
+    const maj = [{ cle, nom, vu_le: new Date().toISOString() }, ...liste].slice(0, 12)
+    localStorage.setItem(CLE_ESPACES, JSON.stringify(maj))
+    return maj
+  } catch {
+    return getMesEspaces()
+  }
+}

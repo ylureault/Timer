@@ -133,6 +133,8 @@ function CreateTimer() {
   const [modeleEnregistre, setModeleEnregistre] = useState(null)
   // Enchaînement des séquences : automatique ou piloté à la main
   const [autoMode, setAutoMode] = useState(false)
+  // Créé depuis un espace : le timer y sera rangé automatiquement.
+  const espaceCle = new URLSearchParams(window.location.search).get('espace')
   const [sessions, setSessions] = useState([
     {
       id: Date.now(),
@@ -278,6 +280,7 @@ function CreateTimer() {
         body: JSON.stringify({
           name: timerName || 'Mon Timer',
           auto_mode: autoMode,
+          espace_cle: espaceCle || undefined,
           sessions: sessions.map((s) => ({
             nom_session: s.nom_session,
             duree_secondes: (parseInt(s.duree_minutes, 10) || 1) * 60,

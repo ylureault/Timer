@@ -1040,3 +1040,39 @@
   .lp-timer-carte { flex-direction: column; align-items: stretch; gap: 0.7rem; }
   .lp-timer-actions { justify-content: space-between; }
 }
+
+/* ---------- Accroche « espace » dans le hero ---------- */
+.lp-espace-accroche {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.9rem;
+  font-size: 0.88rem;
+  color: var(--gris-texte);
+}
+
+.lp-espace-bouton {
+  border: none;
+  background: none;
+  padding: 0;
+  font-family: inherit;
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--bleu);
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.lp-espace-bouton:hover { color: var(--bleu-2); }
+.lp-espace-bouton:disabled { opacity: 0.6; cursor: wait; }
+
+.lp-espace-lien {
+  padding: 0.18rem 0.6rem;
+  border-radius: var(--radius-full);
+  background: var(--bleu-3);
+  color: var(--bleu);
+  font-weight: 600;
+  font-size: 0.82rem;
+}
+.lp-espace-lien:hover { background: var(--jaune); color: var(--navy); }

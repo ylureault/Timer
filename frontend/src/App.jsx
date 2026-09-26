@@ -1,5 +1,6 @@
 import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom'
 import LandingPage from './pages/LandingPage'
+import EspacePage from './pages/EspacePage'
 import CreateTimer from './pages/CreateTimer'
 import TimerDisplay from './pages/TimerDisplay'
 import RemoteControl from './pages/RemoteControl'
@@ -35,6 +36,7 @@ function App() {
     <Router>
       <Routes>
         <Route path="/" element={<LandingPage />} />
+        <Route path="/espace/:cle" element={<EspacePage />} />
         <Route path="/create" element={<CreateTimer />} />
         <Route path="/timer/:code" element={<TimerDisplay />} />
         <Route path="/remote/:code" element={<RemoteControl />} />

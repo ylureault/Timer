@@ -6,6 +6,7 @@ import { createServer } from 'http';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import { existsSync } from 'fs';
+import { randomBytes } from 'crypto';
 import db from './database.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -56,12 +57,22 @@ const generateCode = () => {
   return `${p1}-${p2}`;
 };
 
-const generateEditToken = () => {
-  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-  let token = '';
-  for (let i = 0; i < 12; i++) token += chars.charAt(Math.floor(Math.random() * chars.length));
-  return token;
-};
+// Math.random() n'est pas cryptographiquement sûr : son état interne se
+// reconstitue à partir de quelques sorties. Or ces jetons SONT le contrôle
+// d'accès — un jeton devinable, c'est un déroulé modifiable par n'importe qui.
+const genererCle = (octets) =>
+  randomBytes(octets).toString('base64url').slice(0, Math.ceil((octets * 4) / 3));
+
+const generateEditToken = () => genererCle(12);
+
+// Clé d'espace : elle ouvre l'ensemble des timers d'un facilitateur.
+// 32 octets, soit une chance sur 2^256 de tomber dessus au hasard.
+const genererCleEspace = () => genererCle(32);
+
+const trouverEspace = (cle) => db.prepare('SELECT * FROM espaces WHERE cle = ?').get(cle);
+
+const toucherEspace = (id) =>
+  db.prepare('UPDATE espaces SET last_activity = CURRENT_TIMESTAMP WHERE id = ?').run(id);
 
 // Renvoie un temps SIGNÉ : négatif = dépassement. Un facilitateur doit savoir
 // de combien il déborde, pas seulement que le temps est écoulé.
@@ -119,7 +130,7 @@ const updateLastActivity = (timerId) => {
 
 app.post('/api/timer/create', (req, res) => {
   try {
-    const { name, sessions, auto_mode } = req.body;
+    const { name, sessions, auto_mode, espace_cle } = req.body;
 
     if (!name) {
       return res.status(400).json({ success: false, error: 'Nom du timer requis' });
@@ -144,11 +155,15 @@ app.post('/api/timer/create', (req, res) => {
 
     const editToken = generateEditToken();
 
-    // Insert timer
+    // Rattachement facultatif à un espace : une clé inconnue n'empêche pas
+    // la création, le timer est simplement autonome.
+    const espace = espace_cle ? trouverEspace(espace_cle) : null;
+    if (espace) toucherEspace(espace.id);
+
     const result = db.prepare(`
-      INSERT INTO timers (name, code, edit_token)
-      VALUES (?, ?, ?)
-    `).run(name, code, editToken);
+      INSERT INTO timers (name, code, edit_token, espace_id)
+      VALUES (?, ?, ?, ?)
+    `).run(name, code, editToken, espace ? espace.id : null);
 
     const timerId = result.lastInsertRowid;
 
@@ -888,6 +903,86 @@ app.get('/api/salon/:code/state', (req, res) => {
 });
 
 // ============================
+// ESPACES — un lien secret, pas de compte
+// ============================
+
+app.post('/api/espace', (req, res) => {
+  try {
+    const nom = (req.body?.nom || '').toString().trim().slice(0, 80) || 'Mon espace';
+    const cle = genererCleEspace();
+    const r = db.prepare('INSERT INTO espaces (cle, nom) VALUES (?, ?)').run(cle, nom);
+    res.json({ success: true, cle, nom, id: r.lastInsertRowid });
+  } catch (error) {
+    console.error('Create espace error:', error);
+    res.status(500).json({ success: false, error: 'Creation impossible' });
+  }
+});
+
+app.get('/api/espace/:cle', (req, res) => {
+  try {
+    const espace = trouverEspace(req.params.cle);
+    if (!espace) {
+      return res.status(404).json({ success: false, error: 'Espace introuvable' });
+    }
+    toucherEspace(espace.id);
+
+    const timers = db.prepare(`
+      SELECT t.code, t.name, t.edit_token, t.created_at, t.last_activity,
+             ts.mode, ts.session_en_cours, ts.derive_secondes,
+             (SELECT COUNT(*) FROM sessions s WHERE s.timer_id = t.id) AS nb_sessions,
+             (SELECT COALESCE(SUM(s.duree_secondes), 0) FROM sessions s WHERE s.timer_id = t.id) AS duree_totale
+      FROM timers t
+      LEFT JOIN timer_states ts ON ts.timer_id = t.id
+      WHERE t.espace_id = ?
+      ORDER BY t.created_at DESC
+    `).all(espace.id);
+
+    res.json({
+      success: true,
+      espace: { nom: espace.nom, cle: espace.cle, created_at: espace.created_at },
+      timers,
+    });
+  } catch (error) {
+    console.error('Get espace error:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+app.put('/api/espace/:cle', (req, res) => {
+  try {
+    const espace = trouverEspace(req.params.cle);
+    if (!espace) {
+      return res.status(404).json({ success: false, error: 'Espace introuvable' });
+    }
+    const nom = (req.body?.nom || '').toString().trim().slice(0, 80);
+    if (!nom) return res.status(400).json({ success: false, error: 'Nom requis' });
+    db.prepare('UPDATE espaces SET nom = ?, last_activity = CURRENT_TIMESTAMP WHERE id = ?')
+      .run(nom, espace.id);
+    res.json({ success: true, nom });
+  } catch (error) {
+    console.error('Rename espace error:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// Retire un timer de l'espace sans le supprimer : il reste joignable par code.
+app.delete('/api/espace/:cle/timer/:code', (req, res) => {
+  try {
+    const espace = trouverEspace(req.params.cle);
+    if (!espace) {
+      return res.status(404).json({ success: false, error: 'Espace introuvable' });
+    }
+    db.prepare('UPDATE timers SET espace_id = NULL WHERE code = ? AND espace_id = ?')
+      .run(req.params.code, espace.id);
+    toucherEspace(espace.id);
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Detach timer error:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// ============================
 // STATISTIQUES LIVE
 // ============================
 
@@ -1102,10 +1197,21 @@ setInterval(checkAutoAdvance, 1000);
 
 function cleanupOldTimers() {
   try {
+    // Les timers rangés dans un espace ne sont pas des brouillons : on vient
+    // les rechercher des semaines plus tard. Seuls les timers autonomes
+    // expirent à sept jours.
     const result = db.prepare(`
       DELETE FROM timers
       WHERE last_activity < datetime('now', '-7 days')
+        AND espace_id IS NULL
     `).run();
+
+    const espacesMorts = db.prepare(`
+      DELETE FROM espaces WHERE last_activity < datetime('now', '-180 days')
+    `).run();
+    if (espacesMorts.changes > 0) {
+      console.log(`Cleanup: deleted ${espacesMorts.changes} dormant espace(s)`);
+    }
 
     if (result.changes > 0) {
       console.log(`Cleanup: deleted ${result.changes} inactive timer(s)`);
