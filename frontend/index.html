@@ -221,13 +221,17 @@
     }
     </script>
 
-    <!-- Google tag (gtag.js) -->
+    <!-- Google tag (gtag.js) — deux propriétés.
+         La bibliothèque n'est chargée qu'une fois : gtag.js gère plusieurs
+         propriétés avec autant d'appels config, un second <script src> ne
+         ferait que retélécharger le même fichier. -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-5QRXJ6X3YC"></script>
     <script>
       window.dataLayer = window.dataLayer || [];
       function gtag(){dataLayer.push(arguments);}
       gtag('js', new Date());
       gtag('config', 'G-5QRXJ6X3YC');
+      gtag('config', 'G-W57H67TD3N');
     </script>
   </head>
   <body>
